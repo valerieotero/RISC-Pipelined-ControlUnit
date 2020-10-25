@@ -3,13 +3,16 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PC, C, SA, SB, SD, RFLd, CLK);
+//TODO: Add a repetitive change to the PCLd signal, something close to the always begin
+//Todo: Add mux to R15 in order to conditionally charge PC or PC4
+
+module register_file(PA, PB, PD, PC, PCin, C, SA, SB, SD, RFLd, CLK);
     //Outputs
-    output [31:0] PA, PB, PD;
+    output [31:0] PA, PB, PD, PCout;
     //Inputs
-    input [31:0] PC;
+    input [31:0] PC, PCin;
     input [3:0] SA, SB, SD, C;
-    input RFLd, CLK;
+    input RFLd, PCLd, CLK;
     
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -21,6 +24,8 @@ module register_file(PA, PB, PD, PC, C, SA, SB, SD, RFLd, CLK);
     multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
     multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
+    //Here by default we will always extract the value in register 15, this can be simplified to not use so many wires.
+    multiplexer muxPCout (PCout, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, 4'b1111);
 
     
     //16 Registers
@@ -124,9 +129,9 @@ module tester;
     //Variable for loop
     integer index;
     //Inputs
-    reg CLK, RFLd;
+    reg CLK, RFLd, PCLd;
     reg [3:0] SA, SB, SD, C;
-    reg [31:0] PC, PC4;
+    reg [31:0] PC, PCin;
 
     //Outputs
     wire [31:0] PA, PB, PD;
@@ -144,7 +149,7 @@ module tester;
         $display("PC:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PC:%0d", PC, SA, SB, SD, PA, PB, PD, C, PC);
     end
 
-    register_file test (.PA(PA), .PB(PB), .PD(PD), .PC(PC), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .CLK(CLK));
+    register_file test (.PA(PA), .PB(PB), .PD(PD), .PC(PC), .PCin(PCin),  .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .CLK(CLK));
     initial begin
         //Initial values
         PC = 32'b0;
@@ -153,7 +158,9 @@ module tester;
         SB = 4'b0000;
         SD = 4'b0000;
         RFLd = 1'b0;
+        PCLd = 1'b0;
         CLK = 1'b0;
+        PCin = 32'b0;
         
         //Enable load in each register (Ld = 1)
         #10;         
@@ -253,7 +260,6 @@ module tester;
         #10;
         C = 4'b1111;
         PC = 32'd35;
-        PC4 = PC + 'b0100;
 
         
         //This changes the word in R10 and reads said word via Port A(PA).
