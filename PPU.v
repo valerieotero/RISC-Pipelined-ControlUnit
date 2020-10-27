@@ -1,3 +1,6 @@
+//CONTROL UNIT
+
+
 //INSTRUCTION MEMORY 
 module inst_ram256x8(output reg[31:0] DataOut, input Enable, input [31:0]Address);
                   
