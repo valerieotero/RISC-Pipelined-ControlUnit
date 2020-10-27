@@ -1,5 +1,5 @@
 //CONTROL UNIT
-module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, output [3:0] ID_ALU_op)
+module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, output [3:0] ID_ALU_op);
 
     reg [2:0] instr;
     
@@ -7,7 +7,7 @@ module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_inst
     integer rf_instr = 0; 
     integer l_instr = 0; 
     integer b_instr = 0; 
-    integer [3:0] alu_op = 4'b0;
+    reg [3:0] alu_op = 4'b0000;
     integer b_bl = 0; // branch or branch & link
     integer r_sr_off = 0; // register or Scaled register offset
     integer u = 0;
@@ -62,14 +62,14 @@ module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_inst
                 begin
                     u = A[23];
     
-                    if(A[11:4] == 8'b0)begin
+                    if(A[11:4] == 8'b00000000)
                         r_sr_off = 0;
                     else
                         r_sr_off = 1;
-                    end
+                    
 
                     
-                    if(r_sr_off = 0)begin
+                    if(r_sr_off == 0)begin
                         s_imm = 0; 
                         rf_instr = 1; 
                         l_instr = A[20]; 
@@ -121,6 +121,26 @@ module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_inst
 
         endcase
     end
+endmodule
+
+
+//IF/ID PIPELINE REGISTER
+module IF_ID_pipeline_register();
+endmodule
+
+
+//ID/EX PIPELINE REGISTER
+module ID_EX_pipeline_register();
+endmodule
+
+
+//EX/MEM PIPELINE REGISTER
+module EX_MEM_pipeline_register();
+endmodule
+
+
+//MEM/WB PIPELINE REGISTER
+module MEM_WB_pipeline_register();
 endmodule
 
 
