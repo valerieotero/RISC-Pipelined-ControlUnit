@@ -1,5 +1,7 @@
 //CONTROL UNIT
-module control_unit(input [31:0] A, output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, output [3:0] ID_ALU_op);
+module control_unit(output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, ALUSrc, RegDst,  
+                    MemRead, MemWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [3:0] ID_ALU_op, 
+                    input [31:0] A);
 
     reg [2:0] instr;
     
