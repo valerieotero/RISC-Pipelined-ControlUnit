@@ -1,7 +1,7 @@
 //CONTROL UNIT
 module control_unit(output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, ALUSrc, RegDst,  
                     MemRead, MemWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [3:0] ID_ALU_op, 
-                    input [31:0] A);
+                    input clk, input [31:0] A);
 
     reg [2:0] instr;
     
@@ -127,22 +127,42 @@ endmodule
 
 
 //IF/ID PIPELINE REGISTER
-module IF_ID_pipeline_register();
+module IF_ID_pipeline_register(input clk);
+
+always@(posedge clk)
+    begin
+        
+    end
 endmodule
 
 
 //ID/EX PIPELINE REGISTER
-module ID_EX_pipeline_register();
+module ID_EX_pipeline_register(input clk);
+
+always@(posedge clk)
+    begin
+        
+    end
 endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register();
+module EX_MEM_pipeline_register(input clk);
+
+always@(posedge clk)
+    begin
+        
+    end
 endmodule
 
 
 //MEM/WB PIPELINE REGISTER
-module MEM_WB_pipeline_register();
+module MEM_WB_pipeline_register(input clk);
+
+always@(posedge clk)
+    begin
+        
+    end
 endmodule
 
 
