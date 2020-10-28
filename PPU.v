@@ -152,19 +152,29 @@ endmodule
 
 //Status Register
 module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk);
-    
-    always@(clk)
+    //Recordar que el registro se declara aquí y luego
+    sr_subregister intermediate_reg (cc_in, cc_out, S, clk);
 
-    
+    always @ (clk)
     begin
-
         if(clk == 0)
             cc_out = 4'b0;
         else
             if(S == 1)
-                cc_out = cc_in; 
-            else 
+                cc_out = cc_in;
+            else
                 cc_out = 4'b0; //si no lo modifica va un register con el valor anterior
+    end
+
+endmodule
+
+//Reigster for status register needs
+module sr_subregister(output reg [3:0] cc_out, input [3:0] cc_in, input S, input CLK);
+
+    always @ (posedge CLK)
+    begin
+        if (S)
+            cc_out <= cc_in;
     end
 
 endmodule
