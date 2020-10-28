@@ -1,6 +1,6 @@
 //CONTROL UNIT
 module control_unit(output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, ALUSrc, RegDst,  
-                    MemRead, MemWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [3:0] ID_ALU_op, 
+                    MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [3:0] ID_ALU_op, 
                     input clk, input [31:0] A);
 
     reg [2:0] instr;
@@ -146,6 +146,7 @@ module control_unit(output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm,
     end
 endmodule
 
+
 //Status Register
 module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk);
     
@@ -167,7 +168,10 @@ endmodule
 
 
 //IF/ID PIPELINE REGISTER
-module IF_ID_pipeline_register(input clk);
+module IF_ID_pipeline_register(output reg[23:0] Bit23_0, Next_PC, output reg S,
+                               output reg[3:0] Bit19_16, Bit3_0, Bit31_28, output reg[11:0] Bit11_0,
+                               output reg[3:0] Bit15_12, output reg[31:0] Bit31_0,
+                               input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr);
 
     always@(posedge clk)
         begin
@@ -177,12 +181,41 @@ endmodule
 
 
 //ID/EX PIPELINE REGISTER
-module ID_EX_pipeline_register(input clk);
+module ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,
+                               output reg [3:0] Bit15_12_out, ALU_opcodes_out,
+                               output reg [11:0] Bit11_0_out,
+                               output reg [7:0] addresing_modes_out,
+                               output reg branch_instr_out, load_instr_out, RF_enable_out, shifter_imm_out,
+                               mem_size_out, mem_read_write_out,
 
-    always@(posedge clk)
-        begin
-            
-        end
+                               input [31:0] register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in,
+                               input [3:0] Bit15_12_in, ALU_opcodes_in, 
+                               input [11:0] Bit11_0_in,
+                               input [7:0] addresing_modes_in,
+                               input branch_instr_in, load_instr_in, RF_enable_in, shifter_imm_in,
+                               mem_size_in, mem_read_write_in, input clk);
+
+always@(posedge clk)
+    begin
+        //Control Unit signals        
+        shifter_imm_out = shifter_imm_in; 
+        ALU_opcodes_out = ALU_opcodes_in;
+        load_instr_out = load_instr_in;
+        RF_enable_out = RF_enable_in;
+        branch_instr_out = branch_instr_in;       
+        mem_size_out = mem_size_in;
+        mem_read_write_out = mem_read_write_in;
+
+        //Register File operands
+        register_file_port_MUX1_out = register_file_port_MUX1_in;
+        register_file_port_MUX2_out = register_file_port_MUX2_in;      
+        register_file_port_MUX3_out = register_file_port_MUX3_in;
+
+        //Instruction bits
+        Bit15_12_out = Bit15_12_in;
+        Bit11_0_out = Bit11_0_in;
+        addresing_modes_out = addresing_modes_in; //22-20
+    end
 endmodule
 
 
