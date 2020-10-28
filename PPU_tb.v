@@ -1,45 +1,61 @@
 `include "PPU.v"
 module PPU_tb;
 
-/*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
+    /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
 
-integer file, fw, code, i; reg [31:0] data;
-reg Enable;
-reg [31:0] Address; wire [31:0] DataOut;
+    integer file, fw, code, i; reg [31:0] data;
+    reg Enable;
+    reg [31:0] Address; wire [31:0] DataOut;
 
-inst_ram256x8 ram1 (DataOut, Enable, Address );
+    inst_ram256x8 ram1 (DataOut, Enable, Address );
 
-initial
-    begin
-    file = $fopen("ramintr.txt","rb");
-    Address = 32'b00000000000000000000000000000000;
-        while (!$feof(file)) begin //while not the end of file
-        code = $fscanf(file, "%b", data);
-        ram1.Mem[Address] = data;
-        Address = Address + 1;
+    initial
+        begin
+        file = $fopen("ramintr.txt","rb");
+        Address = 32'b00000000000000000000000000000000;
+            while (!$feof(file)) begin //while not the end of file
+            code = $fscanf(file, "%b", data);
+            ram1.Mem[Address] = data;
+            Address = Address + 1;
+        end
+
+    $fclose(file);  
     end
 
-$fclose(file);  
-end
-
-initial begin
-    fw = $fopen("ramintr_content.txt", "w");
-    Enable = 1'b0; 
-    Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-    repeat (9) begin
-    #5 Enable = 1'b1;
-    #5 Enable = 1'b0;
-    Address = Address + 4;
-end
-$finish;
-end
-always @ (posedge Enable)
-    begin
-    #1;   
-    $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);
-end
+    initial begin
+        fw = $fopen("ramintr_content.txt", "w");
+        Enable = 1'b0; 
+        Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
+        repeat (9) begin
+        #5 Enable = 1'b1;
+        #5 Enable = 1'b0;
+        Address = Address + 4;
+    end
+    $finish;
+    end
+    always @ (posedge Enable)
+        begin
+        #1;   
+        $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);
+    end
 
 
+    /*-------------------------------------- STATUS REGISTER --------------------------------------*/
+    reg clk = 1;
+    reg [3:0] cc_in;
+    wire [3:0] cc_out;
+    reg S = 0;
+    
+    initial begin
+        cc_in = 4'b1111;
+        #20;
+        $display("CC in = %d", stat.cc_in);
+        $display("CC out = %d", stat.cc_out);
+        $display("S = %d", stat.S);
+        $display("Clk = %d", stat.clk);
 
+    end
+
+    Status_register stat(cc_in, S, cc_out, clk);
 
 endmodule
