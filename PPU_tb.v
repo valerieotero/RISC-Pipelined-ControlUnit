@@ -46,16 +46,46 @@ module PPU_tb;
     wire [3:0] cc_out;
     reg S = 0;
     
+    // initial begin
+    //     cc_in = 4'b1111;
+    //     #20;
+    //     $display("CC in = %d", stat.cc_in);
+    //     $display("CC out = %d", stat.cc_out);
+    //     $display("S = %d", stat.S);
+    //     $display("Clk = %d", stat.clk);
+
+    // end
+
+    // Status_register stat(cc_in, S, cc_out, clk);
+
+    
+    
+    /*-------------------------------------- CONDITION ASSERTED AND HANDLER --------------------------------------*/
+    reg [3:0] instr_condition;
+    wire choose_ta_r_nop;
+    reg b_instr;
+
     initial begin
-        cc_in = 4'b1111;
+        // N, Z, C, V
+        cc_in = 4'b0011; // in register
+        instr_condition = 4'b1011; // [31:28] instr
+        b_instr = 1;
+
         #20;
-        $display("CC in = %d", stat.cc_in);
-        $display("CC out = %d", stat.cc_out);
-        $display("S = %d", stat.S);
-        $display("Clk = %d", stat.clk);
+        
+        $display("CC in = %b", assert.cc_in);
+        $display("instruction condition = %b", assert.instr_condition);
+        $display("condition asserted? = %d", assert.asserted);
+        $display("Branch? = %d", ch.b_instr);
+        $display("Condition Handler = %d", ch.choose_ta_r_nop);
+
 
     end
 
-    Status_register stat(cc_in, S, cc_out, clk);
+    Cond_Is_Asserted assert(cc_in, instr_condition, asserted);
+    Condition_Handler ch(asserted, b_instr, choose_ta_r_nop);
+
+
+
 
 endmodule
