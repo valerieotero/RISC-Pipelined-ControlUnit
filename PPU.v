@@ -153,7 +153,7 @@ endmodule
 //Status Register
 module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk);
     //Recordar que el registro se declara aquí y luego
-    sr_subregister intermediate_reg (cc_in, cc_out, S, clk);
+    sr_subregister intermediate_reg (.cc_out(cc_out), .cc_in(cc_in), .S(S), .CLK(CLK));
 
     always @ (clk)
     begin
