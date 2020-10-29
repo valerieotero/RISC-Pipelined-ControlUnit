@@ -46,17 +46,20 @@ module PPU_tb;
     wire [3:0] cc_out;
     reg S = 0;
     
-    // initial begin
-    //     cc_in = 4'b1111;
-    //     #20;
-    //     $display("CC in = %d", stat.cc_in);
-    //     $display("CC out = %d", stat.cc_out);
-    //     $display("S = %d", stat.S);
-    //     $display("Clk = %d", stat.clk);
+    initial begin
+        cc_in = 4'b1111;
+        #20;
+        
+        $display("\n\n STATUS REGISTER");
 
-    // end
+        $display("\nCC in = %b", stat.cc_in);
+        $display("CC out = %b", stat.cc_out);
+        $display("S = %d", stat.S);
+        $display("Clk = %d\n\n", stat.clk);
 
-    // Status_register stat(cc_in, S, cc_out, clk);
+    end
+
+    Status_register stat(cc_in, S, cc_out, clk);
 
     
     
@@ -72,12 +75,13 @@ module PPU_tb;
         b_instr = 1;
 
         #20;
-        
-        $display("CC in = %b", assert.cc_in);
+        $display("\n\n CONDITION ASSERT & HANDLER");
+
+        $display("\nCC in = %b", assert.cc_in);
         $display("instruction condition = %b", assert.instr_condition);
         $display("condition asserted? = %d", assert.asserted);
         $display("Branch? = %d", ch.b_instr);
-        $display("Condition Handler = %d", ch.choose_ta_r_nop);
+        $display("Condition Handler = %d\n", ch.choose_ta_r_nop);
 
 
     end
