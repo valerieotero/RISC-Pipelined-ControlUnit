@@ -1,73 +1,138 @@
 //PPU
-/*
-    //IF Stage
-    mux_2x1_Stages(PC4, TA, CH_sig, PCin);
-    inst_ram256x8(DataOut, input Enable, PCout);
-
-    //IF/ID reg
-    //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
-    //                           output reg[3:0] ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, output reg[11:0] ID_Bit11_0,
-    //                           output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
-    //                           input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
-    IF_ID_pipeline_register(ID_Bit23_0, Next_PC, S,
-                                ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
-                                ID_Bit15_12, ID_Bit31_0,
-                                nop, Hazard_Unit_Ld, clk, PC4, ram_instr, DataOut);
-
-    
-    
-    //ID_Stage
-    Status_register(cc_in, S, cc_out, clk);
-    // este es el general RF
-   // register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK);
-    
-    register_file(PA, PB, PD, PW, PCin, PCout, cc_out[1], ID_Bit19_16, ID_Bit3_0, SD, RFLd, PCLd, CLK);
-
-    //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output MUX_Out);
-    //MUX1
-    mux_4x2_ID(A_O, PW, M_O, PA, A, register_file_port_MUX1_in);
-    //MUX2
-    mux_4x2_ID(A_O, PW, M_O, PB, B, register_file_port_MUX2_in);
-    /MUX3
-    mux_4x2_ID(A_O, PW, M_O, PD, C, register_file_port_MUX3_in);
-
-    //control_unit(output ID_B_instr, ALUSrc, RegDst,  
-    //                MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
-    //               input clk, input [31:0] A); 
-    //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
-
-    control_unit(output ID_B_instr, ALUSrc, RegDst,  
-                    MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
-                    input clk, ID_Bit31_0);
+module main();
+        //IF Stage
+        //para escoger entre TA & PC+4
+        mux_2x1_Stages(PC4, TA, choose_ta_r_nop, PCin);
+        inst_ram256x8(DataOut, input Enable, PCout);
+        //para conseguir PC+4
+        alu(PCout,4'b0100, 4'b0100, cc_out[1], PC4, output N, Z, C, V);
 
 
+        //IF/ID reg
+        //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
+        //                           output reg[3:0] ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, output reg[11:0] ID_Bit11_0,
+        //                           output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
+        //                           input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
+        IF_ID_pipeline_register(ID_Bit23_0, Next_PC, S,
+                                    ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
+                                    ID_Bit15_12, ID_Bit31_0,
+                                    choose_ta_r_nop, Hazard_Unit_Ld, clk, PC4, ram_instr, DataOut);
+
+        
+        
+        //ID_Stage
+        Status_register(cc_main_alu_out, S, cc_out, clk);
+        
+        //SEx4
+
+        //para conseguir TA
+        //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output N, Z, C, V);
+        alu(SEx4_out,ID_Next_PC, 4'b0100, cc_out[1], TA, output N, Z, C, V);
+
+        // este es el general RF
+        // register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK);
+        
+        register_file(PA, PB, PD, PW, PCin, PCout, cc_out[1], ID_Bit19_16, ID_Bit3_0, SD, RFLd, PCLd, CLK); //falta RW = WB_Bit15_12_out
+
+        //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output MUX_Out);
+        //MUX1
+        mux_4x2_ID(A_O, PW, M_O, PA, A, register_file_port_MUX1_in);
+        //MUX2
+        mux_4x2_ID(A_O, PW, M_O, PB, B, register_file_port_MUX2_in);
+        /MUX3
+        mux_4x2_ID(A_O, PW, M_O, PD, C, register_file_port_MUX3_in);
+
+        //control_unit(output ID_B_instr, ALUSrc, RegDst,  
+        //                MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
+        //               input clk, input [31:0] A); 
+        //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
+
+        control_unit(ID_B_instr, ALUSrc, RegDst, MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, C_U_out, 
+                        clk, ID_Bit31_0);
+
+        //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
+        mux_2x1_ID(C_U_out, NOP_S, input HF_U, ID_MUX_2x1_ID_Out);
 
 
 
-    ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,
-                                output reg [3:0] EX_Bit15_12_out, EX_ALU_opcodes_out,
-                                output reg [11:0] EX_Bit11_0_out,
-                                output reg [7:0] EX_addresing_modes_out,
-                                output reg EX_branch_instr_out, EX_load_instr_out, EX_RF_enable_out, EX_shifter_imm_out,
-                                EX_mem_size_out, EX_mem_read_write_out,
+        //ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,
+        //                            output reg [3:0] EX_Bit15_12_out, EX_ALU_opcodes_out,
+        //                            output reg [11:0] EX_Bit11_0_out,
+        //                            output reg [7:0] EX_addresing_modes_out,
+        //                            output reg EX_branch_instr_out, EX_load_instr_out, EX_RF_enable_out, EX_shifter_imm_out,
+        //                            EX_mem_size_out, EX_mem_read_write_out,
+        //
+        //                            input [31:0] register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in,
+        //                            input [3:0] ID_Bit15_12_in, ID_ALU_opcodes_in, 
+        //                            input [11:0] ID_Bit11_0_in,
+        //                            input [7:0] ID_addresing_modes_in,
+        //                            input ID_branch_instr_in, ID_load_instr_in, ID_RF_enable_in, ID_shifter_imm_in,
+        //                            ID_mem_size_in, ID_mem_read_write_in, input clk);    
 
-                                input [31:0] register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in,
-                                input [3:0] ID_Bit15_12_in, ID_ALU_opcodes_in, 
-                                input [11:0] ID_Bit11_0_in,
-                                input [7:0] ID_addresing_modes_in,
-                                input ID_branch_instr_in, ID_load_instr_in, ID_RF_enable_in, ID_shifter_imm_in,
-                                ID_mem_size_in, ID_mem_read_write_in, input clk);    
+        ID_EX_pipeline_register(EX_register_file_port_MUX1_out, EX_register_file_port_MUX2_out, EX_register_file_port_MUX3_out,
+                                        EX_Bit15_12_out, 
+                                        output reg [11:0] EX_Bit11_0_out,
+                                        output reg [7:0] EX_addresing_modes_out,
+                                        EX_MUX_2x1_ID_Out,
+                                        EX_mem_size_out, EX_mem_read_write_out,
 
-*/
+                                        register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in,
+                                        ID_Bit15_12_in,
+                                        input [11:0] ID_Bit11_0_in,
+                                        ID_addresing_modes_in,
+                                        ID_MUX_2x1_ID_Out,
+                                        ID_mem_size_in, ID_mem_read_write_in, input clk);    
+
+
+
+
+        //MAIN ALU    
+        //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V);
+        alu(EX_register_file_port_MUX1_out, EX_MUX_2X1_OUT, EX_MUX_2x1_ID_Out[5:2], cc_out[1], A_O, cc_main_alu_out);
+
+        //Sign_Shift_Extender (input [2:0] shifter_op,input [1:0] by_imm_shift, input [31:0]A, input [11:0]B, output reg [31:0]shift_result, output reg C);
+        Sign_Shift_Extender (input [2:0] shifter_op,input [1:0] by_imm_shift, EX_register_file_port_MUX2_out, ID_Bit31_0, SSE_out, output reg C);
+
+        //mux between Shifter extender & ALU
+        mux_2x1_Stages(EX_register_file_port_MUX2_out, SSE_out, EX_MUX_2x1_ID_Out[6], EX_MUX_2X1_OUT);
+
+        //Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
+        Cond_Is_Asserted (cc_out, ID_Bit31_28, asserted);
+
+        //Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
+        Condition_Handler(asserted, ID_B_instr, choose_ta_r_nop);
+
+        //module EX_MEM_pipeline_register(input [31:0] MUX3, Alu_output, input [3:0] EX_Bit15_12, input [3:0] cc_alu_out, input [1:0] C_U_SIGNAL, input clk
+                                        output [31:0] MEM_Alu_Out, MEM_MUX3, output [3:0] MEM_Bit15_12, output [1:0] MEM_load_rf);
+        EX_MEM_pipeline_register(EX_register_file_port_MUX3_out, A_O, EX_Bit15_12_out, cc_main_alu_out, EX_MUX_2x1_ID_Out[1:0], clk,
+                                MEM_A_O, MEM_register_file_port_MUX3_out, MEM_Bit15_12_out, MEM_load_rf_out);
+
+        //module data_ram256x8(output reg[31:0] DataOut, input Enable, ReadWrite, input[31:0] Address, input[31:0] DataIn, input [1:0] Size);
+        data_ram256x8(Data_RAM_Out, input Enable, ReadWrite, MEM_A_O, MEM_register_file_port_MUX3_out, input [1:0] Size);
+
+        //multiplexer in MEM Stage
+        mux_2x1_Stages(Data_RAM_Out, MEM_A_O, MEM_load_rf_out[1], M_O);
+
+        //module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input [1:0] MEM_load_rf, input clk
+                                        output [31:0] wb_alu_out, wb_data_r_out,output [3:0] wb_bit15_12, output [1:0] wb_load_rf);
+        MEM_WB_pipeline_register(MEM_A_O, Data_RAM_Out, MEM_Bit15_12_out, MEM_load_rf_out, clk
+                                        WB_A_O, WB_Data_RAM_Out, WB_Bit15_12_out, WB_load_rf_out);
+
+        //multiplexer in WB Stage
+        mux_2x1_Stages(WB_Data_RAM_Out, WB_A_O, MEM_load_rf_out[1], PW);
+
+
+        //Hazard-Forward Unit
+endmodule
+
 
 
 
 
 
 //CONTROL UNIT
-module control_unit(output ID_B_instr, ID_load_instr, ID_RF_instr, ID_shift_imm, ALUSrc, RegDst,  
-                    MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [3:0] ID_ALU_op, 
-                    input clk, input [31:0] A);
+module control_unit(output ID_B_instr, ALUSrc, RegDst, MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
+                    input clk, input [31:0] A); 
 
     reg [2:0] instr;
     
@@ -426,9 +491,9 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output r
                                input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
 
     always@(posedge clk)
-        begin
+    begin
         
-        end
+    end
 endmodule
 
 
@@ -447,7 +512,7 @@ module ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, re
                                input ID_branch_instr_in, ID_load_instr_in, ID_RF_enable_in, ID_shifter_imm_in,
                                ID_mem_size_in, ID_mem_read_write_in, input clk);
 
-always@(posedge clk)
+    always@(posedge clk)
     begin
         //Control Unit signals        
         EX_shifter_imm_out = ID_shifter_imm_in; 
@@ -472,17 +537,19 @@ endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register(input clk);
+module EX_MEM_pipeline_register(EX_register_file_port_MUX3_out, A_O, EX_Bit15_12_out, cc_main_alu_out, EX_MUX_2x1_ID_Out[1:0], clk,
+                                MEM_A_O, MEM_register_file_port_MUX3_out, MEM_Bit15_12_out, MEM_load_rf_out);
 
     always@(posedge clk)
-        begin
+    begin
             
-        end
+    end
 endmodule
 
 
 //MEM/WB PIPELINE REGISTER
-module MEM_WB_pipeline_register(input clk);
+module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input [1:0] MEM_load_rf, input clk
+                                    output [31:0] wb_alu_out, wb_data_r_out,output [3:0] wb_bit15_12, output [1:0] wb_load_rf);
 
     always@(posedge clk)
         begin

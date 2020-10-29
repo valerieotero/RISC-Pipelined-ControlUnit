@@ -1,7 +1,7 @@
 /*Creator: Ashley Ortiz Colon
 */
 
-module alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output N, Z, C, V);
+module alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out); // N, Z, C, V);
 
     reg [32:0] OPS_result;
 
@@ -11,10 +11,10 @@ module alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output N
     integer tv = 0; 
     integer ol = 0;
 
-    assign N = tn; //Negative
-    assign Z = tz; //Zero 
-    assign C = tc; //Carry Out
-    assign V = tv; //Overflow
+    assign Alu_Out[3] = tn; //Negative
+    assign Alu_Out[2] = tz; //Zero 
+    assign Alu_Out[1] = tc; //Carry Out
+    assign Alu_Out[0] = tv; //Overflow
 
     // integer mod_cond_codes;
 
