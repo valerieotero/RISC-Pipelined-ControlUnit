@@ -1,5 +1,6 @@
 `include "register_file/PF1_Nazario_Morales_Victor_rf.v"
 `include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_Sign_Shift_Extender.v"
+`include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_ALU.v"
 
 
 //PPU
@@ -700,17 +701,6 @@ module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
             1'b1:
             salida = B;
         endcase
-
-    end
-
-endmodule
-
-
-//ALU
-module alu(output N, Z, C, V, PCout, output [3:0] cc_out, input [3:0] four_bit_input1, four_bit_input2, input PC4);
-
-    always@(*)
-    begin
 
     end
 
