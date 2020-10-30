@@ -494,7 +494,7 @@ endmodule
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
                                output reg[3:0] ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, output reg[11:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
-                               input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
+                               input nop, Hazard_Unit_Ld, clk, Lde, input [23:0] PC4, ram_instr, input [31:0] DataOut);
 
     always@(posedge clk)
     begin
@@ -521,23 +521,23 @@ module ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, re
     always@(posedge clk)
     begin
         //Control Unit signals        
-        EX_shifter_imm_out = ID_shifter_imm_in; 
-        EX_ALU_opcodes_out = ID_ALU_opcodes_in;
-        EX_load_instr_out = ID_load_instr_in;
-        EX_RF_enable_out = ID_RF_enable_in;
-        EX_branch_instr_out = ID_branch_instr_in;       
-        EX_mem_size_out = ID_mem_size_in;
-        EX_mem_read_write_out = ID_mem_read_write_in;
+        EX_shifter_imm_out <= ID_shifter_imm_in;
+        EX_ALU_opcodes_out <= ID_ALU_opcodes_in;
+        EX_load_instr_out <= ID_load_instr_in;
+        EX_RF_enable_out <= ID_RF_enable_in;
+        EX_branch_instr_out <= ID_branch_instr_in;
+        EX_mem_size_out <= ID_mem_size_in;
+        EX_mem_read_write_out <= ID_mem_read_write_in;
 
         //Register File operands
-        register_file_port_MUX1_out = register_file_port_MUX1_in;
-        register_file_port_MUX2_out = register_file_port_MUX2_in;      
-        register_file_port_MUX3_out = register_file_port_MUX3_in;
+        register_file_port_MUX1_out <= register_file_port_MUX1_in;
+        register_file_port_MUX2_out <= register_file_port_MUX2_in;
+        register_file_port_MUX3_out <= register_file_port_MUX3_in;
 
         //Instruction bits
-        EX_Bit15_12_out = ID_Bit15_12_in;
-        EX_Bit11_0_out = ID_Bit11_0_in;
-        EX_addresing_modes_out = ID_addresing_modes_in; //22-20
+        EX_Bit15_12_out <= ID_Bit15_12_in;
+        EX_Bit11_0_out <= ID_Bit11_0_in;
+        EX_addresing_modes_out <= ID_addresing_modes_in; //22-20
     end
 endmodule
 
