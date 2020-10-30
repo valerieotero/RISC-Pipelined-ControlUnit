@@ -10,7 +10,7 @@ module main(input clk);
         mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCin);
         inst_ram256x8 inst_ram(DataOut, Enable, PCout);
         //para conseguir PC+4
-        alu alu_1(PCout,4'b0100, 4'b0100, cc_out[1], PC4, N, Z, C, V);
+        alu alu_1(PCout,32'd4, 4'b0100, cc_out[1], PC4, vv);
 
 
         //IF/ID reg
@@ -37,7 +37,7 @@ module main(input clk);
         // este es el general RF
         // register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK);
         
-        register_file register_file_1(PA, PB, PD, PW, PCin, PCout, cc_out[1], ID_Bit19_16, ID_Bit3_0, SD, RFLd, PCLd, CLK); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCin, PCout, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PCLd, CLK); //falta RW = WB_Bit15_12_out
 
         //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output MUX_Out);
         //MUX1
@@ -124,7 +124,8 @@ module main(input clk);
                                         WB_A_O, WB_Data_RAM_Out, WB_Bit15_12_out, WB_load_rf_out);
 
         //multiplexer in WB Stage
-        mux_2x1_Stages mux_2x1_stages_4(WB_Data_RAM_Out, WB_A_O, MEM_load_rf_out[1], PW);
+        reg MEM_l_rf =  MEM_load_rf_out[1];
+        mux_2x1_Stages mux_2x1_stages_4(WB_Data_RAM_Out, WB_A_O, MEM_l_rf, PW);
 
 
         //Hazard-Forward Unit
@@ -517,44 +518,52 @@ module ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, re
     always@(posedge clk)
     begin
         //Control Unit signals        
-        EX_shifter_imm_out = ID_shifter_imm_in; 
-        EX_ALU_opcodes_out = ID_ALU_opcodes_in;
-        EX_load_instr_out = ID_load_instr_in;
-        EX_RF_enable_out = ID_RF_enable_in;
-        EX_branch_instr_out = ID_branch_instr_in;       
-        EX_mem_size_out = ID_mem_size_in;
-        EX_mem_read_write_out = ID_mem_read_write_in;
+        EX_shifter_imm_out <= ID_shifter_imm_in; 
+        EX_ALU_opcodes_out <= ID_ALU_opcodes_in;
+        EX_load_instr_out <= ID_load_instr_in;
+        EX_RF_enable_out <= ID_RF_enable_in;
+        EX_branch_instr_out <= ID_branch_instr_in;       
+        EX_mem_size_out <= ID_mem_size_in;
+        EX_mem_read_write_out <= ID_mem_read_write_in;
 
         //Register File operands
-        register_file_port_MUX1_out = register_file_port_MUX1_in;
-        register_file_port_MUX2_out = register_file_port_MUX2_in;      
-        register_file_port_MUX3_out = register_file_port_MUX3_in;
+        register_file_port_MUX1_out <= register_file_port_MUX1_in;
+        register_file_port_MUX2_out <= register_file_port_MUX2_in;      
+        register_file_port_MUX3_out <= register_file_port_MUX3_in;
 
         //Instruction bits
-        EX_Bit15_12_out = ID_Bit15_12_in;
-        EX_Bit11_0_out = ID_Bit11_0_in;
-        EX_addresing_modes_out = ID_addresing_modes_in; //22-20
+        EX_Bit15_12_out <= ID_Bit15_12_in;
+        EX_Bit11_0_out <= ID_Bit11_0_in;
+        EX_addresing_modes_out <= ID_addresing_modes_in; //22-20
     end
 endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register(EX_register_file_port_MUX3_out, A_O, EX_Bit15_12_out, cc_main_alu_out, EX_MUX_2x1_ID_Out[1:0], clk,
-                                MEM_A_O, MEM_register_file_port_MUX3_out, MEM_Bit15_12_out, MEM_load_rf_out);
+module EX_MEM_pipeline_register(input [31:0] EX_register_file_port_MUX3_out, A_O, input [3:0] EX_Bit15_12_out, cc_main_alu_out, input [1:0] EX_MUX_2x1_ID_Out[1:0], input clk,
+                                output [31:0] MEM_A_O, MEM_register_file_port_MUX3_out, output [3:0] MEM_Bit15_12_out, output [1:0] MEM_load_rf_out);
 
     always@(posedge clk)
     begin
-            
+        MEM_A_O <= A_O;
+        MEM_register_file_port_MUX3_out<=EX_register_file_port_MUX3_out;
+        MEM_Bit15_12_out <= EX_Bit15_12_out;
+        MEM_load_rf_out<=EX_MUX_2x1_ID_Out;
+
     end
 endmodule
 
 
 //MEM/WB PIPELINE REGISTER
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input [1:0] MEM_load_rf, input clk,
-                                    output [31:0] wb_alu_out, wb_data_r_out,output [3:0] wb_bit15_12, output [1:0] wb_load_rf);
+                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg [1:0] wb_load_rf);
 
     always@(posedge clk)
         begin
+            wb_alu_out<=alu_out;
+            wb_data_r_out<=data_r_out;
+            wb_bit15_12<=bit15_12;
+            wb_load_rf<=MEM_load_rf;
             
         end
 endmodule
@@ -706,7 +715,33 @@ module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
 
 endmodule
 
+module SExtender(input reg [23:0] in, output signed [31:0] out1);
 
+    reg signed [31:0] twoscomp;
+    reg signed [31:0] result;
+    reg signed [31:0] shift_result; 
+    reg signed [31:0] temp_reg;
+
+
+    assign out1 = result; 
+
+    always@(*)
+    begin
+
+        in = {8'b0,in};
+        twoscomp = ~(in) + 1'b1;
+
+        for(integer i=0; i<2; i= i+1)begin
+                            // tc = temp_reg[31];
+            temp_reg = {twoscomp[30:0], 1'b0};
+        end
+                        // C = tc;
+        shift_result = temp_reg;
+
+        result = shift_result * 4;
+
+    end
+endmodule
 /*
 //HAZARD UNIT
 module hazard_unit(output reg [32:0] MUX1_signal, MUX2_signal, MUX3_signal, 
