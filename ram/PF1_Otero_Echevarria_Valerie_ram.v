@@ -20,56 +20,51 @@ endmodule
               
 
 //DATA MEMORY
-module data_ram256x8(output reg[31:0] DataOut, input Enable, ReadWrite, input[31:0] Address, input[31:0] DataIn, input [1:0] Size);
+module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input [1:0] Size);
 
     reg[7:0] Mem[0:255]; //256 localizaciones 
 
-    always @ (Enable, ReadWrite)
-        if (Enable) //When Enable = 1        
-        begin
+    always @ (DataOut, ReadWrite, Address, DataIn, Size)       
 
-            casez(Size) //"casez" to ignore dont care values
-            2'b00: //BYTE
-            begin 
-                if (ReadWrite) //When Write 
-                begin
-                    Mem[Address] = DataIn; 
-                end
-                else //When Read
-                begin
-                    DataOut= Mem[Address];
-                end                
-            end
-
-              2'b01: //HALF-WORD
+        casez(Size) //"casez" to ignore dont care values
+        2'b00: //BYTE
+        begin 
+            if (ReadWrite) //When Write 
             begin
-                if (ReadWrite) //When Write 
-                begin
-                    Mem[Address] = DataIn[15:8]; 
-                    Mem[Address + 1] = DataIn[7:0]; 
-                end
-                else //When Read
-                begin
-                     DataOut = {Mem[Address+0], Mem[Address+1]}; 
-                end  
+                Mem[Address] = DataIn; 
             end
-
-            2'b10: //WORD
+            else //When Read
             begin
-                if (ReadWrite) //When Write 
-                begin
-                    Mem[Address] = DataIn[31:24];
-                    Mem[Address + 1] = DataIn[23:16];
-                    Mem[Address + 2] = DataIn[15:8]; 
-                    Mem[Address + 3] = DataIn[7:0]; 
-                end                 
-                else //When Read
-                begin
-                     DataOut = {Mem[Address + 0], Mem[Address + 1], Mem[Address + 2], Mem[Address + 3]}; 
-                end  
-            end
-          
-            endcase
-            
+                DataOut= Mem[Address];
+            end                
         end
+
+            2'b01: //HALF-WORD
+        begin
+            if (ReadWrite) //When Write 
+            begin
+                Mem[Address] = DataIn[15:8]; 
+                Mem[Address + 1] = DataIn[7:0]; 
+            end
+            else //When Read
+            begin
+                    DataOut = {Mem[Address+0], Mem[Address+1]}; 
+            end  
+        end
+
+        2'b10: //WORD
+        begin
+            if (ReadWrite) //When Write 
+            begin
+                Mem[Address] = DataIn[31:24];
+                Mem[Address + 1] = DataIn[23:16];
+                Mem[Address + 2] = DataIn[15:8]; 
+                Mem[Address + 3] = DataIn[7:0]; 
+            end                 
+            else //When Read
+            begin
+                    DataOut = {Mem[Address + 0], Mem[Address + 1], Mem[Address + 2], Mem[Address + 3]}; 
+            end  
+        end        
+    endcase      
 endmodule
