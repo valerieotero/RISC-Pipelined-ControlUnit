@@ -5,19 +5,18 @@
 
 
 //INSTRUCTION MEMORY 
-module inst_ram256x8(output reg[31:0] DataOut, input Enable, input [31:0]Address);
+module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
-    always @ (Enable)
-        if (Enable) //When Enable = 1            
-            if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
-            begin    
-                DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
-            end
-            else
-                DataOut= Mem[Address];   
-endmodule                              
+    always @ (DataOut,Address)                
+        if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
+        begin    
+            DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
+        end
+        else
+            DataOut= Mem[Address];   
+endmodule                             
               
 
 //DATA MEMORY
