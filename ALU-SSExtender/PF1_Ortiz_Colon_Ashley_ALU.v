@@ -1,7 +1,7 @@
 /*Creator: Ashley Ortiz Colon
 */
 
-module alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out); // N, Z, C, V);
+module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
 
     reg [32:0] OPS_result;
 
@@ -19,9 +19,8 @@ module alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [
     // integer mod_cond_codes;
 
     assign S = OPS_result[31:0];
-    always@(OPS,A,B,Cin)
-    
-
+   
+    always@(*)//OPS,A,B,Cin)
     begin
 
         // mod_cond_codes = B[20];
