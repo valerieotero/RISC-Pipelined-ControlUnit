@@ -2,10 +2,10 @@
 module ramintr_tb;
 
 integer file, fw, code, i; reg [31:0] data;
-reg Enable;
+reg clk;
 reg [31:0] Address; wire [31:0] DataOut;
 
-inst_ram256x8 ram1 (DataOut, Enable, Address );
+inst_ram256x8 ram1 (DataOut, Address);
 
 initial
     begin
@@ -22,18 +22,18 @@ end
 
 initial begin
     fw = $fopen("inst_memcontent.txt", "w");
-    Enable = 1'b0; 
+    clk = 1'b0; 
     Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-    repeat (4) begin
-    #5 Enable = 1'b1;
-    #5 Enable = 1'b0;
-    Address = Address + 4;
+    repeat (9) begin
+    #5 clk = 1'b1;
+    #5 clk = 1'b0;
+    Address = Address + 4;    
 end
 $finish;
-end
-always @ (posedge Enable)
+end 
+always @ (posedge clk)
     begin
     #1;   
-    $fdisplay(fw,"Data en %d = %h %d", Address, DataOut, $time);
+    $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);
 end
 endmodule

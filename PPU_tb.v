@@ -3,11 +3,10 @@ module PPU_tb;
 
     /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
 
-    integer file, fw, code, i; reg [31:0] data;
-    reg Enable;
+    integer file, fw, code, i; reg [31:0] data;    
     reg [31:0] Address; wire [31:0] DataOut;
 
-    inst_ram256x8 ram1 (DataOut, Enable, Address );
+    inst_ram256x8 ram1 (DataOut, Address);
 
     initial
         begin
@@ -20,24 +19,7 @@ module PPU_tb;
         end
 
     $fclose(file);  
-    end
-
-    initial begin
-        fw = $fopen("ramintr_content.txt", "w");
-        Enable = 1'b0; 
-        Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-        repeat (9) begin
-        #5 Enable = 1'b1;
-        #5 Enable = 1'b0;
-        Address = Address + 4;
-    end
-    $finish;
-    end
-    always @ (posedge Enable)
-        begin
-        #1;   
-        $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);
-    end
+    end   
 
 
     /*-------------------------------------- STATUS REGISTER --------------------------------------*/
