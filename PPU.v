@@ -557,6 +557,18 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output r
             ID_Bit11_0 <= 12'b0;
         end
 
+    $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register --------------------------------------*/\n");   
+
+     $display("ID_Bit23_0 = %b | ID_Next_PC =%b | S=%b | ID_Bit19_16=%b | ID_Bit3_0=%b\n",
+                               ID_Bit23_0, ID_Next_PC, S,
+                               ID_Bit19_16, ID_Bit3_0);
+
+    $display("ID_Bit31_28=%b | ID_Bit11_0=%b | ID_Bit15_12=%b | ID_Bit31_0=%b | nop=%b | Hazard_Unit_Ld=%b\n",
+                               ID_Bit31_28, ID_Bit11_0,
+                               ID_Bit15_12, ID_Bit31_0,
+                               nop, Hazard_Unit_Ld);
+                               
+     $display("clk=%b | Lde=%b | PC4=%b | ram_instr=%b | DataOut=%b\n", clk, Lde, PC4, ram_instr, DataOut);    
 
     end
 endmodule
@@ -776,13 +788,15 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
     reg [31:0] in1;
     assign out1 = result; 
 
+    integer i=0;
+
     always@(*)
     begin
 
         in1 = {8'b0, in[23:0]};
         twoscomp = ~(in1) + 1'b1;
 
-        // for(integer i=0; i<2; i= i+1)begin
+        for(i=0; i<2; i= i+1)begin
                             // tc = temp_reg[31];
         temp_reg = {twoscomp[29:0], 2'b0};
         // end
@@ -848,4 +862,4 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, MUXCo
         
     end
 
-endmodule 
+endmodule
