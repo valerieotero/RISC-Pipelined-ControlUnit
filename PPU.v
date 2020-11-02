@@ -67,7 +67,7 @@ module main(input clk);
         //               input clk, input [31:0] A); 
         //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-        control_unit control_unit(ID_B_instr, ALUSrc, RegDst, MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, C_U_out, 
+        control_unit control_unit(ID_B_instr, MemReadWrite, C_U_out, 
                         clk, ID_Bit31_0);
 
         //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
@@ -164,7 +164,7 @@ endmodule
 
 
 //CONTROL UNIT
-module control_unit(output ID_B_instr, ALUSrc, RegDst, MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
+module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, 
                     input clk, input [31:0] A); 
 
     reg [2:0] instr;
@@ -323,11 +323,16 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, inpu
     //Recordar que el registro se declara aquí y luego
     always @ (posedge clk)
     begin
-        if(clk == 0)
-            cc_out = 4'b0;
-        else
-            if(S == 1)
-                cc_out <= cc_in;
+        if (S)
+        //     cc_out <= 5'b00000;
+        // else 
+            cc_out <= cc_in;
+    
+        // if(clk == 0)
+            // cc_out = 4'b0;
+        // else
+        // if(S == 1)
+        //     cc_out <= cc_in;
     end
 
     //    begin
@@ -777,10 +782,10 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
         in1 = {8'b0, in[23:0]};
         twoscomp = ~(in1) + 1'b1;
 
-        for(integer i=0; i<2; i= i+1)begin
+        // for(integer i=0; i<2; i= i+1)begin
                             // tc = temp_reg[31];
-            temp_reg = {twoscomp[30:0], 1'b0};
-        end
+        temp_reg = {twoscomp[29:0], 2'b0};
+        // end
                         // C = tc;
         shift_result = temp_reg;
 

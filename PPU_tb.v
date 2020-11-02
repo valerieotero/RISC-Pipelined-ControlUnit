@@ -50,14 +50,22 @@ module PPU_tb;
     
     initial begin
         cc_in = 4'b1111;
-        #20;
-        
-        $display("\n\n STATUS REGISTER");
+        #25;
+        // clk = 1'b0;
+        //S = 1'b0;
+    
+        repeat (2)begin
+            $display("\n\n STATUS REGISTER");
 
-        $display("\nCC in = %b", stat.cc_in);
-        $display("CC out = %b", stat.cc_out);
-        $display("S = %d", stat.S);
-        $display("Clk = %d\n\n", stat.clk);
+            $display("\nCC in = %b", stat.cc_in);
+            $display("CC out = %b", stat.cc_out);
+            $display("S = %d", stat.S);
+            $display("Clk = %d\n\n", stat.clk);
+            
+            S = S + 1'b1;
+            clk = 0;
+        end
+        // S = S + 1'b1;
 
     end
 
@@ -66,7 +74,7 @@ module PPU_tb;
     
     
     /*-------------------------------------- CONDITION ASSERTED AND HANDLER --------------------------------------*/
-    // reg [31:0] instr;
+    reg [31:0] instr;
     reg [3:0] instr_condition;
     wire choose_ta_r_nop;
     reg b_instr;
@@ -100,22 +108,43 @@ module PPU_tb;
     /*-------------------------------------- 4*SEXTENDER  --------------------------------------*/
     wire [31:0] SEx4_o;
     reg [31:0] instr1;
-    reg [23:0] instr;
+    reg [23:0] instr2;
 
 
     initial begin
         // if(b_instr == 1 && instr[24] == 1)
             // SExtender se(instr, SEx4_out);
         instr1 = 32'b11011011000000000000000000000001;
-        instr = instr1[23:0];
+        instr2 = instr1[23:0];
 
         #20;
-        $display("\instruction = %b", instr);
+        $display("\instruction = %b", instr2);
         $display("instruction extended = %b", SEx4_o);
 
     end
 
-    SExtender set(instr, SEx4_o);
+    SExtender set(instr2, SEx4_o);
+    /* ---------------------------------- CONTORL UNIT ----------------------------------------------  */
 
+    wire ID_B_instr;
+    wire MemReadWrite;
+    wire [6:0] C_U_out;
+    //reg  clk;
+    reg [31:0] ID_Bit31_0;
+
+    initial begin
+        #40;
+        ID_Bit31_0 = 32'b11011011000000000000000000000001;
+
+        $display("\nID_B = %b", control_unit.ID_B_instr);
+        $display("MemRW = %b", control_unit.MemReadWrite);
+        $display("ID_shift_imm = %b", control_unit.C_U_out[6]);
+        $display("ID_alu= %b", control_unit.C_U_out[5:2]);
+        $display("ID_load = %b", control_unit.C_U_out[1]);
+        $display("ID_RF= %b", control_unit.C_U_out[0]);
+        $display("Instruction= %b", ID_Bit31_0);
+    end
+
+    control_unit control_unit(ID_B_instr, MemReadWrite, C_U_out, clk, ID_Bit31_0);
 
 endmodule

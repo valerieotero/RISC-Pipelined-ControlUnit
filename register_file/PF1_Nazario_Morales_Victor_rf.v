@@ -183,7 +183,7 @@ module tester;
     //without trailing zeroes, binary otherwise.
     always @ (CLK)
     begin
-        $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd);
+        // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd);
     end
 
     register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK));
@@ -309,7 +309,7 @@ module tester;
         SA = 4'b1010;
         //Showing output through PA, after changing the word in Register 10
         //$monitor ("Output of Register ", SA, " (using PA) (After Change): PA: %0d",PA);
-        $monitor("Output of Register ", SPCout, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
+        // $monitor("Output of Register ", SPCout, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
     $finish;
     end
     
