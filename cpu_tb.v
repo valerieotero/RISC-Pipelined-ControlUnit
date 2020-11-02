@@ -6,10 +6,10 @@ module PPU_tb;
     /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
 
     integer file, fw, code, i; reg [31:0] data;
-    reg clk = 1'b1;
+    reg clk = 1;
     reg [31:0] Address; wire [31:0] DataOut;
 
-    main PPU(clk);
+    //main PPU(clk);
     inst_ram256x8 ram1 (DataOut, Address);
 
     initial
@@ -26,13 +26,15 @@ module PPU_tb;
     end
 
     /*-------------------------------------- Clock --------------------------------------*/
- 
+
+    main PPU(.clk(clk));
     
-    initial begin
-        repeat(37) //9instr x 4pipelines = 36 + 1 = 37
-         begin
-            #1 clk = 1'b1;
-            #1 clk = 1'b0;           
-         end
-    end
-endmodule
+        initial       
+            begin 
+            Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
+            clk = 0;
+            end
+
+            always
+            #1 clk = ~clk;
+        endmodule

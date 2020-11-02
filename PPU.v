@@ -552,7 +552,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output r
             ID_Bit11_0 <= 12'b0;
         end
 
-    $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register --------------------------------------*/\n");   
+  /*  $display("\n\n\n-------------------------------------- IF_ID_pipeline_register --------------------------------------\n");   
 
      $display("ID_Bit23_0 = %b | ID_Next_PC =%b | S=%b | ID_Bit19_16=%b | ID_Bit3_0=%b\n",
                                ID_Bit23_0, ID_Next_PC, S,
@@ -564,7 +564,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output r
                                nop, Hazard_Unit_Ld);
                                
      $display("clk=%b | Lde=%b | PC4=%b | ram_instr=%b | DataOut=%b\n", clk, Lde, PC4, ram_instr, DataOut);    
-
+*/
     end
 endmodule
 
@@ -640,7 +640,8 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
     always @ (DataOut,Address)                
         if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
         begin    
-            DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
+            DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};    
+            $display("Dataout = %b\n\n", DataOut);            
         end
         else
             DataOut= Mem[Address];   
