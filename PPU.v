@@ -4,14 +4,14 @@
 
 
 //PPU
-module main(input clk1);
+module main(input clk);
 
     //Precharge
-    reg [31:0] PCout = 32'b0; //address instr Mem
+    wire [31:0] PCO; // = 32'b0; //address instr Mem
 
 
     //Inputs 
-    reg clk; //enable
+    // reg clk; //enable
 
 
     //wire 
@@ -20,16 +20,30 @@ module main(input clk1);
     wire [31:0] Next_PC, PC4, DAO; 
 
     wire [23:0] ID_Bit23_0;
-    wire [31:0] ID_Bit19_16, ID_Bit3_0;
-    wire [3:0] ID_Bit31_28, ID_Bit15_12, cc_alu_1;
+    wire [3:0] ID_Bit19_16, ID_Bit3_0;
+    wire [3:0] ID_Bit31_28, cc_alu_1;
+    wire [3:0] ID_Bit15_12;
     wire [11:0] ID_Bit11_0;
-    wire choose_ta_r_nop, IF_ID_Load;
+    wire choose_ta_r_nop = 1;
+    wire IF_ID_Load = 1;
                
     //register file
-    wire [31:0] PA, PB, PD, PW, PCin;
-    wire [3:0] WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD;
-    wire RFLd, PC_RF_ld;
+    wire [31:0] PA, PB, PD; 
+    wire [31:0] PW; // = 32'b0;
 
+    wire [31:0] PCin = 32'd4;
+    wire [3:0] WB_Bit15_12_out = 4'b0;
+    wire [3:0] SD; //ID_Bit19_16, ID_Bit3_0, SD;
+    wire RFLd = 1;
+    wire PC_RF_ld = 1;
+
+    //multiplexers 4x2
+    wire [31:0] A_O, M_O, mux_out_1, mux_out_2, mux_out_3; //PA, PB, PD,PW,
+    wire [1:0] MUX1_signal, MUX2_signal, MUX3_signal;
+
+    //Target Address
+    wire [31:0] SEx4_out, TA, PCI;
+    wire [3:0] cc_alu_2;
 
     
             
@@ -50,21 +64,41 @@ module main(input clk1);
 
         //IF Stage
         //para escoger entre TA & PC+4
-        //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
-        // mux_2x1_Stages mux_2x1_stages_1(.A(PC4), .B(TA), .sig(choose_ta_r_nop), .MUX_Out(PCin));
-        // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-        // inst_ram256x8 inst_ram(DataOut, PCout);
+        //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out); 0 ==A ; 1==B
+        mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
+        initial begin
+                #2;
+                $display(" ------- MUX 2x1 PCin (salida) -------- ");
+
+                $display("PC4 - 0 %b ", PC4);
+                $display("TA - 1 %b ", TA);
+                $display("choose_ta_r_nop %b ", choose_ta_r_nop);
+                $display("PCin %b ", PCI);
+            end
+        // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
+        // inst_ram256x8 inst_ram(DO, PCO);
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 
-        //     $display("PCout%b ", PCout);
-        //     $display("DataOut%b     PCout%b ", DataOut, PCout);
+        //     $display("PCout%b ", PCO);
+        //     $display("DataOut%b     PCout%b ", DO, PCO);
 
         // end 
 
         //para conseguir PC+4
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
-        alu alu_1(PCout, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
+        alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
+         initial begin
+                #2;
+                $display(" ------- ALU PC+4 -------- ");
+
+                $display("PCout _A %b ", PCO);
+                $display("Entrada B %b ", 32'd4);
+                $display("Suma A&B %b ", 4'b0100);
+                $display("Carry In %b ", 1'b0);
+                $display("PC + 4 %b ", PC4);
+                $display("Condition Codes %b ", cc_alu_1);
+            end 
 
 
         // //IF/ID reg
@@ -75,7 +109,7 @@ module main(input clk1);
         IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
                                     ID_Bit15_12, DAO,
-                                    choose_ta_r_nop, 1'b1, clk, PC4, DO);
+                                    choose_ta_r_nop, IF_ID_Load, clk, PC4, DO);
             initial begin
                 #2;
                 $display(" ------- IF_ID_PIPE REG -------- ");
@@ -101,11 +135,40 @@ module main(input clk1);
         
         // //SEx4
         // // SExtender(input reg [23:0] in, output signed [31:0] out1);
-        // SExtender se(ID_Bit23_0, SEx4_out);
-        // //para conseguir TA
-        // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
-        // alu alu_2(SEx4_out, Next_PC, 4'b0100, cc_out[1], TA, cc_alu_2);
+        SExtender se(ID_Bit23_0, SEx4_out);
+        initial begin
+                #2;
+                $display(" ------- 4x(SE) -------- ");
 
+                $display("IN_23bits %b ", ID_Bit23_0);
+                $display("SEx4_out %b ", SEx4_out);
+               
+            end 
+        // //para conseguir TA
+        //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
+        alu alu_2(SEx4_out, Next_PC, 4'b0100, 1'b0, TA, cc_alu_2);
+        initial begin
+                #2;
+                $display(" ------- ALU TARGET ADDRESS -------- ");
+
+                $display("SEx4_out %b ", SEx4_out);
+                $display("Next_PC %b ", Next_PC);
+                $display("Suma %b ",  4'b0100);
+                $display("CARRY IN %b ", 1'b0);
+                $display("Target Address %b ", TA);
+                $display("Condition Codes %b ", cc_alu_2);
+        end 
+
+        // mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCin);
+        // initial begin
+        //         #2;
+        //         $display(" ------- MUX 2x1 PCin (salida) -------- ");
+
+        //         $display("PC4 - 0 %b ", PC4);
+        //         $display("TA - 1 %b ", TA);
+        //         $display("choose_ta_r_nop %b ", choose_ta_r_nop);
+        //         $display("PCin %b ", PCin);
+        //     end
         // // este es el general RF
         // // register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd //hazaerd unit, PCLd, CLK);
         //  output [31:0] PA, PB, PD, PCout;
@@ -115,15 +178,71 @@ module main(input clk1);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
             
-        register_file register_file_1(PA, PB, PD, PW, PCin, PCout, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCin, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk); //falta RW = WB_Bit15_12_out
 
+          initial begin
+                #2;
+                $display(" ------- REGISTER FILE -------- ");
+
+                $display("PA %b ", PA);
+                $display("PB %b ", PB);
+                $display("PD %b ", PD);
+                $display("PW %b ", PW);
+                $display("PCin %b ", PCin);
+                $display("PCout %b ", PCO);
+                $display("RW %b ", WB_Bit15_12_out);
+                $display("SA %b ", ID_Bit19_16);
+                $display("SB %b ", ID_Bit3_0);
+                $display("SD %b", SD);
+                $display("RegFile LOAD %b ", RFLd);
+                $display("PC LOAD %b ", PC_RF_ld);
+                $display("clk %b", clk);
+
+            end 
         // //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output MUX_Out);
         // //MUX1
-        // mux_4x2_ID mux_4x2_ID_1(A_O, PW, M_O, PA, MUX1_signal, register_file_port_MUX1_in);
+        mux_4x2_ID mux_4x2_ID_1(A_O, PW, M_O, PA, MUX1_signal, mux_out_1);
+        
+          initial begin
+                #2;
+                $display(" ------- MUX 4x2 ID A -------- ");
+
+                $display("PA %b ", PA);
+                $display("A_O %b ", A_O);
+                $display("M_O %b ", M_O);
+                $display("PW %b ", PW);
+                $display("MUX1_signal %b ", MUX1_signal);
+                $display("mux_out_1 %b ", mux_out_1);
+              
+            end 
         // //MUX2
-        // mux_4x2_ID mux_4x2_ID_2(A_O, PW, M_O, PB, MUX2_signal, register_file_port_MUX2_in);
+        mux_4x2_ID mux_4x2_ID_2(A_O, PW, M_O, PB, MUX2_signal, mux_out_2);
+         initial begin
+                #2;
+                $display(" ------- MUX 4x2 ID B -------- ");
+
+                $display("PB %b ", PB);
+                $display("A_O %b ", A_O);
+                $display("M_O %b ", M_O);
+                $display("PW %b ", PW);
+                $display("MUX1_signal %b ", MUX2_signal);
+                $display("mux_out_1 %b ", mux_out_2);
+              
+            end 
         // //MUX3
-        // mux_4x2_ID mux_4x2_ID_3(A_O, PW, M_O, PD, MUX3_signal, register_file_port_MUX3_in);
+        mux_4x2_ID mux_4x2_ID_3(A_O, PW, M_O, PD, MUX3_signal, mux_out_3);
+         initial begin
+                #2;
+                $display(" ------- MUX 4x2 ID C -------- ");
+
+                $display("PD %b ", PD);
+                $display("A_O %b ", A_O);
+                $display("M_O %b ", M_O);
+                $display("PW %b ", PW);
+                $display("MUX1_signal %b ", MUX3_signal);
+                $display("mux_out_1 %b ", mux_out_3);
+              
+            end 
 
         // //control_unit(output ID_B_instr, ALUSrc, RegDst,  
         // //                MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
@@ -596,7 +715,7 @@ endmodule
 
 //IF/ID PIPELINE REGISTER
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
-                               output reg [31:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
+                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
                                input nop, Hazard_Unit_Ld, clk, input [31:0] PC4, DataOut);
 
@@ -606,9 +725,9 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         if(Hazard_Unit_Ld) begin
             ID_Bit31_0 = DataOut;
             ID_Next_PC = PC4;
-            ID_Bit3_0 = {28'b0, DataOut[3:0]};
+            ID_Bit3_0 =  DataOut[3:0]; //{28'b0, DataOut[3:0]};
             ID_Bit31_28 = DataOut[31:28];
-            ID_Bit19_16 = {28'b0, DataOut[19:16]};
+            ID_Bit19_16 =  DataOut[19:16]; //{28'b0, DataOut[19:16]};
             ID_Bit15_12 = DataOut[15:12];
             ID_Bit23_0 = DataOut[23:0];
             ID_Bit11_0 = DataOut[11:0];
@@ -616,9 +735,9 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         end else begin
             ID_Bit31_0 = 32'b0;
             ID_Next_PC = 32'b0;
-            ID_Bit3_0 = 32'b0;
+            ID_Bit3_0 = 4'b0; //32'b0;
             ID_Bit31_28 = 4'b0;
-            ID_Bit19_16 = 32'b0;
+            ID_Bit19_16 = 4'b0; //32'b0;
             ID_Bit15_12 = 4'b0;
             ID_Bit23_0 = 24'b0;
             ID_Bit11_0 = 12'b0;
@@ -636,18 +755,18 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         // end
 
 
-    $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register OUT --------------------------------------*/\n");   
+    // $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register OUT --------------------------------------*/\n");   
 
-     $display("ID_Bit23_0 = %b | ID_Next_PC =%b | ID_Bit19_16=%b | ID_Bit3_0=%b\n",
-                               ID_Bit23_0, ID_Next_PC,
-                               ID_Bit19_16, ID_Bit3_0);
+    //  $display("ID_Bit23_0 = %b | ID_Next_PC =%b | ID_Bit19_16=%b | ID_Bit3_0=%b\n",
+    //                            ID_Bit23_0, ID_Next_PC,
+    //                            ID_Bit19_16, ID_Bit3_0);
 
-    $display("ID_Bit31_28=%b | ID_Bit11_0=%b | ID_Bit15_12=%b | ID_Bit31_0=%b | nop=%b | Hazard_Unit_Ld=%b\n",
-                               ID_Bit31_28, ID_Bit11_0,
-                               ID_Bit15_12, ID_Bit31_0,
-                               nop, Hazard_Unit_Ld);
+    // $display("ID_Bit31_28=%b | ID_Bit11_0=%b | ID_Bit15_12=%b | ID_Bit31_0=%b | nop=%b | Hazard_Unit_Ld=%b\n",
+    //                            ID_Bit31_28, ID_Bit11_0,
+    //                            ID_Bit15_12, ID_Bit31_0,
+    //                            nop, Hazard_Unit_Ld);
                                
-     $display("clk=%b | PC4=%b | DataOut=%b\n", clk, PC4, DataOut);    
+    //  $display("clk=%b | PC4=%b | DataOut=%b\n", clk, PC4, DataOut);    
 
     end
 endmodule
@@ -721,14 +840,14 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
-    always @ (DataOut,Address)                
+    always @ (*) //(DataOut,Address)                
         if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
         begin    
             DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};
-            $display("DO_instMem  %b\n", DataOut);                
+            // $display("DO_instMem  %b\n", DataOut);                
         end
         else
-            DataOut= Mem[Address]; 
+            DataOut = Mem[Address]; 
 
 endmodule                               
               
@@ -885,6 +1004,7 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
         shift_result = temp_reg;
 
         result = shift_result * 4;
+        // result = in1 <<< 2;
 
 
     end

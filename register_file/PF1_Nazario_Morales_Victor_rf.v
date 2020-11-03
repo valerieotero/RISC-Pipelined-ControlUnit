@@ -60,7 +60,7 @@ module binary_decoder(E, C, Ld);
     input [3:0] C;
     input Ld;
 
-    always @(C, Ld)
+    always @(*) //C, Ld)
 
         if(Ld)
             case(C)
@@ -92,7 +92,7 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
     input [3:0] S;
 
-    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
+    always @(*) //S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
 
     case (S)
         4'b0000: P <= I0;
@@ -125,7 +125,7 @@ module twoToOneMultiplexer(PW, PC, PCLd, MO);
 
     //Whenever a change is produced in the signals, change the output
     //according with the stablished logic.
-    always @(PW, PC, PCLd)
+    always @(*) //PW, PC, PCLd)
     begin
         if (PCLd)
             MO <= PW;
@@ -143,7 +143,7 @@ module register(Q, PW, RFLd, CLK);
     input [31:0] PW;
     input RFLd, CLK;
 
-    always @ (posedge CLK)
+    always @ (*) //posedge CLK)
     begin
         if (RFLd)
             Q <= PW;
@@ -163,7 +163,7 @@ module PCregister(Q, PW, PCin, RFLd, CLK);
 //        R15PCout <= PCin;
 //    end
 
-    always @ (posedge CLK)
+    always @ (*) //posedge CLK)
     begin
         Q <= PCin;
 
@@ -188,7 +188,7 @@ module tester;
     always begin
         #5;
         PCin = PCin + 4;
-        CLK = ~CLK;
+        // CLK = ~CLK;
     end
 
     //PCLoad signal
@@ -200,10 +200,10 @@ module tester;
 
     //Will print values for each tick of the clock. All 32bit values displayed in decimal
     //without trailing zeroes, binary otherwise.
-    always @ (CLK)
-    begin
-        $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
-    end
+    // always @ (CLK)
+    // begin
+    //     // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+    // end
 
     register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK));
     initial begin
@@ -215,13 +215,13 @@ module tester;
         SD = 4'b0000;
         RFLd = 1'b0;
         PCLd = 1'b0;
-        CLK = 1'b0;
+        CLK = 1'b1;
         PCin = 32'b0;
 
         //Enable load in each register (Ld = 1)
         #10;
         RFLd = 1'b1;
-        PCLd = 1'b0;
+        PCLd = 1'b1;
 
         //Writing a unique word of each register using Port C(PC)//
 
@@ -328,7 +328,7 @@ module tester;
         SA = 4'b1010;
         //Showing output through PA, after changing the word in Register 10
         //$monitor ("Output of Register ", SA, " (using PA) (After Change): PA: %0d",PA);
-        $monitor("Output of Register 15: %0d", PD, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
+        // $monitor("Output of Register 15: %0d", PD, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
     $finish;
     end
 
