@@ -30,7 +30,6 @@ module main(input clk);
     wire IF_ID_Load = 1; // load pipeline viene de hazard unit
                
     //register file
-<<<<<<< HEAD
     wire [31:0] PA = 32'd6;
     wire [31:0] PB = 32'd7; 
     wire [31:0] PD = 32'd9; 
@@ -41,16 +40,6 @@ module main(input clk);
     wire [3:0] SD; //ID_Bit19_16, ID_Bit3_0, SD;
     wire RFLd = 1;
     wire PC_RF_ld; // = 1; //load pc viene de Hazard unit
-=======
-    wire [31:0] PA, PB, PD; 
-    wire [31:0] PW = 0; // = 32'b0;
-
-    wire [31:0] PCin = 32'd4;
-    wire [3:0] WB_Bit15_12_out = 4'b1111;
-    wire [3:0] SD = 4'b0000; //ID_Bit19_16, ID_Bit3_0, SD;
-    wire RFLd = 1;
-    wire PC_RF_ld = 1'b0;
->>>>>>> 3eb33e76096f23dc689788a5d563b4f4e99757b8
 
     //multiplexers 4x2
     wire [31:0] A_O; // = 32'd15;
