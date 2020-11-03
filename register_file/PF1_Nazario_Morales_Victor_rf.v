@@ -14,28 +14,24 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK
     input [31:0] PW, PCin;
     input [3:0] SA, SB, SD, C;
     input RFLd, PCLd, CLK;
-    
+
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
 
     //Binary Decoder
     binary_decoder bc (E, C, RFLd);
-    
+
     //Multiplexers
     multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
     multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
-
-    //Here by default we will always extract the value
-    //in register 15, this can be simplified to not use so many wires.
-    multiplexer muxPCout (PCout, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, 4'b1111);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
     //is the equivalent to the PC (which gets increaed by 4)
     twoToOneMultiplexer r15mux (PW, PCin, PCLd, MO);
 
-    
+
     //16 Registers
     register R0 (Q0, PW, E[0], CLK);
     register R1 (Q1, PW, E[1], CLK);
@@ -52,7 +48,8 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK
     register R12 (Q12, PW, E[12], CLK);
     register R13 (Q13, PW, E[13], CLK);
     register R14 (Q14, PW, E[14], CLK);
-    register R15 (Q15, MO, E[15], CLK);  //register 15 will have two data sources on future revisions.
+    PCregister R15 (Q15, MO, PCin, E[15], CLK);  //register 15 will have two data sources on future revisions.
+    assign PCout = Q15;
 
 endmodule
 
@@ -62,10 +59,10 @@ module binary_decoder(E, C, Ld);
     //Inputs
     input [3:0] C;
     input Ld;
-    
+
     always @(C, Ld)
 
-        if(Ld) 
+        if(Ld)
             case(C)
                 4'b0000: E <= 16'b0000000000000001;
                 4'b0001: E <= 16'b0000000000000010;
@@ -85,7 +82,7 @@ module binary_decoder(E, C, Ld);
                 4'b1111: E <= 16'b1000000000000000;
             endcase
         else  E <= 16'b0000000000000000;
-        
+
 endmodule
 
 module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15, S);
@@ -96,7 +93,7 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [3:0] S;
 
     always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
-    
+
     case (S)
         4'b0000: P <= I0;
         4'b0001: P <= I1;
@@ -114,7 +111,7 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
         4'b1101: P <= I13;
         4'b1110: P <= I14;
         4'b1111: P <= I15;
-        
+
     endcase
 endmodule
 
@@ -131,9 +128,9 @@ module twoToOneMultiplexer(PW, PC, PCLd, MO);
     always @(PW, PC, PCLd)
     begin
         if (PCLd)
-            MO <= PC;
-        else
             MO <= PW;
+        else
+            MO <= PC;
     end
 endmodule
 
@@ -148,10 +145,32 @@ module register(Q, PW, RFLd, CLK);
 
     always @ (posedge CLK)
     begin
-        if (RFLd) 
+        if (RFLd)
             Q <= PW;
     end
-    
+
+endmodule
+
+module PCregister(Q, PW, PCin, RFLd, CLK);
+    //Output
+    output reg [31:0] Q;
+    //Inputs
+    input [31:0] PW, PCin;
+    input RFLd, CLK;
+
+//    always @ (PCin)
+//    begin
+//        R15PCout <= PCin;
+//    end
+
+    always @ (posedge CLK)
+    begin
+        Q <= PCin;
+
+        if (RFLd)
+            Q <= PW;
+    end
+
 endmodule
 
 module tester;
@@ -164,7 +183,7 @@ module tester;
 
     //Outputs
     wire [31:0] PA, PB, PD, PCout;
-    
+
     //Clock Signal
     always begin
         #5;
@@ -173,17 +192,17 @@ module tester;
     end
 
     //PCLoad signal
-    always begin
-        #2;
-        PCLd = ~PCLd;
-    end
+//    always begin
+//        #2;
+//        PCLd = ~PCLd;
+//    end
 
 
     //Will print values for each tick of the clock. All 32bit values displayed in decimal
     //without trailing zeroes, binary otherwise.
     always @ (CLK)
     begin
-        // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd);
+        $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
     end
 
     register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK));
@@ -198,14 +217,14 @@ module tester;
         PCLd = 1'b0;
         CLK = 1'b0;
         PCin = 32'b0;
-        SPCout = 4'b1111;
-        
+
         //Enable load in each register (Ld = 1)
-        #10;         
+        #10;
         RFLd = 1'b1;
-        
+        PCLd = 1'b0;
+
         //Writing a unique word of each register using Port C(PC)//
-        
+
         //Register 0
         #10;
         C = 4'b0000;
@@ -214,7 +233,7 @@ module tester;
         SB = 4'b0000;
         SD = 4'b0000;
 
-        
+
         //Register 1
         #10;
         C = 4'b0001;
@@ -222,7 +241,7 @@ module tester;
         SA = 4'b0001;
         SB = 4'b0001;
         SD = 4'b0001;
-        
+
         //Register 2
         #10;
         C = 4'b0010;
@@ -230,7 +249,7 @@ module tester;
         SA = 4'b0010;
         SB = 4'b0010;
         SD = 4'b0010;
-        
+
         //Register 3
         #10;
         C = 4'b0011;
@@ -238,69 +257,69 @@ module tester;
         SA = 4'b0011;
         SB = 4'b0011;
         SD = 4'b0011;
-        
+
         //Register 4
         #10;
         C = 4'b0100;
         PW = 32'd17;
-        
+
         //Register 5
         #10;
         C = 4'b0101;
         PW = 32'd73;
-        
+
         //Register 6
         #10;
         C = 4'b0110;
         PW = 32'd6;
-        
+
         //Register 7
         #10;
         C = 4'b0111;
         PW = 32'd50;
-        
+
         //Register 8
         #10;
         C = 4'b1000;
         PW = 32'd45;
-        
+
         //Register 9
         #10;
         C = 4'b1001;
         PW = 32'd18;
-        
+
         //Register 10
         #10;
         C = 4'b1010;
         PW = 32'd9;
-        
+
         //Register 11
         #10;
         C = 4'b1011;
         PW = 32'd6;
-        
+
         //Register 12
         #10;
         C = 4'b1100;
         PW = 32'd24;
-        
+
         //Register 13
         #10;
         C = 4'b1101;
         PW = 32'd21;
-        
+
         //Register 14
-        #10;    
+        #10;
         C = 4'b1110;
         PW = 32'd83;
-        
+
         //Register 15
         #10;
         C = 4'b1111;
         PW = 32'd35;
-        PCin = 32'd100;
 
-        
+
+
         //This changes the word in R10 and reads said word via Port A(PA).
         #10;
         C = 4'b1010;
@@ -309,8 +328,8 @@ module tester;
         SA = 4'b1010;
         //Showing output through PA, after changing the word in Register 10
         //$monitor ("Output of Register ", SA, " (using PA) (After Change): PA: %0d",PA);
-        // $monitor("Output of Register ", SPCout, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
+        $monitor("Output of Register 15: %0d", PD, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
     $finish;
     end
-    
+
 endmodule
