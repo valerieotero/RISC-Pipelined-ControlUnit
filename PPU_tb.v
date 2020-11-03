@@ -130,21 +130,24 @@ module PPU_tb;
     wire MemReadWrite;
     wire [6:0] C_U_out;
     //reg  clk;
-    reg [31:0] ID_Bit31_0;
+    reg [31:0] A;
 
+    // control_unit UUT(ID_B_instr, MemReadWrite, C_U_out, clk, A);
     initial begin
-        #40;
-        ID_Bit31_0 = 32'b11011011000000000000000000000001;
+        #30;
+        A = 32'b11011011000000000000000000000001;
 
-        $display("\nID_B = %b", control_unit.ID_B_instr);
-        $display("MemRW = %b", control_unit.MemReadWrite);
-        $display("ID_shift_imm = %b", control_unit.C_U_out[6]);
-        $display("ID_alu= %b", control_unit.C_U_out[5:2]);
-        $display("ID_load = %b", control_unit.C_U_out[1]);
-        $display("ID_RF= %b", control_unit.C_U_out[0]);
-        $display("Instruction= %b", ID_Bit31_0);
+        // $display("\nID_B = %b", cu.ID_B_instr);
+        // $display("MemRW = %b", cu.MemReadWrite);
+        // $display("C_U = %b", cu.C_U_out);
+
+        // $display("ID_shift_imm = %b", cu.C_U_out[6]);
+        // $display("ID_alu= %b", cu.C_U_out[5:2]);
+        // $display("ID_load = %b", cu.C_U_out[1]);
+        // $display("ID_RF= %b", cu.C_U_out[0]);
+        $display("Instruction= %b", A);
     end
 
-    control_unit control_unit(ID_B_instr, MemReadWrite, C_U_out, clk, ID_Bit31_0);
+    control_unit cu(.ID_B_instr(ID_B_instr), .MemReadWrite(MemReadWrite), .C_U_out(C_U_out), .clk(clk), .A(A));
 
 endmodule
