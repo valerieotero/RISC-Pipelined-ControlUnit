@@ -29,13 +29,13 @@ module main(input clk);
                
     //register file
     wire [31:0] PA, PB, PD; 
-    wire [31:0] PW; // = 32'b0;
+    wire [31:0] PW = 0; // = 32'b0;
 
     wire [31:0] PCin = 32'd4;
-    wire [3:0] WB_Bit15_12_out = 4'b0;
-    wire [3:0] SD; //ID_Bit19_16, ID_Bit3_0, SD;
+    wire [3:0] WB_Bit15_12_out = 4'b1111;
+    wire [3:0] SD = 4'b0000; //ID_Bit19_16, ID_Bit3_0, SD;
     wire RFLd = 1;
-    wire PC_RF_ld = 1;
+    wire PC_RF_ld = 1'b0;
 
     //multiplexers 4x2
     wire [31:0] A_O, M_O, mux_out_1, mux_out_2, mux_out_3; //PA, PB, PD,PW,
