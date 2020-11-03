@@ -36,5 +36,6 @@ module PPU_tb;
             end
 
             always
-            #1 clk = ~clk;
+              #1
+              clk = ~clk;
         endmodule
