@@ -80,7 +80,7 @@ module main(input clk);
         //para escoger entre TA & PC+4
         //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out); 0 ==A ; 1==B
         mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
-        initial begin
+       /* initial begin
                 #2;
                 $display(" ------- MUX 2x1 PCin (salida) -------- ");
 
@@ -88,7 +88,7 @@ module main(input clk);
                 $display("TA - 1 %b ", TA);
                 $display("choose_ta_r_nop %b ", choose_ta_r_nop);
                 $display("PCin %b ", PCI);
-            end
+            end */
         // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
         // inst_ram256x8 inst_ram(DO, PCO);
         // initial begin
@@ -102,7 +102,7 @@ module main(input clk);
         //para conseguir PC+4
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
         alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
-         initial begin
+       /*  initial begin
                 #2;
                 $display(" ------- ALU PC+4 -------- ");
 
@@ -112,7 +112,7 @@ module main(input clk);
                 $display("Carry In %b ", 1'b0);
                 $display("PC + 4 %b ", PC4);
                 $display("Condition Codes %b ", cc_alu_1);
-            end 
+            end */
 
 
         // //IF/ID reg
@@ -124,7 +124,7 @@ module main(input clk);
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
                                     ID_Bit15_12, DAO,
                                     choose_ta_r_nop, IF_ID_Load, clk, PC4, DO);
-            initial begin
+           /* initial begin
                 #2;
                 $display(" ------- IF_ID_PIPE REG -------- ");
 
@@ -140,13 +140,13 @@ module main(input clk);
                 $display("PC4 %b ", PC4);
                 $display("DataOut %b", DO);
 
-            end 
+            end */
 
         
         
         // //ID_Stage
         Status_register Status_register(cc_main_alu_out, S, cc_out, clk);
-         initial begin
+      /*   initial begin
                 #2;
                 $display(" ------- STATUS REGISTER -------- ");
 
@@ -155,23 +155,23 @@ module main(input clk);
                 $display("cc_out %b ",  cc_out);
                 $display("clk %b ", clk);
             
-        end 
+        end */
         
         // //SEx4
         // // SExtender(input reg [23:0] in, output signed [31:0] out1);
         SExtender se(ID_Bit23_0, SEx4_out);
-        initial begin
+      /*  initial begin
             #2;
             $display(" ------- 4x(SE) -------- ");
 
             $display("IN_23bits %b ", ID_Bit23_0);
             $display("SEx4_out %b ", SEx4_out);
                
-        end 
+        end */
         // //para conseguir TA
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
         alu alu_2(SEx4_out, Next_PC, 4'b0100, 1'b0, TA, cc_alu_2);
-        initial begin
+     /*   initial begin
                 #2;
                 $display(" ------- ALU TARGET ADDRESS -------- ");
 
@@ -181,7 +181,7 @@ module main(input clk);
                 $display("CARRY IN %b ", 1'b0);
                 $display("Target Address %b ", TA);
                 $display("Condition Codes %b ", cc_alu_2);
-        end 
+        end */
 
         // mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCin);
         // initial begin
@@ -227,7 +227,7 @@ module main(input clk);
         // //MUX1
         mux_4x2_ID mux_4x2_ID_1(A_O, PW, M_O, PA, MUX1_signal, mux_out_1);
         
-            initial begin
+          /*  initial begin
             #2;
                 $display(" ------- MUX 4x2 ID A -------- ");
 
@@ -238,10 +238,10 @@ module main(input clk);
                 $display("MUX1_signal %b ", MUX1_signal);
                 $display("mux_out_1 %b ", mux_out_1);
               
-            end 
+            end */
         // //MUX2
         mux_4x2_ID mux_4x2_ID_2(A_O, PW, M_O, PB, MUX2_signal, mux_out_2);
-            initial begin
+         /*   initial begin
                 #2;
                 $display(" ------- MUX 4x2 ID B -------- ");
 
@@ -252,10 +252,10 @@ module main(input clk);
                 $display("MUX2_signal %b ", MUX2_signal);
                 $display("mux_out_2 %b ", mux_out_2);
               
-            end 
+            end */
         // //MUX3
         mux_4x2_ID mux_4x2_ID_3(A_O, PW, M_O, PD, MUX3_signal, mux_out_3);
-        initial begin
+      /*  initial begin
                 #2;
                 $display(" ------- MUX 4x2 ID C -------- ");
 
@@ -266,7 +266,7 @@ module main(input clk);
                 $display("MUX3_signal %b ", MUX3_signal);
                 $display("mux_out_3 %b ", mux_out_3);
               
-        end 
+        end */
 
         // //control_unit(output ID_B_instr, ALUSrc, RegDst,  
         // //                MemReadWrite, PCSrc, RegWrite, MemToReg, Branch, Jump, output [6:0] C_U_out, 
@@ -275,7 +275,7 @@ module main(input clk);
 
         control_unit control_unit(ID_B_instr, ID_mem_read_write, C_U_out, 
                         clk, DAO);
-        initial begin
+      /*  initial begin
                 #2;
                 $display(" ------- CONTROL UNIT -------- ");
 
@@ -285,11 +285,11 @@ module main(input clk);
                 $display("clk %b ", clk);
                 $display("DAO %b ", DAO);
               
-        end 
+        end */
 
         // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
         mux_2x1_ID mux_2x1_ID(C_U_out, NOP_S, MUXControlUnit_signal, ID_CU);
-        initial begin
+       /* initial begin
                 #2;
                 $display(" ------- Multiplexer CONTROL UNIT -------- ");
 
@@ -298,7 +298,7 @@ module main(input clk);
                 $display("MUXControlUnit_signal %b ", MUXControlUnit_signal);
                 $display("ID_CU %b ", ID_CU);
               
-        end 
+        end */
 
 
         // //ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,
@@ -321,7 +321,7 @@ module main(input clk);
 
                                         mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_CU,
                                         ID_Bit11_0, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
-                initial begin
+              /*  initial begin
                                 #2;
                                 $display(" ------- ID_EX_PIPE REG -------- ");
 
@@ -351,7 +351,7 @@ module main(input clk);
 
 
 
-                end 
+                end */
 
 
 
@@ -359,7 +359,7 @@ module main(input clk);
         // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
         // // wire [3:0] E_M_2x1_I_O = EX_MUX_2x1_ID_Out[5:2];
         alu alu_main(mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, C, A_O, cc_main_alu_out);
-                initial begin
+              /*  initial begin
                                 #2;
                                 $display(" ------- MAIN ALU -------- ");
 
@@ -370,10 +370,10 @@ module main(input clk);
                                 $display("A_O %b ", A_O);
                                 $display("cc_main_alu_out %b ", cc_main_alu_out);
                                
-                end 
+                end */
         // //Sign_Shift_Extender (input [31:0]A, input [11:0]B, output reg [31:0]shift_result, output reg C);
         Sign_Shift_Extender sign_shift_extender_1(mux_out_2_B, EX_Bit11_0, SSE_out, C);
-                initial begin
+            /*    initial begin
                                 #2;
                                 $display(" ------- SIGN SHIFT EXTENDER -------- ");
 
@@ -382,11 +382,11 @@ module main(input clk);
                                 $display("SSE_out %b ", SSE_out);
                                 $display("C %b ", C);
                                                           
-                end 
+                end */
         // //mux between Shifter extender & ALU
         // // wire E_M_2x1_Id_Ot = EX_MUX_2x1_ID_Out[6];
         mux_2x1_Stages  mux_2x1_stages_2(mux_out_2_B, SSE_out, EX_Shift_imm, EX_MUX_2X1_OUT);
-                initial begin
+          /*      initial begin
                                 #2;
                                 $display(" ------- MUX BETWEEN SIGN SHIFT EXTENDER & ALU -------- ");
 
@@ -395,10 +395,10 @@ module main(input clk);
                                 $display("SSE_out %b ", SSE_out);
                                 $display("EX_MUX_2X1_OUT %b ", EX_MUX_2X1_OUT);
                                                           
-                end 
+                end */
         // //Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
         Cond_Is_Asserted Cond_Is_Asserted (cc_out, ID_Bit31_28, asserted);
-         initial begin
+     /*    initial begin
                                 #2;
                                 $display(" ------- COND ASSERTED-------- ");
 
@@ -406,11 +406,11 @@ module main(input clk);
                                 $display("ID_Bit31_28 %b ", ID_Bit31_28);
                                 $display("asserted %b ", asserted);
                                                           
-                end 
+                end  */
 
         // //Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
         Condition_Handler Condition_Handler(asserted, ID_B_instr, choose_ta_r_nop);
-        initial begin
+      /*  initial begin
                                 #2;
                                 $display(" ------- COND HANDLER-------- ");
 
@@ -419,13 +419,13 @@ module main(input clk);
                                 $display("ID_B_instr %b ", ID_B_instr);
                                 $display("choose_ta_r_nop %b ", choose_ta_r_nop);
                                                           
-                end 
+                end  */
 
         // //module EX_MEM_pipeline_register(input [31:0] MUX3, Alu_output, input [3:0] EX_Bit15_12, input [3:0] cc_alu_out, input [1:0] C_U_SIGNAL, input clk
         //                                 //output [31:0] MEM_Alu_Out, MEM_MUX3, output [3:0] MEM_Bit15_12, output [1:0] MEM_load_rf);
         EX_MEM_pipeline_register EX_mem_pipeline_register(mux_out_3_C, A_O, EX_Bit15_12, cc_main_alu_out, EX_load_instr, EX_RF_Enable, clk, EX_mem_read_write, EX_mem_size,
                                 MEM_A_O, MEM_MUX3, MEM_Bit15_12, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
-            initial begin
+        /*    initial begin
                 #2;
                 $display(" ------- EX_MEM_PIPE REG -------- ");
 
@@ -447,11 +447,11 @@ module main(input clk);
                 $display("MEM_mem_size %b", MEM_mem_size);
 
 
-            end
+            end */
 
         // //module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size);
         data_ram256x8 data_ram(Data_RAM_Out, MEM_mem_read_write, MEM_A_O, MEM_MUX3, Size);
-            initial begin
+        /*    initial begin
                 #2;
                 $display(" ------- DATA RAM -------- ");
 
@@ -461,11 +461,11 @@ module main(input clk);
                 $display("MEM_MUX3 %b ", MEM_MUX3);
                 $display("Size %b ", Size);
            
-            end
+            end */
 
         // //multiplexer in MEM Stage
         mux_2x1_Stages  mux_2x1_stages_3(Data_RAM_Out, MEM_A_O, MEM_load, M_O);
-         initial begin
+       /*  initial begin
                 #2;
                 $display(" ------- MUX en MEM STAGE -------- ");
 
@@ -474,13 +474,13 @@ module main(input clk);
                 $display("MEM_load %b ", MEM_load);
                 $display("M_O %b ", M_O);
            
-            end
+            end */
 
         // //module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input [1:0] MEM_load_rf, input clk
         //                                 //output [31:0] wb_alu_out, wb_data_r_out,output [3:0] wb_bit15_12, output [1:0] wb_load_rf);
         MEM_WB_pipeline_register MEM_WB_pipeline_register(MEM_A_O, Data_RAM_Out, MEM_Bit15_12, MEM_load_instr, MEM_RF_Enable, clk,
                                         WB_A_O, WB_Data_RAM_Out, WB_Bit15_12, WB_load_instr, WB_RF_Enable);
-            initial begin
+           /* initial begin
                 #2;
                 $display(" ------- MEM_WB_PIPE REG -------- ");
 
@@ -498,19 +498,19 @@ module main(input clk);
                 $display("WB_load_instr %b ", WB_load_instr);
                 $display("WB_RF_Enable %b ", WB_RF_Enable);
              
-            end
+            end */
         // //multiplexer in WB Stage
         // // reg MEM_l_rf =  MEM_load_rf_out[1];
         mux_2x1_Stages mux_2x1_stages_4(WB_Data_RAM_Out, WB_A_O, WB_load_instr, PW);
-        initial begin
-            #2;
+         /*initial begin
+           #2;
             $display(" ------- MUX WB STAGE -------- ");
 
             $display("WB_A_O %b ", WB_A_O);
             $display("WB_Data_RAM_Out %b ", WB_Data_RAM_Out);
             $display("PW %b ", PW);
             $display("WB_load_instr %b ", WB_load_instr);
-        end
+        end */
 
         // //Hazard-Forward Unit
         // /*
@@ -526,7 +526,7 @@ module main(input clk);
                     EX_load_instr, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable,
                     EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, ID_Bit3_0, ID_Bit19_16);
         
-         initial begin
+         /*initial begin
                                 #2;
                                 $display(" ------- HAZARD UNIT -------- ");
 
@@ -548,7 +548,7 @@ module main(input clk);
                                 $display("ID_Bit3_0 %b ", ID_Bit3_0);
                                 $display("ID_Bit19_16 %b ", ID_Bit19_16);
                                
-                end 
+                end */
 endmodule
 
 
@@ -587,7 +587,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
 
     begin
         instr = A[27:25];
-        $display("instr %b", instr);
+       // $display("instr %b", instr);
         // if(instr == 3'b101)
         //     b_instr = 1;
         // else 
@@ -701,10 +701,8 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
             
 
         endcase
-        // $display("ID_shift_imm = %b", C_U_out[6]);
-        // $display("ID_alu= %b", C_U_out[5:2]);
-        // $display("ID_load = %b", C_U_out[1]);
-        // $display("ID_RF= %b", C_U_out[0]);
+         $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
+       
     end
 endmodule
 
