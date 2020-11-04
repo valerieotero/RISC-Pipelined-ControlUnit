@@ -46,7 +46,8 @@ module main(input clk);
     wire [31:0] M_O = 32'd16;
     // wire [31:0] PB = 32'd7; 
     wire [31:0] mux_out_1, mux_out_2, mux_out_3, Data_RAM_Out, WB_A_O, WB_Data_RAM_Out; //PA, PB, PD,PW,
-    wire [1:0] MUX1_signal, Size; 
+    wire [1:0] MUX1_signal;
+    wire Size; 
     wire MEM_mem_size;// = 2'b00;
     wire [1:0] MUX2_signal;// = 2'b01;
     wire [1:0] MUX3_signal;// = 2'b10;
@@ -448,7 +449,7 @@ module main(input clk);
 
             end
 
-        // //module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input [1:0] Size);
+        // //module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size);
         data_ram256x8 data_ram(Data_RAM_Out, MEM_mem_read_write, MEM_A_O, MEM_MUX3, Size);
             initial begin
                 #2;
@@ -1067,14 +1068,14 @@ endmodule
               
 
 //DATA MEMORY
-module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input [1:0] Size);
+module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size);
 
     reg[7:0] Mem[0:255]; //256 localizaciones 
 
     always @ (DataOut, ReadWrite, Address, DataIn, Size)       
 
         casez(Size) //"casez" to ignore dont care values
-        2'b00: //BYTE
+        1'b1: //BYTE
         begin 
             if (ReadWrite) //When Write 
             begin
@@ -1084,22 +1085,9 @@ module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Addr
             begin
                 DataOut= Mem[Address];
             end                
-        end
+        end      
 
-            2'b01: //HALF-WORD
-        begin
-            if (ReadWrite) //When Write 
-            begin
-                Mem[Address] = DataIn[15:8]; 
-                Mem[Address + 1] = DataIn[7:0]; 
-            end
-            else //When Read
-            begin
-                    DataOut = {Mem[Address+0], Mem[Address+1]}; 
-            end  
-        end
-
-        2'b10: //WORD
+        1'b0: //WORD
         begin
             if (ReadWrite) //When Write 
             begin
