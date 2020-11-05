@@ -8,7 +8,7 @@ module PPU_tb;
     integer file, fw, code, i; reg [31:0] data;
     reg clk = 1;
     reg [31:0] Address; wire [31:0] DataOut;
-    wire [31:0] PCO = 32'b0; //address instr Mem
+    reg [31:0] PCO = 32'b0; //address instr Mem
 
 
     //Inputs 
@@ -61,7 +61,7 @@ module PPU_tb;
     wire MUXControlUnit_signal; 
     wire EX_load_instr,  WB_load_instr,  MEM_load_instr; 
     wire S = 1; 
-    wire MEM_RF_Enable;
+    wire MEM_RF_Enable, WB_mem_read_write;
     wire WB_RF_Enable;
     wire [3:0] EX_Bit15_12, cc_out;
     wire [3:0] MEM_Bit15_12;
@@ -71,12 +71,12 @@ module PPU_tb;
     wire [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
     wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, C;
     wire [3:0] EX_ALU_OP;
-    wire[7:0] EX_addresing_modes, ID_addresing_modes;
+    wire [7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
                                         
 
     //main PPU(clk);
-    inst_ram256x8 ram1 (DataOut, Address);
+    
 
     initial
         begin
@@ -91,31 +91,43 @@ module PPU_tb;
 
     $fclose(file);  
     end
+    
+    inst_ram256x8 ram1 (DataOut, Address);
 
     /*-------------------------------------- Clock --------------------------------------*/
 
     main PPU(.clk(clk));
     
-    always@(clk)
-    begin         
+    // always@(clk)
+    initial begin
+        
+        $display("\n\n         PC               ------------------ID State-------------------                      ------------------EX State------------------                   ---------MEM State------                  -------WB State-------");
+        $display("               ID_B_instr  | ID_shift_imm | ID_alu  | ID_load | ID_RF | ID_mem_r_w        EX_shift_imm | EX_alu  | EX_load | EX_RF | EX_mem_r_w          MEM_load  | MEM_RF | MEM_mem_r_w            WB_load | WB_RF | WB_mem_r_w \n");
+        PCO = 32'b0; 
+    end
+    // begin      
+    always begin
+         
+        Address = #1 32'b11100000100000100101000000000101; //1100000100000100101000000000101;
         clk = ~clk;          
-            $display("\n\n          PC                 ------------------ID State-------------------                   ------------------EX State------------------                ---------MEM State------          -------WB State-------");
-            
-            
-            begin 
-            Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-            $display("                          ID_B_instr  | ID_shift_imm | ID_alu  | ID_load | ID_RF              EX_shift_imm | EX_alu  | EX_load | EX_RF                    MEM_load  | MEM_RF                 WB_load  | WB_RF \n");
-    
-            repeat(3) begin
-            $display(" %d                     %b     |       %b      |   %b  |     %b   |    %b                          %b |   %b  |    %b    |  %b                               %b |  %b                            %b |  %b \n", PCO, ID_B_instr, ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0],  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable, MEM_load_instr, MEM_RF_Enable, WB_load_instr, WB_RF_Enable);
-
-            end 
-            end
-
+                  
+        $display("%d           %b     |       %b      |   %b  |     %b   |   %b   |  %b                          %b  |   %b  |    %b    |   %b   | %b                           %b |    %b   | %b                            %b |   %b   |  %b \n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, WB_mem_read_write);
+        #5;
+        PCO = PCO + 32'd4;
+  
+        Address =  32'b11011011000000000000000000000001;
             
         
     end 
+    
+    // // inst_ram256x8 ram1 (DataOut, Address);
+    control_unit control_unit1(ID_B_instr, ID_mem_read_write, C_U_out, clk, DataOut);
+    ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_out_3_C, EX_Bit15_12, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,
+                                        EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write,
 
-     control_unit control_unit1(ID_B_instr, ID_mem_read_write, C_U_out, clk, DO);
+                                        mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, C_U_out, ID_Bit11_0, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);
+    EX_MEM_pipeline_register EX_mem_pipeline_register(mux_out_3_C, A_O, EX_Bit15_12, cc_main_alu_out, EX_load_instr, EX_RF_Enable, clk, EX_mem_read_write, EX_mem_size,
+                                MEM_A_O, MEM_MUX3, MEM_Bit15_12, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
+    MEM_WB_pipeline_register MEM_WB_pipeline_register(MEM_A_O, Data_RAM_Out, MEM_Bit15_12, MEM_load_instr, MEM_RF_Enable, clk, WB_A_O, WB_Data_RAM_Out, WB_Bit15_12, WB_load_instr, WB_RF_Enable);
             
 endmodule

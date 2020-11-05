@@ -319,7 +319,7 @@ module main( input clk);
                                         EX_Bit15_12, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,
                                         EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write,
 
-                                        mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_CU,
+                                        mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, C_U_out,
                                         ID_Bit11_0, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
               /*  initial begin
                                 #2;
@@ -1049,13 +1049,13 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
 
     always@(*)//posedge clk)
     begin
-        MEM_A_O <= A_O;
-        MEM_MUX3 <= mux_out_3_C;
-        MEM_Bit15_12 <= EX_Bit15_12;
-        MEM_load_instr <= EX_load_instr;
-        MEM_RF_Enable <= EX_RF_Enable;
-        MEM_mem_read_write <= EX_mem_read_write;
-        MEM_mem_size <=  EX_mem_size;
+        MEM_A_O = A_O;
+        MEM_MUX3 = mux_out_3_C;
+        MEM_Bit15_12 = EX_Bit15_12;
+        MEM_load_instr = EX_load_instr;
+        MEM_RF_Enable = EX_RF_Enable;
+        MEM_mem_read_write = EX_mem_read_write;
+        MEM_mem_size =  EX_mem_size;
     
     // $display("EX_MEM reg");
     // $display("EX_load = %b | EX_RF= %b", EX_load_instr, EX_RF_Enable);     
