@@ -4,10 +4,10 @@
 
 
 //PPU
-module main(input clk);
+module main( input clk);
 
     //Precharge
-    wire [31:0] PCO = 32'b0; //address instr Mem
+    wire [31:0] PCO; // = 32'b0; //address instr Mem
 
 
     //Inputs 
@@ -16,8 +16,8 @@ module main(input clk);
 
     //wire 
     //ALU_IF && IF_ID_pipeeline
-    wire [31:0] DO = 32'b11100000100000100101000000000101;
-    wire [31:0] DAO = 32'b11100000100000100101000000000101;
+    wire [31:0] DO; // = 32'b11100000100000100101000000000101;
+    wire [31:0] DAO; // = 32'b11100000100000100101000000000101;
     wire [31:0] Next_PC, PC4, MEM_A_O, MEM_MUX3; //, DAO; 
 
     wire [23:0] ID_Bit23_0;
@@ -27,23 +27,23 @@ module main(input clk);
     wire [11:0] ID_Bit11_0;
     wire [31:0] EX_Bit11_0, EX_MUX_2X1_OUT;
     wire choose_ta_r_nop;
-    wire IF_ID_Load = 1; // load pipeline viene de hazard unit
+    wire IF_ID_Load; // = 1; // load pipeline viene de hazard unit
                
     //register file
-    wire [31:0] PA = 32'd6;
-    wire [31:0] PB = 32'd7; 
-    wire [31:0] PD = 32'd9; 
-    wire [31:0] PW = 32'd17; // = 32'b0;
+    wire [31:0] PA; // = 32'd6;
+    wire [31:0] PB; // = 32'd7; 
+    wire [31:0] PD; // = 32'd9; 
+    wire [31:0] PW; // = 32'd17; // = 32'b0;
 
-    wire [31:0] PCin = 32'd4;
-    wire [3:0] WB_Bit15_12_out = 4'b0; // registro destino valor del WB
+    wire [31:0] PCin; // = 32'd4;
+    wire [3:0] WB_Bit15_12_out; // = 4'b0; // registro destino valor del WB
     wire [3:0] SD; //ID_Bit19_16, ID_Bit3_0, SD;
-    wire RFLd = 1;
+    wire RFLd; // = 1;
     wire PC_RF_ld; // = 1; //load pc viene de Hazard unit
 
     //multiplexers 4x2
     wire [31:0] A_O; // = 32'd15;
-    wire [31:0] M_O = 32'd16;
+    wire [31:0] M_O; // = 32'd16;
     // wire [31:0] PB = 32'd7; 
     wire [31:0] mux_out_1, mux_out_2, mux_out_3, Data_RAM_Out, WB_A_O, WB_Data_RAM_Out; //PA, PB, PD,PW,
     wire [1:0] MUX1_signal;
@@ -68,7 +68,7 @@ module main(input clk);
 
     //ID_EX
     wire [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
-    wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, clk, C;
+    wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, C;
     wire [3:0] EX_ALU_OP;
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
@@ -90,7 +90,7 @@ module main(input clk);
                 $display("PCin %b ", PCI);
             end */
         // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-        // inst_ram256x8 inst_ram(DO, PCO);
+        inst_ram256x8 inst_ram(DO, PCO);
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 
@@ -122,7 +122,7 @@ module main(input clk);
         // //                           input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
         IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
-                                    ID_Bit15_12, DAO,
+                                    ID_Bit15_12, DO,
                                     choose_ta_r_nop, IF_ID_Load, clk, PC4, DO);
            /* initial begin
                 #2;
@@ -183,7 +183,7 @@ module main(input clk);
                 $display("Condition Codes %b ", cc_alu_2);
         end */
 
-        // mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCin);
+        mux_2x1_Stages mux_2x1_stages_5(PC4, TA, choose_ta_r_nop, PCin);
         // initial begin
         //         #2;
         //         $display(" ------- MUX 2x1 PCin (salida) -------- ");
@@ -202,7 +202,7 @@ module main(input clk);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
             
-        // register_file register_file_1(PA, PB, PD, PW, PCin, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCI, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk); //falta RW = WB_Bit15_12_out
 
         //   initial begin
         //         #2;
@@ -274,7 +274,7 @@ module main(input clk);
         // //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
         control_unit control_unit(ID_B_instr, ID_mem_read_write, C_U_out, 
-                        clk, DAO);
+                        clk, DO);
       /*  initial begin
                 #2;
                 $display(" ------- CONTROL UNIT -------- ");
@@ -549,6 +549,29 @@ module main(input clk);
                                 $display("ID_Bit19_16 %b ", ID_Bit19_16);
                                
                 end */
+                // initial begin 
+                //     $display("\n\n          PC                 ------------------ID State-------------------                   ------------------EX State------------------                ---------MEM State------          -------WB State-------");
+
+                //     repeat (3)begin
+                //         #10;
+                //         $display(" %d            ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b           EX_shift_imm = %b | EX_alu= %b | EX_load = %b | EX_RF= %b          MEM_load = %b | MEM_RF= %b        WB_load = %b | WB_RF= %b \n", PCO, ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0],  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable, MEM_load_instr, MEM_RF_Enable, WB_load_instr, WB_RF_Enable);
+                //         // $display("DO: %d", DO);
+                //         // #10;
+                    
+                //         // $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
+                //         // $display("EX_shift_imm = %b | EX_alu= %b | EX_load = %b | EX_RF= %b", EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable);  
+                //         // #10;
+                //         // $display("------------------EX_MEM reg------------------");
+                //         // $display("EX_load = %b | EX_RF= %b", EX_load_instr, EX_RF_Enable);     
+                //         // $display("MEM_load = %b | MEM_RF= %b", MEM_load_instr, MEM_RF_Enable);   
+
+                //         // #10;
+                //         // $display("---------------------MEM_WB reg----------------");
+        
+                //         // $display("MEM_load = %b | MEM_RF= %b", MEM_load_instr, MEM_RF_Enable);  
+                //         // $display("WB_load = %b | WB_RF= %b", WB_load_instr, WB_RF_Enable);    
+                //     end
+                // end
 endmodule
 
 
@@ -701,8 +724,8 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
             
 
         endcase
-         $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
-       
+        //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
+    //    
     end
 endmodule
 
@@ -1009,7 +1032,13 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
         EX_Bit15_12 = ID_Bit15_12;
         EX_Bit11_0 = {20'b0, ID_Bit11_0};
         EX_addresing_modes = ID_addresing_modes; //22-20
+   
+    // $display("ID_EX reg");
+    // $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
+    // $display("EX_shift_imm = %b | EX_alu= %b | EX_load = %b | EX_RF= %b", EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_instr);     
+
     end
+   
 endmodule
 
 
@@ -1018,17 +1047,22 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
                                 output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
 
 
-    always@(posedge clk)
+    always@(*)//posedge clk)
     begin
-        MEM_A_O = A_O;
-        MEM_MUX3 = mux_out_3_C;
-        MEM_Bit15_12 = EX_Bit15_12;
-        MEM_load_instr = EX_load_instr;
-        MEM_RF_Enable = EX_RF_Enable;
-        MEM_mem_read_write = EX_mem_read_write;
-        MEM_mem_size =  EX_mem_size;
+        MEM_A_O <= A_O;
+        MEM_MUX3 <= mux_out_3_C;
+        MEM_Bit15_12 <= EX_Bit15_12;
+        MEM_load_instr <= EX_load_instr;
+        MEM_RF_Enable <= EX_RF_Enable;
+        MEM_mem_read_write <= EX_mem_read_write;
+        MEM_mem_size <=  EX_mem_size;
+    
+    // $display("EX_MEM reg");
+    // $display("EX_load = %b | EX_RF= %b", EX_load_instr, EX_RF_Enable);     
+    // $display("MEM_load = %b | MEM_RF= %b", MEM_load_instr, MEM_RF_Enable);     
 
     end
+   
 endmodule
 
 
@@ -1036,15 +1070,19 @@ endmodule
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
                                     output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable);
 
-    always@(posedge clk)
-        begin
-            wb_alu_out = alu_out;
-            wb_data_r_out = data_r_out;
-            wb_bit15_12 = bit15_12;
-            WB_load_instr = MEM_load_instr;
-            WB_RF_Enable = MEM_RF_Enable;
-            
-        end
+    always@(*) //posedge clk)
+    begin
+        wb_alu_out = alu_out;
+        wb_data_r_out = data_r_out;
+        wb_bit15_12 = bit15_12;
+        WB_load_instr = MEM_load_instr;
+        WB_RF_Enable = MEM_RF_Enable;
+    // $display("MEM_WB reg");
+     
+    // $display("MEM_load = %b | MEM_RF= %b", MEM_load_instr, MEM_RF_Enable);  
+    // $display("WB_load = %b | WB_RF= %b", WB_load_instr, WB_RF_Enable);           
+    end
+    
 endmodule
 
 

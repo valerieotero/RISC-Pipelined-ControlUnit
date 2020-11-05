@@ -60,7 +60,7 @@ module binary_decoder(E, C, Ld);
     input [3:0] C;
     input Ld;
 
-    always @(*) //C, Ld)
+    always @(C, Ld)
 
         if(Ld)
             case(C)
@@ -92,7 +92,7 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
     input [3:0] S;
 
-    always @(*) //S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
+    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
 
     case (S)
         4'b0000: P <= I0;
@@ -125,7 +125,7 @@ module twoToOneMultiplexer(PW, PC, PCLd, MO);
 
     //Whenever a change is produced in the signals, change the output
     //according with the stablished logic.
-    always @(*) //PW, PC, PCLd)
+    always @(PW, PC, PCLd)
     begin
         if (PCLd)
             MO <= PW;
@@ -143,7 +143,7 @@ module register(Q, PW, RFLd, CLK);
     input [31:0] PW;
     input RFLd, CLK;
 
-    always @ (*) //posedge CLK)
+    always @ (posedge CLK)
     begin
         if (RFLd)
             Q <= PW;
@@ -163,7 +163,7 @@ module PCregister(Q, PW, PCin, RFLd, CLK);
 //        R15PCout <= PCin;
 //    end
 
-    always @ (*) //posedge CLK)
+    always @ (posedge CLK)
     begin
         Q <= PCin;
 
