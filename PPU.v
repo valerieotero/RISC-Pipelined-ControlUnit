@@ -72,7 +72,7 @@ module main( input clk);
     wire [3:0] EX_ALU_OP;
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
-                                                                               
+
 
 
     

@@ -6,14 +6,14 @@
 
 //Todo: Validate if PCOut can be done without mux, right now it's just a bus output but value is being obtained by mux
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, SD, C;
-    input RFLd, PCLd, CLK;
+    input RFLd, PCLd, CLK, RST;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -48,7 +48,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK
     register R12 (Q12, PW, E[12], CLK);
     register R13 (Q13, PW, E[13], CLK);
     register R14 (Q14, PW, E[14], CLK);
-    PCregister R15 (Q15, MO, PCin, E[15], CLK);  //register 15 will have two data sources on future revisions.
+    PCregister R15 (Q15, MO, PCin, E[15], CLK, RST);  //register 15 will have two data sources on future revisions.
     assign PCout = Q15;
 
 endmodule
@@ -151,17 +151,18 @@ module register(Q, PW, RFLd, CLK);
 
 endmodule
 
-module PCregister(Q, PW, PCin, RFLd, CLK);
+module PCregister(Q, PW, PCin, RFLd, CLK, RST);
     //Output
     output reg [31:0] Q;
     //Inputs
     input [31:0] PW, PCin;
-    input RFLd, CLK;
+    input RFLd, CLK, RST;
 
-//    always @ (PCin)
-//    begin
-//        R15PCout <= PCin;
-//    end
+    //Used as a reset mechanism, when RST is equals to one, the R15 will get a 0 value
+    always @ (posedge RST)
+    begin
+        Q <= 0;
+    end
 
     always @ (posedge CLK)
     begin
@@ -177,18 +178,20 @@ module tester;
     //Variable for loop
     integer index;
     //Inputs
-    reg CLK, RFLd, PCLd;
+    reg CLK, RFLd, PCLd, RST;
     reg [3:0] SA, SB, SD, SPCout, C;
     reg [31:0] PW, PCin;
 
     //Outputs
     wire [31:0] PA, PB, PD, PCout;
 
+    initial RST = 1'b1;
+
     //Clock Signal
     always begin
         #5;
         PCin = PCin + 4;
-        // CLK = ~CLK;
+        CLK = ~CLK;
     end
 
     //PCLoad signal
@@ -198,14 +201,14 @@ module tester;
 //    end
 
 
-    //Will print values for each tick of the clock. All 32bit values displayed in decimal
-    //without trailing zeroes, binary otherwise.
-    // always @ (CLK)
-    // begin
-    //     // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
-    // end
+//    Will print values for each tick of the clock. All 32bit values displayed in decimal
+//    without trailing zeroes, binary otherwise.
+     always @ (CLK)
+     begin
+         //$display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+     end
 
-    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK));
+    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK), .RST(RST));
     initial begin
         //Initial values
         PW = 32'b0;
@@ -217,6 +220,7 @@ module tester;
         PCLd = 1'b0;
         CLK = 1'b1;
         PCin = 32'b0;
+        RST = 1'b0;
 
         //Enable load in each register (Ld = 1)
         #10;
