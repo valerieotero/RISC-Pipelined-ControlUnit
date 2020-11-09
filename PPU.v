@@ -1087,20 +1087,28 @@ endmodule
 
 
 //INSTRUCTION MEMORY 
-module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
+module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset);
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
-    always @ (*) //(DataOut,Address)                
-        if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
-        begin    
-            DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};
-            // $display("DO_instMem  %b\n", DataOut);                
-        end
-        else
-            DataOut = Mem[Address]; 
+    always @ (DataOut,Address,Reset)  
+    begin
 
-endmodule                               
+        if (Reset)            
+            DataOut = 32'b00000000000000000000000000000000;            
+             
+        else //Not Reset
+        begin
+
+            if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
+                 DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
+                
+            else                    
+                DataOut= Mem[Address]; 
+                     
+        end        
+    end 
+endmodule                                
               
 
 //DATA MEMORY
