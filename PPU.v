@@ -18,7 +18,7 @@ module main(); //input clk, input Reset);
     //wire 
     //ALU_IF && IF_ID_pipeeline
     wire [31:0] DO; // = 32'b11100000100000100101000000000101;
-    wire [31:0] DAO; // = 32'b11100000100000100101000000000101;
+    // wire [31:0] DAO; // = 32'b11100000100000100101000000000101;
     wire [31:0] Next_PC, PC4, MEM_A_O, MEM_MUX3; //, DAO; 
 
     wire [23:0] ID_Bit23_0;
@@ -77,23 +77,27 @@ module main(); //input clk, input Reset);
 
     initial begin
         
-        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------");
-        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w            load | R F ");
+        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------");
+        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
         // PCO = 32'b0; 
     end
-    // begin      
-    always begin
-        $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                       %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                     %b |  %b  ",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable);
-
+    // begin 
+      
+    // initial 
+    always @(clk) 
+    begin
+    
+        $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                       %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO);
+        clk = ~clk;
         // Address = #1 32'b11100000100000100101000000000101; //1100000100000100101000000000101;
         // clk = ~clk;          
                   
         // $display("%d        %b     |       %b      |   %b  |     %b   |   %b   |  %b                      %b  |   %b  |    %b    |   %b   | %b                         %b |    %b   | %b                        %b |   %b   |  %b", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, WB_mem_read_write);
-        #5;
+        // #5;
         // PCO = PCO + 32'd4;
   
         // Address =  32'b11011011000000000000000000000001;
-            
+        Reset = 0;
         
     end 
     
