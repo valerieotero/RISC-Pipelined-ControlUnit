@@ -10,7 +10,7 @@ module main(); //input clk, input Reset);
     wire [31:0] PCO; // = 32'b0; //address instr Mem
     
     reg clk = 0;
-    reg Reset = 0;
+    reg Reset = 1;
     //Inputs 
     // reg clk; //enable
 
@@ -112,7 +112,7 @@ module main(); //input clk, input Reset);
                 $display("PCin %b ", PCI);
             end */
         // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-        inst_ram256x8 inst_ram(DO, PCO);
+        inst_ram256x8 inst_ram(DO, PCO, Reset);
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 
@@ -1116,16 +1116,6 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
-<<<<<<< HEAD
-    always @ (DataOut,Address)                
-        if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
-        begin    
-            DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};
-            // $display("DO_instMem  %b\n", DataOut);                
-        end
-        else
-            DataOut = Mem[Address]; 
-=======
     always @ (DataOut,Address,Reset)  
     begin
 
@@ -1134,7 +1124,6 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
              
         else //Not Reset
         begin
->>>>>>> a6d274df489bc17ddab515e8eeab59befc461fe6
 
             if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
                  DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
