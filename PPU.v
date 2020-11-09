@@ -4,12 +4,13 @@
 
 
 //PPU
-module main( input clk);
+module main(); //input clk, input Reset);
 
     //Precharge
     wire [31:0] PCO; // = 32'b0; //address instr Mem
-
-
+    
+    reg clk = 0;
+    reg Reset = 0;
     //Inputs 
     // reg clk; //enable
 
@@ -74,7 +75,28 @@ module main( input clk);
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
                                                                                
 
+    initial begin
+        
+        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------");
+        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w            load | R F ");
+        // PCO = 32'b0; 
+    end
+    // begin      
+    always begin
+        $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                       %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                     %b |  %b  ",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable);
 
+        // Address = #1 32'b11100000100000100101000000000101; //1100000100000100101000000000101;
+        // clk = ~clk;          
+                  
+        // $display("%d        %b     |       %b      |   %b  |     %b   |   %b   |  %b                      %b  |   %b  |    %b    |   %b   | %b                         %b |    %b   | %b                        %b |   %b   |  %b", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, WB_mem_read_write);
+        #5;
+        // PCO = PCO + 32'd4;
+  
+        // Address =  32'b11011011000000000000000000000001;
+            
+        
+    end 
+    
     
         //IF Stage
         //para escoger entre TA & PC+4
@@ -123,7 +145,7 @@ module main( input clk);
         IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
                                     ID_Bit15_12, DO,
-                                    choose_ta_r_nop, IF_ID_Load, clk, PC4, DO);
+                                    choose_ta_r_nop, IF_ID_Load, clk,Reset, PC4, DO);
            /* initial begin
                 #2;
                 $display(" ------- IF_ID_PIPE REG -------- ");
@@ -202,7 +224,7 @@ module main( input clk);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
             
-        register_file register_file_1(PA, PB, PD, PW, PCI, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCI, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk, Reset); //falta RW = WB_Bit15_12_out
 
         //   initial begin
         //         #2;
@@ -945,42 +967,45 @@ endmodule
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
                                output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
-                               input nop, Hazard_Unit_Ld, clk, input [31:0] PC4, DataOut);
+                               input nop, Hazard_Unit_Ld, clk, Reset, input [31:0] PC4, DataOut);
 
-    always@(*) //posedge clk)
+    always@(posedge clk)
     begin
 
-        if(Hazard_Unit_Ld) begin
-            ID_Bit31_0 = DataOut;
-            ID_Next_PC = PC4;
-            ID_Bit3_0 =  DataOut[3:0]; //{28'b0, DataOut[3:0]};
-            ID_Bit31_28 = DataOut[31:28];
-            ID_Bit19_16 =  DataOut[19:16]; //{28'b0, DataOut[19:16]};
-            ID_Bit15_12 = DataOut[15:12];
-            ID_Bit23_0 = DataOut[23:0];
-            ID_Bit11_0 = DataOut[11:0];
-            
-        end else begin
+        if(Reset) begin
             ID_Bit31_0 = 32'b0;
             ID_Next_PC = 32'b0;
-            ID_Bit3_0 = 4'b0; //32'b0;
+            ID_Bit3_0 = 4'b0;
             ID_Bit31_28 = 4'b0;
-            ID_Bit19_16 = 4'b0; //32'b0;
+            ID_Bit19_16 = 4'b0;
             ID_Bit15_12 = 4'b0;
             ID_Bit23_0 = 24'b0;
             ID_Bit11_0 = 12'b0;
-        end
 
-        // if(nop)begin
-        //     ID_Bit31_0 <= 32'b0;
-        //     ID_Next_PC <= 32'b0;
-        //     ID_Bit3_0 <= 4'b0;
-        //     ID_Bit31_28 <= 4'b0;
-        //     ID_Bit19_16 <= 4'b0;
-        //     ID_Bit15_12 <= 4'b0;
-        //     ID_Bit23_0 <= 24'b0;
-        //     ID_Bit11_0 <= 12'b0;
-        // end
+        end else begin
+
+            if(Hazard_Unit_Ld) begin
+                ID_Bit31_0 = DataOut;
+                ID_Next_PC = PC4;
+                ID_Bit3_0 =  DataOut[3:0]; //{28'b0, DataOut[3:0]};
+                ID_Bit31_28 = DataOut[31:28];
+                ID_Bit19_16 =  DataOut[19:16]; //{28'b0, DataOut[19:16]};
+                ID_Bit15_12 = DataOut[15:12];
+                ID_Bit23_0 = DataOut[23:0];
+                ID_Bit11_0 = DataOut[11:0];
+                
+            end else begin
+                ID_Bit31_0 = 32'b0;
+                ID_Next_PC = 32'b0;
+                ID_Bit3_0 = 4'b0; //32'b0;
+                ID_Bit31_28 = 4'b0;
+                ID_Bit19_16 = 4'b0; //32'b0;
+                ID_Bit15_12 = 4'b0;
+                ID_Bit23_0 = 24'b0;
+                ID_Bit11_0 = 12'b0;
+            end
+        end
+       
 
 
     // $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register OUT --------------------------------------*/\n");   
@@ -1013,7 +1038,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                input [7:0] ID_addresing_modes,
                                input ID_mem_size, ID_mem_read_write, input clk);
 
-    always@(*) //posedge clk)
+    always@(posedge clk)
     begin
         //Control Unit signals  
         EX_Shift_imm = ID_CU[6];
@@ -1047,7 +1072,7 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
                                 output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
 
 
-    always@(*)//posedge clk)
+    always@(posedge clk)
     begin
         MEM_A_O = A_O;
         MEM_MUX3 = mux_out_3_C;
@@ -1070,7 +1095,7 @@ endmodule
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
                                     output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable);
 
-    always@(*) //posedge clk)
+    always@(posedge clk)
     begin
         wb_alu_out = alu_out;
         wb_data_r_out = data_r_out;
@@ -1091,7 +1116,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
-    always @ (*) //(DataOut,Address)                
+    always @ (DataOut,Address)                
         if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
         begin    
             DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};

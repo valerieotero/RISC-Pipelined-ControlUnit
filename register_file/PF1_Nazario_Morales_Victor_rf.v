@@ -6,51 +6,52 @@
 
 //Todo: Validate if PCOut can be done without mux, right now it's just a bus output but value is being obtained by mux
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK, Reset);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, SD, C;
-    input RFLd, PCLd, CLK;
+    input RFLd, PCLd, CLK, Reset;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
 
-    //Binary Decoder
-    binary_decoder bc (E, C, RFLd);
+        //Binary Decoder
+        binary_decoder bc (E, C, RFLd);
 
-    //Multiplexers
-    multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
-    multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
-    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
+        //Multiplexers
+        multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
+        multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
+        multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
 
-    //Added this 2x1 multi to handle R15 input variations
-    //Here PC is equivalent to PW in the diagram and PCin
-    //is the equivalent to the PC (which gets increaed by 4)
-    twoToOneMultiplexer r15mux (PW, PCin, PCLd, MO);
+        //Added this 2x1 multi to handle R15 input variations
+        //Here PC is equivalent to PW in the diagram and PCin
+        //is the equivalent to the PC (which gets increaed by 4)
+        twoToOneMultiplexer r15mux (PW, PCin, PCLd, MO);
 
 
-    //16 Registers
-    register R0 (Q0, PW, E[0], CLK);
-    register R1 (Q1, PW, E[1], CLK);
-    register R2 (Q2, PW, E[2], CLK);
-    register R3 (Q3, PW, E[3], CLK);
-    register R4 (Q4, PW, E[4], CLK);
-    register R5 (Q5, PW, E[5], CLK);
-    register R6 (Q6, PW, E[6], CLK);
-    register R7 (Q7, PW, E[7], CLK);
-    register R8 (Q8, PW, E[8], CLK);
-    register R9 (Q9, PW, E[9], CLK);
-    register R10 (Q10, PW, E[10], CLK);
-    register R11 (Q11, PW, E[11], CLK);
-    register R12 (Q12, PW, E[12], CLK);
-    register R13 (Q13, PW, E[13], CLK);
-    register R14 (Q14, PW, E[14], CLK);
-    PCregister R15 (Q15, MO, PCin, E[15], CLK);  //register 15 will have two data sources on future revisions.
-    assign PCout = Q15;
-
+        //16 Registers
+        register R0 (Q0, PW, E[0], CLK);
+        register R1 (Q1, PW, E[1], CLK);
+        register R2 (Q2, PW, E[2], CLK);
+        register R3 (Q3, PW, E[3], CLK);
+        register R4 (Q4, PW, E[4], CLK);
+        register R5 (Q5, PW, E[5], CLK);
+        register R6 (Q6, PW, E[6], CLK);
+        register R7 (Q7, PW, E[7], CLK);
+        register R8 (Q8, PW, E[8], CLK);
+        register R9 (Q9, PW, E[9], CLK);
+        register R10 (Q10, PW, E[10], CLK);
+        register R11 (Q11, PW, E[11], CLK);
+        register R12 (Q12, PW, E[12], CLK);
+        register R13 (Q13, PW, E[13], CLK);
+        register R14 (Q14, PW, E[14], CLK);
+        PCregister R15 (Q15, MO, PCin, E[15], CLK);  //register 15 will have two data sources on future revisions.
+    
+        assign PCout = Q15;
+    
 endmodule
 
 module binary_decoder(E, C, Ld);
@@ -200,12 +201,12 @@ module tester;
 
     //Will print values for each tick of the clock. All 32bit values displayed in decimal
     //without trailing zeroes, binary otherwise.
-    // always @ (CLK)
-    // begin
-    //     // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
-    // end
+    always @ (CLK)
+    begin
+        // $display("PC:%0d | PW:%0d | SA:%b | SB:%b | SD:%b | PA:%0d | PB:%0d | PD:%0d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+    end
 
-    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK));
+    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK), .Reset(Reset));
     initial begin
         //Initial values
         PW = 32'b0;
