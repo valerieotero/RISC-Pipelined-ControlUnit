@@ -73,7 +73,7 @@ module main(); //input clk, input Reset);
     wire [3:0] EX_ALU_OP;
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
-                                                                               
+
 
     initial begin
         
@@ -1112,10 +1112,11 @@ endmodule
 
 
 //INSTRUCTION MEMORY 
-module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
+module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset);
                   
    reg[7:0] Mem[0:255]; //256 localizaciones 
    
+<<<<<<< HEAD
     always @ (DataOut,Address)                
         if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.
         begin    
@@ -1124,8 +1125,26 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
         end
         else
             DataOut = Mem[Address]; 
+=======
+    always @ (DataOut,Address,Reset)  
+    begin
 
-endmodule                               
+        if (Reset)            
+            DataOut = 32'b00000000000000000000000000000000;            
+             
+        else //Not Reset
+        begin
+>>>>>>> a6d274df489bc17ddab515e8eeab59befc461fe6
+
+            if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
+                 DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
+                
+            else                    
+                DataOut= Mem[Address]; 
+                     
+        end        
+    end 
+endmodule                                
               
 
 //DATA MEMORY
