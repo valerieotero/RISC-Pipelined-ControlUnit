@@ -97,7 +97,7 @@ module main(); //input clk, input Reset);
         // PCO = PCO + 32'd4;
   
         // Address =  32'b11011011000000000000000000000001;
-        Reset = 0;
+        //Reset = 0;
         
     end 
     
@@ -1123,8 +1123,11 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
     always @ (DataOut,Address,Reset)  
     begin
 
-        if (Reset)            
-            DataOut = 32'b00000000000000000000000000000000;            
+        if (Reset)    
+        begin        
+            DataOut = 32'b00000000000000000000000000000000; 
+            $display("Inside Reset\n");   
+        end
              
         else //Not Reset
         begin
@@ -1135,7 +1138,8 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
             else                    
                 DataOut= Mem[Address]; 
                      
-        end        
+        end 
+        $display("From inside Instr Mem, DataOut= %b\n", DataOut);       
     end 
 endmodule                                
               
