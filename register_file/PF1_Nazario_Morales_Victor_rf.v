@@ -3,9 +3,6 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-
-//Todo: Validate if PCOut can be done without mux, right now it's just a bus output but value is being obtained by mux
-
 module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
@@ -157,19 +154,19 @@ module PCregister(Q, PW, PCin, RFLd, CLK, RST);
     //Inputs
     input [31:0] PW, PCin;
     input RFLd, CLK, RST;
+    wire CLK, RST;
 
-    //Used as a reset mechanism, when RST is equals to one, the R15 will get a 0 value
-    always @ (posedge RST)
-        Q <= 0;
-
-    always @ (posedge CLK)
+    always @ (posedge CLK or posedge RST)
     begin
-        Q <= PCin;
+        if(RST == 1'b1)
+          Q <= 0;
 
-        if (RFLd)
-            Q <= PW;
+        else
+          Q <= PCin;
+
+        if(RFLd == 1'b1)
+          Q <= PW;
     end
-
 endmodule
 
 //module tester;
