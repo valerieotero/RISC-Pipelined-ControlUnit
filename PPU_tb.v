@@ -9,7 +9,7 @@ module PPU_tb;
     reg Enable;
     reg [31:0] Address; wire [31:0] DataOut;
 
-    inst_ram256x8 ram1 (DataOut, Address);
+    inst_ram256x8 ram1 (DataOut, Address, Reset);
 
     initial
         begin

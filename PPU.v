@@ -74,6 +74,26 @@ module main(); //input clk, input Reset);
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
 
+  /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
+
+    integer file, fw, code, i; reg [31:0] data;   
+    reg [31:0] Address; wire [31:0] DataOut;
+
+    inst_ram256x8 ram1 (DO, PCO, Reset);
+
+    initial
+        begin
+        file = $fopen("ramintr.txt","rb");
+        Address = 32'b00000000000000000000000000000000;
+            while (!$feof(file)) begin //while not the end of file
+            code = $fscanf(file, "%b", data);
+            ram1.Mem[Address] = data;
+            Address = Address + 1;
+        end
+
+    $fclose(file);  
+    Address = #1 32'b00000000000000000000000000000000; //make sure adress starts back in 0 after precharge
+    end
 
     initial begin
         
@@ -82,13 +102,27 @@ module main(); //input clk, input Reset);
         // PCO = 32'b0; 
     end
     // begin 
+
+    /*--------------------------------------  Toggle Reset  --------------------------------------*/
+
+    initial begin
+        clk = 1'b0;
+        Reset = 1'b1;
+        #30 $finish;
+    end
       
+    /*--------------------------------------  Toggle Clock  --------------------------------------*/
+
+    always begin
+        #1 clk = ~clk; Reset = 1'b0;
+    
+
     // initial 
-    always @(clk) 
-    begin
+   // always @(clk) 
+   // begin
     
         $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                       %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO);
-        clk = ~clk;
+       // clk = ~clk;
         // Address = #1 32'b11100000100000100101000000000101; //1100000100000100101000000000101;
         // clk = ~clk;          
                   
@@ -116,7 +150,7 @@ module main(); //input clk, input Reset);
                 $display("PCin %b ", PCI);
             end */
         // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-        inst_ram256x8 inst_ram(DO, PCO, Reset);
+       // inst_ram256x8 inst_ram(DO, PCO, Reset);
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 
@@ -1131,6 +1165,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
              
         else //Not Reset
         begin
+        $display("From inside Instr Mem, Address= %d\n", Address);
 
             if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
                  DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
@@ -1139,7 +1174,8 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
                 DataOut= Mem[Address]; 
                      
         end 
-        $display("From inside Instr Mem, DataOut= %b\n", DataOut);       
+        $display("From inside Instr Mem, DataOut= %b\n", DataOut);    
+         
     end 
 endmodule                                
               
