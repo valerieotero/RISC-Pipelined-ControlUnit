@@ -18,7 +18,7 @@ module main(); //input clk, input Reset);
     //wire 
     //ALU_IF && IF_ID_pipeeline
     wire [31:0] DO; // = 32'b11100000100000100101000000000101;
-    // wire [31:0] DAO; // = 32'b11100000100000100101000000000101;
+    wire [31:0] DO_CU; // = 32'b11100000100000100101000000000101;
     wire [31:0] Next_PC, PC4, MEM_A_O, MEM_MUX3; //, DAO; 
 
     wire [23:0] ID_Bit23_0;
@@ -182,7 +182,7 @@ module main(); //input clk, input Reset);
         // //                           input nop, Hazard_Unit_Ld, clk, input [23:0] PC4, ram_instr, input [31:0] DataOut);
         IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
-                                    ID_Bit15_12, DO,
+                                    ID_Bit15_12, DO_CU,
                                     choose_ta_r_nop, IF_ID_Load, clk,Reset, PC4, DO);
            /* initial begin
                 #2;
@@ -334,7 +334,7 @@ module main(); //input clk, input Reset);
         // //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
         control_unit control_unit(ID_B_instr, ID_mem_read_write, C_U_out, 
-                        clk, DO);
+                        clk, DO_CU);
       /*  initial begin
                 #2;
                 $display(" ------- CONTROL UNIT -------- ");
@@ -647,12 +647,12 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     integer b_instr = 0; 
     integer m_rw = 0;
 
-    reg [3:0] alu_op = 4'b0000;
-    integer b_bl = 0; // branch or branch & link
-    integer r_sr_off = 0; // register or Scaled register offset
-    integer u = 0;
-    integer l = 0;
-    integer condAsserted = 0; // 0 Cond no se da, 1 cond se da
+    reg [3:0] alu_op;
+    integer b_bl; // branch or branch & link
+    integer r_sr_off; // register or Scaled register offset
+    integer u;
+    integer l;
+    // integer condAsserted;// = Cond_Is_Asserted (input [3:0] cc_in, A[31:28], asserted);; // 0 Cond no se da, 1 cond se da
 
     assign C_U_out[6] = s_imm;
     assign C_U_out[0] = rf_instr;
@@ -660,8 +660,8 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     assign ID_B_instr = b_instr;
     assign C_U_out[5:2] = alu_op;
     assign MemReadWrite = m_rw;
-
-    always@(*)
+//  Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
+    always@(*) //posedge clk)
     // if(Cond_Is_Asserted == 1) ejecuta instr, else tira un NOP
     //
     //if(Cond_Is_Asserted (Status_register(cc_in, S, cc_out, clk), A[31:28], output asserted)) == 0)
@@ -669,122 +669,129 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     //else (el codigo de abajo)
 
     begin
-        instr = A[27:25];
-       // $display("instr %b", instr);
-        // if(instr == 3'b101)
-        //     b_instr = 1;
-        // else 
-       //     b_instr = 0;     
-        case(instr)
+        // if(condAsserted == 0) begin
+        //     s_imm = 0; 
+        //     rf_instr = 0; 
+        //     l_instr = 0; 
+        //     b_instr = 0; 
+        //     m_rw = 0;
+        // end else begin 
+            instr = A[27:25];
+        // $display("instr %b", instr);
+            // if(instr == 3'b101)
+            //     b_instr = 1;
+            // else 
+        //     b_instr = 0;     
+            case(instr)
 
-            3'b000: //Data Procesing Shift_by_imm
-            begin
-                s_imm = 0; 
-                rf_instr = 1; 
-                l_instr = 0; 
-                    // b_instr = 0;
-                alu_op = A[24:21];
-            end
-
-            3'b001: //Data Procesing Immediate
-            begin
-                s_imm = 1; 
-                rf_instr = 1; 
-                l_instr = 0; 
-                   // b_instr = 0;
-                alu_op = A[24:21];
-            end
-
-            3'b010: //Load/Store Immediate Offset
-            begin
-                u = A[23];
-                l = A[20];
-                s_imm = 0; 
-                l_instr = l; 
-                    // b_instr = 0;
-
-                if(l == 0)
-                    rf_instr = 0;
-                else
+                3'b000: //Data Procesing Shift_by_imm
+                begin
+                    s_imm = 0; 
                     rf_instr = 1; 
-                    
-
-                if(u == 1)
-                    alu_op = 4'b0100; //suma
-                else
-                    alu_op = 4'b0010; //resta              
-            end
-
-            3'b011: //Load/Store Register Offset
-            begin
-                u = A[23];
-                l = A[20];
-
-                if(u == 1)
-                    alu_op = 4'b0100; //suma
-                else
-                    alu_op = 4'b0010; //resta
-                    
-
-                if(l == 0) begin
-                    rf_instr = 0;
-                    m_rw = 1;
-                end else begin
-                    rf_instr = 1; 
-                    m_rw = 1;
-
+                    l_instr = 0; 
+                        // b_instr = 0;
+                    alu_op = A[24:21];
                 end
-            
-                if(A[11:4] == 8'b00000000)
-                    r_sr_off = 0;
-                else
-                    r_sr_off = 1;
-                    
 
-                    
-                if(r_sr_off == 0)begin //register_offset
+                3'b001: //Data Procesing Immediate
+                begin
+                    s_imm = 1; 
+                    rf_instr = 1; 
+                    l_instr = 0; 
+                    // b_instr = 0;
+                    alu_op = A[24:21];
+                end
+
+                3'b010: //Load/Store Immediate Offset
+                begin
+                    u = A[23];
+                    l = A[20];
                     s_imm = 0; 
                     l_instr = l; 
                         // b_instr = 0;
 
+                    if(l == 0)
+                        rf_instr = 0;
+                    else
+                        rf_instr = 1; 
+                        
+
+                    if(u == 1)
+                        alu_op = 4'b0100; //suma
+                    else
+                        alu_op = 4'b0010; //resta              
+                end
+
+                3'b011: //Load/Store Register Offset
+                begin
+                    u = A[23];
+                    l = A[20];
+
+                    if(u == 1)
+                        alu_op = 4'b0100; //suma
+                    else
+                        alu_op = 4'b0010; //resta
+                        
+
+                    if(l == 0) begin
+                        rf_instr = 0;
+                        m_rw = 1;
+                    end else begin
+                        rf_instr = 1; 
+                        m_rw = 1;
+
+                    end
                 
-                end else begin //scaled_reg_offset
-                    s_imm = 0; 
-                    l_instr = l; 
-                        // b_instr = 0;
+                    if(A[11:4] == 8'b00000000)
+                        r_sr_off = 0;
+                    else
+                        r_sr_off = 1;
+                        
 
-                       
-                            
+                        
+                    if(r_sr_off == 0)begin //register_offset
+                        s_imm = 0; 
+                        l_instr = l; 
+                            // b_instr = 0;
+
+                    
+                    end else begin //scaled_reg_offset
+                        s_imm = 0; 
+                        l_instr = l; 
+                            // b_instr = 0;
+
+                        
+                                
+                    end
+                    
                 end
-                  
-            end
 
-            3'b101: //branches
-            begin
-                b_bl = A[24];
-                  
-                // case(b_bl)
-                    // 1'b0://branch
-                if(b_bl == 0) begin
-                    s_imm = 0; 
-                    rf_instr = 0; 
-                    l_instr = 0; 
-                                // b_instr = 1;
-                end else begin
-                    // 1'b1://branch & link begin
-                    s_imm = 0; 
-                    rf_instr = 1; 
-                    l_instr = 0; 
-                                // b_instr = 1;
-                    alu_op = 4'b0100; //suma
+                3'b101: //branches
+                begin
+                    b_bl = A[24];
+                    
+                    // case(b_bl)
+                        // 1'b0://branch
+                    if(b_bl == 0) begin
+                        s_imm = 0; 
+                        rf_instr = 0; 
+                        l_instr = 0; 
+                                    // b_instr = 1;
+                    end else begin
+                        // 1'b1://branch & link begin
+                        s_imm = 0; 
+                        rf_instr = 1; 
+                        l_instr = 0; 
+                                    // b_instr = 1;
+                        alu_op = 4'b0100; //suma
+                    end
+                    // endcase
+                    
                 end
-                // endcase
-                   
-            end
-            
+                
 
-        endcase
-        //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
+            endcase
+        // end//  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
     //    
     end
 endmodule
@@ -1160,12 +1167,12 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
         if (Reset)    
         begin        
             DataOut = 32'b00000000000000000000000000000000; 
-            $display("Inside Reset\n");   
+            // $display("Inside Reset\n");   
         end
              
         else //Not Reset
         begin
-        $display("From inside Instr Mem, Address= %d\n", Address);
+        // $display("From inside Instr Mem, Address= %d\n", Address);
 
             if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
                  DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
@@ -1174,7 +1181,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
                 DataOut= Mem[Address]; 
                      
         end 
-        $display("From inside Instr Mem, DataOut= %b\n", DataOut);    
+        // $display("From inside Instr Mem, DataOut= %b\n", DataOut);    
          
     end 
 endmodule                                
