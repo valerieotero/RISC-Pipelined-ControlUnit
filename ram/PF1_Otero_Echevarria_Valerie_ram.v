@@ -19,7 +19,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
         begin
 
             if(Address%4==0) //Instructions have to start at even locations that are multiples of 4.                        
-                 DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
+                DataOut = {Mem[Address+0], Mem[Address+1], Mem[Address+2], Mem[Address+3]};                
                 
             else                    
                 DataOut= Mem[Address]; 

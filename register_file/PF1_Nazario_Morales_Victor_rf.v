@@ -154,18 +154,18 @@ module PCregister(Q, PW, PCin, RFLd, CLK, RST);
     //Inputs
     input [31:0] PW, PCin;
     input RFLd, CLK, RST;
-    wire CLK, RST;
+    //wire CLK, RST;
 
     always @ (posedge CLK or posedge RST)
     begin
         if(RST == 1'b1)
-          Q <= 0;
+          Q <= 32'b0;
 
-        else
+        else 
           Q <= PCin;
-
         if(RFLd == 1'b1)
           Q <= PW;
+        
     end
 endmodule
 
