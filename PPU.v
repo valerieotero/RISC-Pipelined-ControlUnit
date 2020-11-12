@@ -4,15 +4,12 @@
 
 
 //PPU
-module main(); //input clk, input Reset);
+module main(input clk, Reset); //input clk, input Reset);
 
     //Precharge
     wire [31:0] PCO; // = 32'b0; //address instr Mem
     
-    reg clk = 0;
-    reg Reset = 0;
-    //Inputs 
-    // reg clk; //enable
+    wire ID_B_instr, MEM_mem_read_write, MEM_load_instr,WB_load_instr;  
 
 
     //wire 
@@ -74,7 +71,7 @@ module main(); //input clk, input Reset);
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
 
-    //test
+    
 
   /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
 
@@ -96,28 +93,9 @@ module main(); //input clk, input Reset);
     $fclose(file);  
     Address = #1 32'b00000000000000000000000000000000; //make sure adress starts back in 0 after precharge
     end
-   
-
-    /*--------------------------------------  Toggle Clock  --------------------------------------*/
-
-    initial #22 $finish; //finish simulation on tick 22
-
-    initial begin
-
-        clk = 1'b0; //before tick starts, clk=0
-
-        repeat(22) #1 clk = ~clk; end  //enough repeats to read all instructions 
-
-    /*--------------------------------------  Toggle Reset  --------------------------------------*/
-
-    initial fork       
-
-        Reset = 1'b1; //before tick starts, reset=0
-
-        #2 Reset = 1'b0; //after two ticks, change value to 0                    
       
-    join 
-  
+ /*--------------------------------------  Monitor  --------------------------------------*/ 
+ 
      initial begin
           
         $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
@@ -126,6 +104,7 @@ module main(); //input clk, input Reset);
 
     end
     
+
         //IF Stage
         //para escoger entre TA & PC+4
         //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out); 0 ==A ; 1==B

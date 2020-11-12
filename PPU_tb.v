@@ -2,12 +2,11 @@
 
 module ppu_tb;
 
-/* CPU Signals */
+/* PPU Signals */
 reg clk, Reset;
 
-
 /* Modules instances */
-//main PPU(clk, reset);
+main PPU(clk, Reset);
 
 
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
@@ -20,7 +19,7 @@ reg clk, Reset;
 
         repeat(22) #1 clk = ~clk; end  //enough repeats to read all instructions 
 
-    /*--------------------------------------  Toggle Reset  --------------------------------------*/
+/*--------------------------------------  Toggle Reset  --------------------------------------*/
 
     initial fork       
 
@@ -28,14 +27,6 @@ reg clk, Reset;
 
         #2 Reset = 1'b0; //after two ticks, change value to 0                    
       
-    join 
+    join   
   
-    initial begin
-          
-        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------");
-        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
-        //$monitor("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU);
-
-    end
-
 endmodule
