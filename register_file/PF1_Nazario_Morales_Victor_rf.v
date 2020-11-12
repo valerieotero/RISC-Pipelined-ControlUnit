@@ -3,14 +3,15 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, HZPCld, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
+    output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, SD, C;
-    input RFLd, PCLd, CLK, RST;
+    input RFLd, PCLd, CLK, RST, HZPCld;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -22,6 +23,9 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK
     multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
     multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
+
+
+    loadDecoder r15decoder(PCLd, E[15], R15MO);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -45,7 +49,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, CLK
     register R12 (Q12, PW, E[12], CLK);
     register R13 (Q13, PW, E[13], CLK);
     register R14 (Q14, PW, E[14], CLK);
-    PCregister R15 (Q15, MO, PCin, E[15], CLK, RST);  //register 15 will have two data sources on future revisions.
+    PCregister R15 (Q15, MO, HZPCld, CLK, RST);
     assign PCout = Q15;
 
 endmodule
@@ -113,24 +117,45 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
 endmodule
 
 //This defines the multiplexer used to change inputs to r15 conditionally
-module twoToOneMultiplexer(PW, PC, PCLd, MO);
+module twoToOneMultiplexer(PW, PC, R15MO, MO);
     //Output
     output reg [31:0] MO;
     //Input
     input[31:0] PW, PC;
-    input PCLd;
+    input R15MO;
 
     //Whenever a change is produced in the signals, change the output
     //according with the stablished logic.
-    always @(PW, PC, PCLd)
+    always @(PW, PC, R15MO)
     begin
-        if (PCLd)
-            MO <= PW;
-        else
+        if (R15MO)
             MO <= PC;
+        else
+            MO <= PW;
     end
 endmodule
 
+module loadDecoder(PCLd, RFLd, R15MO);
+//When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
+// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
+//Otherwise we set it to 0 and PCin is loaded into the register.
+output reg[1:0] R15MO;
+input PCLd, RFLd;
+
+//What happens when both = 1?
+//Does this means that the following is accomplished?
+
+//El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
+//ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
+//el mismo, lo cual tiene prioridad.
+always @ (PCLd, RFLd)
+    begin
+        if(RFLd)
+          R15MO <= 1'b1;
+        else
+          R15MO <= 1'b0;
+    end
+endmodule
 
 
 module register(Q, PW, RFLd, CLK);
@@ -148,24 +173,24 @@ module register(Q, PW, RFLd, CLK);
 
 endmodule
 
-module PCregister(Q, PW, PCin, RFLd, CLK, RST);
+module PCregister(Q, MOin, HZPCld, CLK, RST);
     //Output
     output reg [31:0] Q;
     //Inputs
-    input [31:0] PW, PCin;
-    input RFLd, CLK, RST;
+    input [31:0] MOin;
+    input HZPCld, CLK, RST;
     //wire CLK, RST;
 
-    always @ (posedge CLK or posedge RST)
+    always @ (posedge CLK or posedge RST or HZPCld)
     begin
-        if(RST == 1'b1)
-          Q <= 32'b0;
+        if(HZPCld)
+        begin
+            if(RST)
+                Q <= 32'b0;
 
-        else 
-          Q <= PCin;
-        if(RFLd == 1'b1)
-          Q <= PW;
-        
+            else
+                Q <= MOin;
+        end
     end
 endmodule
 
@@ -173,7 +198,7 @@ endmodule
 //    //Variable for loop
 //    integer index;
 //    //Inputs
-//    reg CLK, RFLd, PCLd, RST;
+//    reg CLK, RFLd, PCLd, RST, HZPCLd;
 //    reg [3:0] SA, SB, SD, SPCout, C;
 //    reg [31:0] PW, PCin;
 //
@@ -181,6 +206,10 @@ endmodule
 //    wire [31:0] PA, PB, PD, PCout;
 //
 //    initial RST = 1'b1;
+//
+//    initial HZPCLd = 1'b1;
+//
+//
 //
 //    //Clock Signal
 //    always begin
@@ -201,10 +230,12 @@ endmodule
 //     always @ (CLK)
 //     begin
 //         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+//         //$display("PC:%3d | PCout: %3d", PCin, PCout);
 //     end
 //
-//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .CLK(CLK), .RST(RST));
+//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
 //    initial begin
+//    //$monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
 //        //Initial values
 //        PW = 32'b0;
 //        C = 4'b0000;
@@ -220,7 +251,7 @@ endmodule
 //        //Enable load in each register (Ld = 1)
 //        #10;
 //        RFLd = 1'b1;
-//        PCLd = 1'b1;
+//        PCLd = 1'b1;  //Tells if we write PC or PW
 //
 //        //Writing a unique word of each register using Port C(PC)//
 //
@@ -286,12 +317,14 @@ endmodule
 //        #10;
 //        C = 4'b1001;
 //        PW = 32'd18;
-//        RST = 1'b1;
 //
 //        //Register 10
 //        #10;
 //        C = 4'b1010;
 //        PW = 32'd9;
+//        //RST = 1'b1;    //Can be used to cause a RST
+//        //HZPCLd = 1'b0; //Can be used to cause PC to not increment
+//
 //
 //        //Register 11
 //        #10;
@@ -308,15 +341,21 @@ endmodule
 //        C = 4'b1101;
 //        PW = 32'd21;
 //
+//
 //        //Register 14
 //        #10;
 //        C = 4'b1110;
 //        PW = 32'd83;
 //
+//
 //        //Register 15
 //        #10;
 //        C = 4'b1111;
 //        PW = 32'd35;
+//
+//        //Won't charge PCin, it will charge PW instead given these two signals bellow.
+//        PCLd = 1'b0;
+//        RFLd = 1'b1;
 //
 //
 //
