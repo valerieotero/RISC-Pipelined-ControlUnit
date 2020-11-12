@@ -772,6 +772,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         rf_instr = 0; 
                         l_instr = 0; 
                         b_instr = 1;
+                        alu_op = 4'b0010;
                     end else begin
                         // 1'b1://branch & link begin
                         s_imm = 0; 
