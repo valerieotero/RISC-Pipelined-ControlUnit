@@ -74,6 +74,8 @@ module main(); //input clk, input Reset);
     wire[7:0] EX_addresing_modes, ID_addresing_modes;
     wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
 
+    //test
+
   /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
 
     integer file, fw, code, i; reg [31:0] data;   
@@ -94,33 +96,35 @@ module main(); //input clk, input Reset);
     $fclose(file);  
     Address = #1 32'b00000000000000000000000000000000; //make sure adress starts back in 0 after precharge
     end
+   
+
+    /*--------------------------------------  Toggle Clock  --------------------------------------*/
+
+    initial #22 $finish; //finish simulation on tick 22
 
     initial begin
-        
-        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------");
-        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
-    end
+
+        clk = 1'b0; //before tick starts, clk=0
+
+        repeat(22) #1 clk = ~clk; end  //enough repeats to read all instructions 
 
     /*--------------------------------------  Toggle Reset  --------------------------------------*/
 
-    initial begin
-        clk = 1'b0;
-        Reset = 1'b1;
-        #30 $finish;
-    end
-      
-    /*--------------------------------------  Toggle Clock  --------------------------------------*/
+    initial fork       
 
-    always begin
-        $display(Reset);
-        clk = ~clk; 
-        
-        #1.5 Reset = 1'b0;
-       
-        $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU);
+        Reset = 1'b1; //before tick starts, reset=0
+
+        #2 Reset = 1'b0; //after two ticks, change value to 0                    
       
-    end 
+    join 
   
+    initial begin
+          
+        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------");
+        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
+        $monitor("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU);
+
+    end
     
         //IF Stage
         //para escoger entre TA & PC+4
@@ -845,143 +849,143 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition,input cl
 
     always@(posedge clk)
     begin
-        n = cc_in[3];
-        z = cc_in[2];
-        c = cc_in[1];
-        v = cc_in[0];
+        n <= cc_in[3];
+        z <= cc_in[2];
+        c <= cc_in[1];
+        v <= cc_in[0];
         case(instr_condition)
             4'b0000: //(EQ) Equal
             begin
                 if(z == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //1
             4'b0001: //(NE) Not Equal
             begin
                 if(z == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //2
             4'b0010: //(CS/HS) Carry set/unsigned higher or same
            begin
                 if(c == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //3
             4'b0011: //(CC/LO) carry clear/ unsigned lower
            begin
                 if(c == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
                      
             //4
             4'b0100: //(MI) Minus/negative
             begin
                 if(n == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //5
             4'b0101: //(PL) plus/positive or zero 
             begin
                 if(n == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //6
             4'b0110: //(VS) Overflow
             begin
                 if(v == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //7
             4'b0111: //(VC) No Overflow
             begin
                 if(v == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
             
             //8
             4'b1000: //(HI) Unsigned Higher 
             begin
                 if(c == 1 && z ==0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //9
             4'b1001: //(LS) Unsigned Lower or same
             begin
                 if(c == 0 || z == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //10
             4'b1010: //(GE) Signed greater than or equal 
             begin
                 if(v == n)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //11
             4'b1011: //(LT) Signed less than
             begin
                 if(v != n)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //12
             4'b1100: //(GT) Signed greater than
             begin
                 if(z == 0 || n == v)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end 
 
             //13
             4'b1101: // (LE) Signed Less than or equal
              begin
                 if(z == 1 || n != v)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end 
 
             //14
             4'b1110: //Always
-            assrt = 1;
+            assrt <= 1;
 
             //15
             4'b1111: 
-            assrt = 0;
+            assrt <= 0;
 
         endcase
         // $display("condition arsserted %b", assrt);
@@ -1012,7 +1016,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
     begin
 
         if(Reset==1) begin
-            ID_Bit31_0 = 32'b0;
+            ID_Bit31_0 <= 32'b0;
             ID_Next_PC <= 32'b0;
             ID_Bit3_0 <= 4'b0;
             ID_Bit31_28 <= 4'b0;
@@ -1024,7 +1028,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         end else begin
 
           //  if(Hazard_Unit_Ld == 0) begin
-                ID_Bit31_0 = DataOut;
+                ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
                 ID_Bit31_28 <= DataOut[31:28];
@@ -1329,7 +1333,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
                    input EX_load_instr, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, clk,
                    input [3:0] EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, ID_Bit3_0, 
                    ID_Bit19_16);
-    always@(posedge clk)
+    always@(*)
     begin
         //DATA Hazard-By Load Instr
         if(EX_load_instr && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12)))begin
