@@ -255,8 +255,8 @@ module main(); //input clk, input Reset);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
         
-                  //    register_file(PA, PB, PD, PW, PCin, PCout,      C,            SA,         SB,     SD, RFLd,  PCLd,   HZPCld,  CLK,   RST);
-        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, 1'b1,   PC_RF_ld ,clk,   Reset); //falta RW = WB_Bit15_12_out
+                  //    register_file(PA, PB, PD, PW, PCin, PCout,      C,            SA,         SB,     SD, RFLd,   HZPCld,  CLK,  RST);
+        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
 
         //   initial begin
         //         #10;
