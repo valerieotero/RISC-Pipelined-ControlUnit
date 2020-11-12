@@ -788,7 +788,7 @@ endmodule
 
 
 //Status Register
-module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk);
+module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk); //verify
     //Recordar que el registro se declara aquí y luego
     always @ (posedge clk)
     begin
