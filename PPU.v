@@ -771,13 +771,13 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         s_imm = 0; 
                         rf_instr = 0; 
                         l_instr = 0; 
-                                    // b_instr = 1;
+                        //  b_instr = 1;
                     end else begin
                         // 1'b1://branch & link begin
                         s_imm = 0; 
                         rf_instr = 1; 
                         l_instr = 0; 
-                                    // b_instr = 1;
+                        //   b_instr = 1;
                         alu_op = 4'b0100; //suma
                     end
                     // endcase
@@ -849,143 +849,143 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition,input cl
 
     always@(posedge clk)
     begin
-        n = cc_in[3];
-        z = cc_in[2];
-        c = cc_in[1];
-        v = cc_in[0];
+        n <= cc_in[3];
+        z <= cc_in[2];
+        c <= cc_in[1];
+        v <= cc_in[0];
         case(instr_condition)
             4'b0000: //(EQ) Equal
             begin
                 if(z == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //1
             4'b0001: //(NE) Not Equal
             begin
                 if(z == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //2
             4'b0010: //(CS/HS) Carry set/unsigned higher or same
            begin
                 if(c == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //3
             4'b0011: //(CC/LO) carry clear/ unsigned lower
            begin
                 if(c == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
                      
             //4
             4'b0100: //(MI) Minus/negative
             begin
                 if(n == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //5
             4'b0101: //(PL) plus/positive or zero 
             begin
                 if(n == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //6
             4'b0110: //(VS) Overflow
             begin
                 if(v == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //7
             4'b0111: //(VC) No Overflow
             begin
                 if(v == 0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
             
             //8
             4'b1000: //(HI) Unsigned Higher 
             begin
                 if(c == 1 && z ==0)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //9
             4'b1001: //(LS) Unsigned Lower or same
             begin
                 if(c == 0 || z == 1)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //10
             4'b1010: //(GE) Signed greater than or equal 
             begin
                 if(v == n)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //11
             4'b1011: //(LT) Signed less than
             begin
                 if(v != n)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end
 
             //12
             4'b1100: //(GT) Signed greater than
             begin
                 if(z == 0 || n == v)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end 
 
             //13
             4'b1101: // (LE) Signed Less than or equal
              begin
                 if(z == 1 || n != v)
-                    assrt = 1;
+                    assrt <= 1;
                 else
-                    assrt = 0;
+                    assrt <= 0;
             end 
 
             //14
             4'b1110: //Always
-            assrt = 1;
+            assrt <= 1;
 
             //15
             4'b1111: 
-            assrt = 0;
+            assrt <= 0;
 
         endcase
         // $display("condition arsserted %b", assrt);
@@ -1016,7 +1016,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
     begin
 
         if(Reset==1) begin
-            ID_Bit31_0 = 32'b0;
+            ID_Bit31_0 <= 32'b0;
             ID_Next_PC <= 32'b0;
             ID_Bit3_0 <= 4'b0;
             ID_Bit31_28 <= 4'b0;
@@ -1028,7 +1028,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         end else begin
 
           //  if(Hazard_Unit_Ld == 0) begin
-                ID_Bit31_0 = DataOut;
+                ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
                 ID_Bit31_28 <= DataOut[31:28];
@@ -1342,42 +1342,42 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         if(EX_load_instr && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12)))begin
             // ID_EX_pipeline_register reg1(32'b0, 32'b0, 32'b0, 4'b0, 6'b0, 12'b0, 8'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in, ID_Bit15_12_in, ID_ALU_opcodes_in, ID_Bit11_0_in, ID_addresing_modes_in, ID_mem_size_in, ID_mem_read_write_in, clk);
             
-            IF_ID_load = 1'b0;
-            PC_RF_load = 1'b0;
-            MUXControlUnit_signal = 1'b0;
+            IF_ID_load <= 1'b0;
+            PC_RF_load <= 1'b0;
+            MUXControlUnit_signal <= 1'b0;
         end
 
         if(EX_load_instr == 1) 
-            MUXControlUnit_signal = 1; //NOP
+            MUXControlUnit_signal <= 1; //NOP
         else
-            MUXControlUnit_signal = 0; //Control Unit
+            MUXControlUnit_signal <= 0; //Control Unit
             
-        IF_ID_load = 1'b1;//0
-        PC_RF_load = 1'b1;//0
-        MUXControlUnit_signal = 1'b1;//0
+        IF_ID_load <= 1'b1;//0
+        PC_RF_load <= 1'b1;//0
+        MUXControlUnit_signal <= 1'b1;//0
         
 
 
         //DATA Forwarding
         if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //ID_Forwarding = EX_Bit15_12_in;
-            MUX1_signal = 2'b01;
-            MUX2_signal = 2'b01; 
-            MUX3_signal = 2'b01;
+            MUX1_signal <= 2'b01;
+            MUX2_signal <= 2'b01; 
+            MUX3_signal <= 2'b01;
         end else if(MEM_RF_Enable && ((ID_Bit19_16 == MEM_Bit15_12)||(ID_Bit3_0 == MEM_Bit15_12))) begin
            // ID_Forwarding = MEM_Bit15_12_in;
-            MUX1_signal = 2'b10;
-            MUX2_signal = 2'b10;
-            MUX3_signal = 2'b10;
+            MUX1_signal <= 2'b10;
+            MUX2_signal <= 2'b10;
+            MUX3_signal <= 2'b10;
         end else if(WB_RF_Enable && ((ID_Bit19_16 == WB_Bit15_12)||(ID_Bit3_0 == WB_Bit15_12))) begin
             //ID_Forwarding = WB_Bit15_12_in;
-            MUX1_signal = 2'b11;
-            MUX2_signal = 2'b11; 
-            MUX3_signal = 2'b11;
+            MUX1_signal <= 2'b11;
+            MUX2_signal <= 2'b11; 
+            MUX3_signal <= 2'b11;
         end else begin
-            MUX1_signal = 2'b00;
-            MUX2_signal = 2'b00; 
-            MUX3_signal = 2'b00;
+            MUX1_signal <= 2'b00;
+            MUX2_signal <= 2'b00; 
+            MUX3_signal <= 2'b00;
         end
 
 
