@@ -115,7 +115,7 @@ module main(); //input clk, input Reset);
         $display(Reset);
         clk = ~clk; 
         
-        #2 Reset = 1'b0;
+        #1.5 Reset = 1'b0;
        
         $display("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU);
       
@@ -334,7 +334,7 @@ module main(); //input clk, input Reset);
         end */
 
         // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
-        mux_2x1_ID mux_2x1_ID(C_U_out, NOP_S, MUXControlUnit_signal, ID_CU);
+        mux_2x1_ID mux_2x1_ID(C_U_out, MUXControlUnit_signal, ID_CU);
        /* initial begin
                 #2;
                 $display(" ------- Multiplexer CONTROL UNIT -------- ");
@@ -767,13 +767,13 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         s_imm = 0; 
                         rf_instr = 0; 
                         l_instr = 0; 
-                                    // b_instr = 1;
+                        b_instr = 1;
                     end else begin
                         // 1'b1://branch & link begin
                         s_imm = 0; 
                         rf_instr = 1; 
                         l_instr = 0; 
-                                    // b_instr = 1;
+                        b_instr = 1;
                         alu_op = 4'b0100; //suma
                     end
                     // endcase
@@ -1248,16 +1248,13 @@ module mux_4x2_ID(input [31:0] A_O, PW, M_O, X, input [1:0] HF_U, output [31:0] 
 endmodule
 
 //Multiplexer control Unit
-module mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
+module mux_2x1_ID(input [6:0] C_U, input HF_U, output [6:0] MUX_Out);
     reg [6:0] salida;
 
-    // assign NOP_S = 6'b0;
     assign MUX_Out = salida;
 
     always@(*)
     begin
-       // NOP_S = 6'b0;
-
         case(HF_U)
             1'b0: // NOP
             salida = 6'b0;
@@ -1334,43 +1331,32 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
                    ID_Bit19_16);
     always@(posedge clk)
     begin
-        //DATA Hazard
+        //DATA Hazard-By Load Instr
         if(EX_load_instr && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12)))begin
-            // ID_EX_pipeline_register reg1(32'b0, 32'b0, 32'b0, 4'b0, 6'b0, 12'b0, 8'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, register_file_port_MUX1_in, register_file_port_MUX2_in, register_file_port_MUX3_in, ID_Bit15_12_in, ID_ALU_opcodes_in, ID_Bit11_0_in, ID_addresing_modes_in, ID_mem_size_in, ID_mem_read_write_in, clk);
-            
-            IF_ID_load = 1'b0;
-            PC_RF_load = 1'b0;
-            MUXControlUnit_signal = 1'b0;
+         
+            IF_ID_load = 1'b0; //Disable pipeline Load
+            PC_RF_load = 1'b0; //Disable PC load
+            MUXControlUnit_signal = 1'b0; //NOP
         end
 
-        if(EX_load_instr == 1) 
-            MUXControlUnit_signal = 1; //NOP
-        else
-            MUXControlUnit_signal = 0; //Control Unit
-            
-        IF_ID_load = 1'b1;//0
-        PC_RF_load = 1'b1;//0
-        MUXControlUnit_signal = 1'b1;//0
-        
-
-
+       
         //DATA Forwarding
         if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
-            //ID_Forwarding = EX_Bit15_12_in;
+            //Valor del Main ALU
             MUX1_signal = 2'b01;
             MUX2_signal = 2'b01; 
             MUX3_signal = 2'b01;
         end else if(MEM_RF_Enable && ((ID_Bit19_16 == MEM_Bit15_12)||(ID_Bit3_0 == MEM_Bit15_12))) begin
-           // ID_Forwarding = MEM_Bit15_12_in;
+           // valor multiplexer MEM Stage
             MUX1_signal = 2'b10;
             MUX2_signal = 2'b10;
             MUX3_signal = 2'b10;
         end else if(WB_RF_Enable && ((ID_Bit19_16 == WB_Bit15_12)||(ID_Bit3_0 == WB_Bit15_12))) begin
-            //ID_Forwarding = WB_Bit15_12_in;
+            //valor PW (multiplexer WB)
             MUX1_signal = 2'b11;
             MUX2_signal = 2'b11; 
             MUX3_signal = 2'b11;
-        end else begin
+        end else begin //valor del Register File 
             MUX1_signal = 2'b00;
             MUX2_signal = 2'b00; 
             MUX3_signal = 2'b00;
