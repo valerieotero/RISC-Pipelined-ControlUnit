@@ -105,8 +105,9 @@ module main(input clk, Reset); //input clk, input Reset);
    // end
 
     initial begin 
-        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/ \n");
+        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");
      end
+
         //IF Stage
         //para escoger entre TA & PC+4
         //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out); 0 ==A ; 1==B
@@ -114,17 +115,17 @@ module main(input clk, Reset); //input clk, input Reset);
 
         mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
 
-       /* initial begin
-                #2;
-                $display(" ------- MUX 2x1 PCin (salida) -------- ");
+        initial begin
+                #2; //in tick 2 because clk = 1 on this tick 
+                $display(" ------- MUX 2x1 PCin (salida) -------- \n");
 
                 $display("PC4 - 0 %b ", PC4);
                 $display("TA - 1 %b ", TA);
                 $display("choose_ta_r_nop %b ", choose_ta_r_nop);
                 $display("PCin %b ", PCI);
-            end */
-        // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-    //    inst_ram256x8 inst_ram(DO, PCO, Reset);
+            end 
+        
+    
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 

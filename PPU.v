@@ -95,7 +95,7 @@ module main(input clk, Reset); //input clk, input Reset);
     end
       
  /*--------------------------------------  Monitor  --------------------------------------*/ 
- 
+
      initial begin
           
         $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
@@ -121,8 +121,8 @@ module main(input clk, Reset); //input clk, input Reset);
                 $display("choose_ta_r_nop %b ", choose_ta_r_nop);
                 $display("PCin %b ", PCI);
             end */
-        // // module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address);
-    //    inst_ram256x8 inst_ram(DO, PCO, Reset);
+      
+        
         // initial begin
         //     $display(" ------- INSTR MEM  -------- ");
 
