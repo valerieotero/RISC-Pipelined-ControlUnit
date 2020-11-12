@@ -118,11 +118,11 @@ module main(); //input clk, input Reset);
       
     join 
   
-    initial begin
+     initial begin
           
-        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------");
+        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------      --Time--");
         $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
-        $monitor("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b",  PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU);
+        $monitor("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
     end
     
@@ -255,7 +255,7 @@ module main(); //input clk, input Reset);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
             
-        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, clk, Reset); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, 1'b1 ,clk, Reset); //falta RW = WB_Bit15_12_out
 
         //   initial begin
         // //         #2;
