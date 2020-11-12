@@ -120,9 +120,9 @@ module main(); //input clk, input Reset);
   
      initial begin
           
-        $display("\n\n                    ------------------ID State-------------------            ------------------EX State------------------           --------MEM State------          -------WB State-------       -------Instruction-------      --Time--");
-        $display("         PC      B_instr | shift_imm |   alu  | load | R F | mem_r_w           shift_imm | alu  | load | R F | mem_r_w                load | R F | mem_r_w                load | R F              ");
-        $monitor("%d           %b   |     %b     |  %b  |  %b   |  %b  |  %b                      %b  | %b |   %b  |  %b  | %b                         %b |  %b  | %b                         %b |  %b             %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+        $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
+        $display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
+        $monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
     end
     
@@ -255,27 +255,27 @@ module main(); //input clk, input Reset);
         // input [3:0] SA, SB, SD, C;
         // input RFLd, PCLd, CLK;
             
-        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, PC_RF_ld, 1'b1 ,clk, Reset); //falta RW = WB_Bit15_12_out
+        register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd, 1'b1, PC_RF_ld ,clk, Reset); //falta RW = WB_Bit15_12_out
 
         //   initial begin
-        // //         #2;
+        //         #10;
         // //         $display(" ------- REGISTER FILE -------- ");
 
-        //         $display("PA %b ", PA);
-        //         $display("PB %b ", PB);
-        //         $display("PD %b ", PD);
+                // $display("PA %b ", PA);
+                // $display("PB %b ", PB);
+                // $display("PD %b ", PD);
         // //         $display("PW %b ", PW);
         // //         $display("PCin %b ", PCin);
         // //         $display("PCout %b ", PCO);
-        // //         $display("RW %b ", WB_Bit15_12_out);
+        // // //         $display("RW %b ", WB_Bit15_12_out);
         //         $display("SA %b ", ID_Bit19_16);
         //         $display("SB %b ", ID_Bit3_0);
         //         $display("SD %b", SD);
-        // //         $display("RegFile LOAD %b ", RFLd);
-        // //         $display("PC LOAD %b ", PC_RF_ld);
+        //         // $display("RegFile LOAD %b ", RFLd);
+        //         $display("PC LOAD %b ", PC_RF_ld);
         // //         $display("clk %b", clk);
 
-        //     end 
+            // end 
         // //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output [31:0] MUX_Out);
         // //MUX1
         mux_4x2_ID mux_4x2_ID_1(A_O, PW, M_O, PA, MUX1_signal, mux_out_1);
@@ -651,7 +651,6 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     reg b_bl; // branch or branch & link
     reg r_sr_off; // register or Scaled register offset
     reg u;
-    reg l;
     // integer condAsserted;// = Cond_Is_Asserted (input [3:0] cc_in, A[31:28], asserted);; // 0 Cond no se da, 1 cond se da
 
     assign C_U_out[6] = s_imm;
@@ -666,7 +665,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
 
     begin
         // $display("instruction %b", A);
-        if(Reset == 1) begin
+        if(Reset == 1 || A == 32'b0) begin
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -700,16 +699,19 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                 3'b010: //Load/Store Immediate Offset
                 begin
                     u = A[23];
-                    l = A[20];
                     s_imm = 0; 
-                    l_instr = l; 
+                    l_instr = A[20]; 
                     b_instr = 0;
 
-                    if(l == 0)
+                    if(l_instr == 0) begin
                         rf_instr = 0;
-                    else
-                        rf_instr = 1; 
+                        m_rw = 1;
+
+                    end else begin
+                        rf_instr = 0; 
+                        m_rw = 0;
                         
+                    end 
 
                     if(u == 1)
                         alu_op = 4'b0100; //suma
@@ -720,7 +722,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                 3'b011: //Load/Store Register Offset
                 begin
                     u = A[23];
-                    l = A[20];
+                    l_instr = A[20];
 
                     if(u == 1)
                         alu_op = 4'b0100; //suma
@@ -728,12 +730,12 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         alu_op = 4'b0010; //resta
                         
 
-                    if(l == 0) begin
+                    if(l_instr == 0) begin
                         rf_instr = 0;
                         m_rw = 1;
                     end else begin
-                        rf_instr = 1; 
-                        m_rw = 1;
+                        rf_instr = 0; 
+                        m_rw = 0;
 
                     end
                 
@@ -743,27 +745,16 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         r_sr_off = 1;
                         
 
-                        
-                    if(r_sr_off == 0)begin //register_offset
-                        s_imm = 0; 
-                        l_instr = l; 
-                        b_instr = 0;
-
-                    
-                    end else begin //scaled_reg_offset
-                        s_imm = 0; 
-                        l_instr = l; 
-                        b_instr = 0;
-
-                        
-                                
-                    end
+                    s_imm = 0; 
+                    b_instr = 0;
+            
                     
                 end
 
                 3'b101: //branches
                 begin
                     b_bl = A[24];
+                    b_instr = 1;
                     
                     // case(b_bl)
                         // 1'b0://branch
@@ -771,17 +762,18 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                         s_imm = 0; 
                         rf_instr = 0; 
                         l_instr = 0; 
-                        b_instr = 1;
                         alu_op = 4'b0010;
+                        m_rw = 0;
+
                     end else begin
                         // 1'b1://branch & link begin
                         s_imm = 0; 
                         rf_instr = 1; 
                         l_instr = 0; 
-                        b_instr = 1;
                         alu_op = 4'b0100; //suma
+                        m_rw = 0;
+
                     end
-                    // endcase
                     
                 end
                 
@@ -999,7 +991,7 @@ module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
         if(asserted == 1 && b_instr == 1)
-            choose_ta_r_nop = 1;
+            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0
         else
             choose_ta_r_nop = 0; 
     end
@@ -1342,6 +1334,10 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
             MUXControlUnit_signal = 1'b0; //NOP
+        end else begin
+            IF_ID_load = 1'b1; //Disable pipeline Load
+            PC_RF_load = 1'b1; //Disable PC load
+            MUXControlUnit_signal = 1'b1; //NOP
         end
 
        
@@ -1368,7 +1364,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         end
 
 
-        
+        // $display("pc_ld ", PC_RF_load);
     end
 
 endmodule
