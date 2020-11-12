@@ -140,9 +140,14 @@ module loadDecoder(PCLd, RFLd, R15MO);
 // thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
 //Otherwise we set it to 0 and PCin is loaded into the register.
 output reg[1:0] R15MO;
-input PCLd, RFLd, HZPCLd;
+input PCLd, RFLd;
 
 //What happens when both = 1?
+//Does this means that the following is accomplished?
+
+//El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
+//ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
+//el mismo, lo cual tiene prioridad.
 always @ (PCLd, RFLd)
     begin
         if(RFLd)
@@ -176,14 +181,16 @@ module PCregister(Q, MOin, HZPCld, CLK, RST);
     input HZPCld, CLK, RST;
     //wire CLK, RST;
 
-    always @ (posedge CLK or posedge RST)
+    always @ (posedge CLK or posedge RST or HZPCld)
     begin
-        if(RST == 1'b1)
-          Q <= 32'b0;
+        if(HZPCld)
+        begin
+            if(RST)
+                Q <= 32'b0;
 
-        else 
-          Q <= MOin;
-        
+            else
+                Q <= MOin;
+        end
     end
 endmodule
 
@@ -220,15 +227,15 @@ endmodule
 //
 ////    Will print values for each tick of the clock. All 32bit values displayed in decimal
 ////    without trailing zeroes, binary otherwise.
-////     always @ (CLK)
-////     begin
-////         //$display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
-////         $display("PC:%3d | PCout: %3d", PCin, PCout);
-////     end
+//     always @ (CLK)
+//     begin
+//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+//         //$display("PC:%3d | PCout: %3d", PCin, PCout);
+//     end
 //
 //    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
 //    initial begin
-//    $monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
+//    //$monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
 //        //Initial values
 //        PW = 32'b0;
 //        C = 4'b0000;
@@ -244,7 +251,7 @@ endmodule
 //        //Enable load in each register (Ld = 1)
 //        #10;
 //        RFLd = 1'b1;
-//        PCLd = 1'b1;
+//        PCLd = 1'b1;  //Tells if we write PC or PW
 //
 //        //Writing a unique word of each register using Port C(PC)//
 //
@@ -315,6 +322,9 @@ endmodule
 //        #10;
 //        C = 4'b1010;
 //        PW = 32'd9;
+//        //RST = 1'b1;    //Can be used to cause a RST
+//        //HZPCLd = 1'b0; //Can be used to cause PC to not increment
+//
 //
 //        //Register 11
 //        #10;
@@ -330,13 +340,13 @@ endmodule
 //        #10;
 //        C = 4'b1101;
 //        PW = 32'd21;
-//        RST = 1'b1;
+//
 //
 //        //Register 14
 //        #10;
 //        C = 4'b1110;
 //        PW = 32'd83;
-//        RST = 1'b0;
+//
 //
 //        //Register 15
 //        #10;
