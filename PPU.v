@@ -983,7 +983,7 @@ endmodule
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
                                output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
-                               input nop, Hazard_Unit_Ld, clk, Reset, input [31:0] PC4, DataOut);
+                               input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset, input [31:0] PC4, DataOut);
 
     always@(posedge clk)
     begin
