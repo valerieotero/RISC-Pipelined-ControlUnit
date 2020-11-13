@@ -991,8 +991,8 @@ endmodule
 module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
-        if(asserted == 1 && b_instr == 1)
-            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0
+        if(asserted == 1 && b_instr == 1)//TA to PC and NOP (Reset) to IF/ID stage
+            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0  
         else
             choose_ta_r_nop = 0; 
     end
