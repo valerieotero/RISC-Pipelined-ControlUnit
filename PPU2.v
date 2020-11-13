@@ -95,15 +95,18 @@ module main(input clk, Reset); //input clk, input Reset);
     end
       
  /*--------------------------------------  Monitor  --------------------------------------*/ 
-
-     initial begin
+ 
+     //initial begin
           
-        $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
-        $display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
-        $monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+       // $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
+        //$display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
+        //$monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
-    end
-    
+   // end
+
+    initial begin 
+        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");       
+     end
 
         //IF Stage
         //para escoger entre TA & PC+4
@@ -112,39 +115,42 @@ module main(input clk, Reset); //input clk, input Reset);
 
         mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
 
-       /* initial begin
-                #2;
-                $display(" ------- MUX 2x1 PCin (salida) -------- ");
-
-                $display("PC4 - 0 %b ", PC4);
-                $display("TA - 1 %b ", TA);
-                $display("choose_ta_r_nop %b ", choose_ta_r_nop);
-                $display("PCin %b ", PCI);
-            end */
-      
         
-        // initial begin
-        //     $display(" ------- INSTR MEM  -------- ");
+        always @ (*) begin
+               // #2; //in tick 2 because clk = 1 on this tick 
 
-        //     $display("PCout%b ", PCO);
-        //     $display("DataOut%b     PCout%b ", DO, PCO);
+                $display(" ------- MUX 2x1 PCin (salida) -------- \n");
 
-        // end 
+                $display("PC4 - 0: %b  clk: %0d", PC4, $time);
+                $display("TA - 1: %b   clk: %0d", TA, $time);
+                $display("choose_ta_r_nop: %b                         clk: %0d ", choose_ta_r_nop, $time);
+                $display("PCin: %b     clk: %0d \n\n", PCI, $time);
+            end 
+        
+    
+         always @ (*) begin
+             $display(" ------- INSTR MEM  -------- \n");
+
+             $display("PCout: %b  clk: %0d", PCO, $time);
+             $display("DataOut: %b     PCout%b  clk: %0d\n\n ", DO, PCO,$time);
+
+         end 
 
         //para conseguir PC+4
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
         alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
-       /*  initial begin
-                #2;
-                $display(" ------- ALU PC+4 -------- ");
 
-                $display("PCout _A %b ", PCO);
-                $display("Entrada B %b ", 32'd4);
-                $display("Suma A&B %b ", 4'b0100);
-                $display("Carry In %b ", 1'b0);
-                $display("PC + 4 %b ", PC4);
-                $display("Condition Codes %b ", cc_alu_1);
-            end */
+        always @ (*) begin
+            //#2;
+            $display(" ------- ALU PC+4 --------\n ");
+
+            $display("PCout _A: %b  clk: %0d", PCO, $time);
+            $display("Entrada B: %b  clk: %0d", 32'd4, $time);
+            $display("Suma A&B: %b  clk: %0d", 4'b0100, $time);
+            $display("Carry In: %b  clk: %0d", 1'b0, $time);
+            $display("PC + 4: %b  clk: %0d", PC4, $time);
+            $display("Condition Codes: %b  clk: %0d\n\n ", cc_alu_1, $time);
+        end 
 
 
         // //IF/ID reg
@@ -970,8 +976,8 @@ endmodule
 module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
-        if(asserted == 1 && b_instr == 1)//TA to PC and NOP (Reset) to IF/ID stage
-            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0  
+        if(asserted == 1 && b_instr == 1)
+            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0
         else
             choose_ta_r_nop = 0; 
     end

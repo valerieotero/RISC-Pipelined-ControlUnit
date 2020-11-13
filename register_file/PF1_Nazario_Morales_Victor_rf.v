@@ -3,7 +3,7 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, HZPCld, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
@@ -11,7 +11,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, HZP
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, SD, C;
-    input RFLd, PCLd, CLK, RST, HZPCld;
+    input RFLd, CLK, RST, HZPCld;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -25,12 +25,12 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, PCLd, HZP
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
 
 
-    loadDecoder r15decoder(PCLd, E[15], R15MO);
+    //loadDecoder r15decoder(E[15], R15MO);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
     //is the equivalent to the PC (which gets increaed by 4)
-    twoToOneMultiplexer r15mux (PW, PCin, PCLd, MO);
+    twoToOneMultiplexer r15mux (PW, PCin, E[15], MO);
 
 
     //16 Registers
@@ -117,45 +117,45 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
 endmodule
 
 //This defines the multiplexer used to change inputs to r15 conditionally
-module twoToOneMultiplexer(PW, PC, R15MO, MO);
+module twoToOneMultiplexer(PW, PC, PWLd, MO);
     //Output
     output reg [31:0] MO;
     //Input
     input[31:0] PW, PC;
-    input R15MO;
+    input PWLd;
 
     //Whenever a change is produced in the signals, change the output
     //according with the stablished logic.
-    always @(PW, PC, R15MO)
+    always @(PW, PC, PWLd)
     begin
-        if (R15MO)
-            MO <= PC;
-        else
+        if (PWLd)
             MO <= PW;
-    end
-endmodule
-
-module loadDecoder(PCLd, RFLd, R15MO);
-//When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
-// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
-//Otherwise we set it to 0 and PCin is loaded into the register.
-output reg[1:0] R15MO;
-input PCLd, RFLd;
-
-//What happens when both = 1?
-//Does this means that the following is accomplished?
-
-//El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
-//ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
-//el mismo, lo cual tiene prioridad.
-always @ (PCLd, RFLd)
-    begin
-        if(RFLd)
-          R15MO <= 1'b1;
         else
-          R15MO <= 1'b0;
+            MO <= PC;
     end
 endmodule
+
+//module loadDecoder(RFLd, R15MO);
+////When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
+//// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
+////Otherwise we set it to 0 and PCin is loaded into the register.
+//output reg[1:0] R15MO;
+//input RFLd;
+//
+////What happens when both = 1?
+////Does this means that the following is accomplished?
+//
+////El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
+////ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
+////el mismo, lo cual tiene prioridad.
+//always @ (RFLd)
+//    begin
+//        if(RFLd)
+//          R15MO <= 1'b1;
+//        else
+//          R15MO <= 1'b0;
+//    end
+//endmodule
 
 
 module register(Q, PW, RFLd, CLK);
@@ -198,7 +198,7 @@ endmodule
 //    //Variable for loop
 //    integer index;
 //    //Inputs
-//    reg CLK, RFLd, PCLd, RST, HZPCLd;
+//    reg CLK, RFLd, RST, HZPCLd;
 //    reg [3:0] SA, SB, SD, SPCout, C;
 //    reg [31:0] PW, PCin;
 //
@@ -218,22 +218,16 @@ endmodule
 //        CLK = ~CLK;
 //    end
 //
-//    //PCLoad signal
-////    always begin
-////        #2;
-////        PCLd = ~PCLd;
-////    end
-//
 //
 ////    Will print values for each tick of the clock. All 32bit values displayed in decimal
 ////    without trailing zeroes, binary otherwise.
 //     always @ (CLK)
 //     begin
-//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCLd:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCLd, PCout);
+//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCout: %3d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCout);
 //         //$display("PC:%3d | PCout: %3d", PCin, PCout);
 //     end
 //
-//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .PCLd(PCLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
+//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
 //    initial begin
 //    //$monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
 //        //Initial values
@@ -243,7 +237,6 @@ endmodule
 //        SB = 4'b0000;
 //        SD = 4'b0000;
 //        RFLd = 1'b0;
-//        PCLd = 1'b0;
 //        CLK = 1'b1;
 //        PCin = 32'b0;
 //        RST = 1'b0;
@@ -251,7 +244,6 @@ endmodule
 //        //Enable load in each register (Ld = 1)
 //        #10;
 //        RFLd = 1'b1;
-//        PCLd = 1'b1;  //Tells if we write PC or PW
 //
 //        //Writing a unique word of each register using Port C(PC)//
 //
@@ -353,8 +345,7 @@ endmodule
 //        C = 4'b1111;
 //        PW = 32'd35;
 //
-//        //Won't charge PCin, it will charge PW instead given these two signals bellow.
-//        PCLd = 1'b0;
+//        //Won't charge PCin, it will charge PW instead given the signal bellow.
 //        RFLd = 1'b1;
 //
 //
@@ -367,7 +358,6 @@ endmodule
 //        SA = 4'b1010;
 //        //Showing output through PA, after changing the word in Register 10
 //        //$monitor ("Output of Register ", SA, " (using PA) (After Change): PA: %0d",PA);
-//        // $monitor("Output of Register 15: %0d", PD, " with PCout:%0d, PCLd was:%d", PCout, PCLd, " Output of Register ", SA, " (using PA) (After Change): PA: %0d" ,PA);
 //    $finish;
 //    end
 //
