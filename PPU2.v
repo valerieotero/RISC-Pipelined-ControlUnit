@@ -9,7 +9,7 @@ module main(input clk, Reset); //input clk, input Reset);
     //Precharge
     wire [31:0] PCO; // = 32'b0; //address instr Mem
     
-    wire ID_B_instr, MEM_mem_read_write, MEM_load_instr,WB_load_instr;  
+    wire ID_B_instr, MEM_mem_read_write, MEM_load_instr,WB_load_instr, asserted;  
 
 
     //wire 
@@ -96,63 +96,68 @@ module main(input clk, Reset); //input clk, input Reset);
       
  /*--------------------------------------  Monitor  --------------------------------------*/ 
  
-     //initial begin
+    initial begin
           
-       // $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
-        //$display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
-        //$monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+     $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
+     $display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
+     $monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
-   // end
+    end
 
-    initial begin 
-        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");       
-     end
+    //initial begin 
+      //  $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");       
+    //end
+       // inst_ram256x8 ram1 (DO, PCO, Reset);
 
         //IF Stage
         //para escoger entre TA & PC+4
         //module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out); 0 ==A ; 1==B
-        mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
+       
 
-        mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
-
-        
-        always @ (*) begin
-               // #2; //in tick 2 because clk = 1 on this tick 
-
-                $display(" ------- MUX 2x1 PCin (salida) -------- \n");
-
-                $display("PC4 - 0: %b  clk: %0d", PC4, $time);
-                $display("TA - 1: %b   clk: %0d", TA, $time);
-                $display("choose_ta_r_nop: %b                         clk: %0d ", choose_ta_r_nop, $time);
-                $display("PCin: %b     clk: %0d \n\n", PCI, $time);
-            end 
         
     
-         always @ (*) begin
-             $display(" ------- INSTR MEM  -------- \n");
+      /*  always @ (clk) begin
+             $display(" ------- INSTR MEM  --------                           clk: %0d  Reset:%0d", $time, Reset);
 
-             $display("PCout: %b  clk: %0d", PCO, $time);
-             $display("DataOut: %b     PCout%b  clk: %0d\n\n ", DO, PCO,$time);
+             $display("\nPCout: %b  ", PCO);
+             $display("DataOut: %b     Address: %b  \n\n ", DO, PCO);
 
-         end 
+        end */
+       
 
         //para conseguir PC+4
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
         alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
 
-        always @ (*) begin
+      /*  always @ (clk) begin
             //#2;
-            $display(" ------- ALU PC+4 --------\n ");
+            $display(" ------- ALU PC+4 --------                           clk: %0d", $time);
 
-            $display("PCout _A: %b  clk: %0d", PCO, $time);
-            $display("Entrada B: %b  clk: %0d", 32'd4, $time);
-            $display("Suma A&B: %b  clk: %0d", 4'b0100, $time);
-            $display("Carry In: %b  clk: %0d", 1'b0, $time);
-            $display("PC + 4: %b  clk: %0d", PC4, $time);
-            $display("Condition Codes: %b  clk: %0d\n\n ", cc_alu_1, $time);
-        end 
+            $display("PCout _A: %b  ", PCO);
+            $display("Entrada B: %b ", 32'd4);
+            $display("Suma A&B: %b  ", 4'b0100);
+            $display("Carry In: %b  ", 1'b0);
+            $display("PC + 4: %b    ", PC4);
+            $display("Condition Codes: %b  \n\n ", cc_alu_1);
+        end */
 
+        mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
 
+        mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
+     /*   always @ (clk) begin
+                    // #2; //in tick 2 because clk = 1 on this tick 
+
+                        $display(" ------- MUX 2x1 PCin (salida) --------              clk: %0d", $time);
+
+                        $display("PC4 - 0: %b  ", PC4);
+                        $display("TA - 1: %b   ", TA);
+                        $display("choose_ta_r_nop: %b  ", choose_ta_r_nop);
+                        $display("PCin: %b  \n\n", PCI);
+                        $display("Reset: %b ", Reset);
+
+                        $display("PCI RF: %b  \n\n", PCIN);
+                    end */
+                
         // //IF/ID reg
         // //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
         // //                           output reg[3:0] ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, output reg[11:0] ID_Bit11_0,
@@ -161,24 +166,24 @@ module main(input clk, Reset); //input clk, input Reset);
         IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                     ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, ID_Bit11_0,
                                     ID_Bit15_12, DO_CU,
-                                    choose_ta_r_nop, IF_ID_Load, clk,Reset, PC4, DO);
-            initial begin
-                // #2;
-                // $display(" ------- IF_ID_PIPE REG -------- ");
+                                    choose_ta_r_nop, IF_ID_Load, clk,Reset, asserted, PC4, DO);
+         /*   always@(clk) begin
+                
+                $display(" ------- IF_ID_PIPE REG --------               clk: %0d", $time);
 
-                // $display("ID_Bit23_0 %b ", ID_Bit23_0);
-                // $display("Next_PC %b ", Next_PC);
-                // $display("ID_Bit19_16 %b ", ID_Bit19_16);
-                // $display("ID_Bit3_0 %b ", ID_Bit3_0);
-                // $display("ID_Bit31_28 %b ", ID_Bit31_28);
-                // $display("ID_Bit15_12 %b ", ID_Bit15_12);
-                // $display("choose_ta_r_nop %b ", choose_ta_r_nop);
-                // $display("IF_ID_Load %b ", IF_ID_Load);
-                // $display("clk %b ", clk);
-                // $display("PC4 %b ", PC4);
-                // $display("DataOut %b", DO);
+                $display("ID_Bit23_0 %b ", ID_Bit23_0);
+                $display("Next_PC %b ", Next_PC);
+                $display("ID_Bit19_16 %b ", ID_Bit19_16);
+                $display("ID_Bit3_0 %b ", ID_Bit3_0);
+                $display("ID_Bit31_28 %b ", ID_Bit31_28);
+                $display("ID_Bit15_12 %b ", ID_Bit15_12);
+                $display("choose_ta_r_nop %b ", choose_ta_r_nop);
+                $display("IF_ID_Load %b ", IF_ID_Load);
+                $display("clk %b ", clk);
+                $display("PC4 %b ", PC4);
+                $display("DataOut %b", DO_CU);
 
-            end 
+            end */
 
         
         
@@ -310,7 +315,7 @@ module main(input clk, Reset); //input clk, input Reset);
         /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
         //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-        control_unit control_unit1(ID_B_instr, ID_mem_read_write, C_U_out,clk, Reset, DO_CU);
+        control_unit control_unit1(ID_B_instr, ID_mem_read_write, C_U_out,clk, Reset, asserted, DO_CU);
       /*  initial begin
                 #2;
                 $display(" ------- CONTROL UNIT -------- ");
@@ -622,7 +627,7 @@ endmodule
 
 
 //CONTROL UNIT
-module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); 
+module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -651,7 +656,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
 
     begin
         // $display("instruction %b", A);
-        if(Reset == 1 || A == 32'b0) begin
+        if(Reset == 1 || A == 32'b0) begin // || asserted == 0) begin
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -739,28 +744,35 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
 
                 3'b101: //branches
                 begin
-                    b_bl = A[24];
                     b_instr = 1;
-                    
-                    // case(b_bl)
-                        // 1'b0://branch
-                    if(b_bl == 0) begin
+
+                    if(asserted == 1)begin
                         s_imm = 0; 
                         rf_instr = 0; 
                         l_instr = 0; 
                         alu_op = 4'b0010;
                         m_rw = 0;
+                    end else begin 
+                        b_bl = A[24];
+                        
+                       //branch
+                        if(b_bl == 0) begin
+                            s_imm = 0; 
+                            rf_instr = 0; 
+                            l_instr = 0; 
+                            alu_op = 4'b0010;
+                            m_rw = 0;
 
-                    end else begin
-                        // 1'b1://branch & link begin
-                        s_imm = 0; 
-                        rf_instr = 1; 
-                        l_instr = 0; 
-                        alu_op = 4'b0100; //suma
-                        m_rw = 0;
+                        end else begin
+                        //branch & link begin
+                            s_imm = 0; 
+                            rf_instr = 1; 
+                            l_instr = 0; 
+                            alu_op = 4'b0100; //suma
+                            m_rw = 0;
 
+                        end
                     end
-                    
                 end
                 
 
@@ -989,9 +1001,9 @@ endmodule
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
                                output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
-                               input nop, Hazard_Unit_Ld, clk, Reset, input [31:0] PC4, DataOut);
+                               input nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
 
-    always@(posedge clk)
+    always@(clk)
     begin
 
         if(Reset==1) begin
@@ -1006,7 +1018,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
 
         end else begin
 
-          //  if(Hazard_Unit_Ld == 0) begin
+          //  if(Hazard_Unit_Ld == 0 || asserted == 1|| nop == 0) begin
                 ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
@@ -1060,7 +1072,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                input [7:0] ID_addresing_modes,
                                input ID_mem_size, ID_mem_read_write, input clk);
 
-    always@(posedge clk)
+    always@(clk)
     begin
         //Control Unit signals  
         EX_Shift_imm <= ID_CU[6];
@@ -1094,7 +1106,7 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
                                 output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
 
 
-    always@(posedge clk)
+    always@(clk)
     begin
         MEM_A_O <= A_O;
         MEM_MUX3 <= mux_out_3_C;
@@ -1117,7 +1129,7 @@ endmodule
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
                                     output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable);
 
-    always@(posedge clk)
+    always@(clk)
     begin
         wb_alu_out <= alu_out;
         wb_data_r_out <= data_r_out;

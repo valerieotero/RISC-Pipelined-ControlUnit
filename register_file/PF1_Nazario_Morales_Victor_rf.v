@@ -181,7 +181,7 @@ module PCregister(Q, MOin, HZPCld, CLK, RST);
     input HZPCld, CLK, RST;
     //wire CLK, RST;
 
-    always @ (posedge CLK or posedge RST or HZPCld)
+    always @ (CLK or  RST or HZPCld)
     begin
         if(HZPCld)
         begin
