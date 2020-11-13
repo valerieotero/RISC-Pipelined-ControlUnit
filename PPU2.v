@@ -105,7 +105,7 @@ module main(input clk, Reset); //input clk, input Reset);
    // end
 
     initial begin 
-        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");
+        $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");       
      end
 
         //IF Stage
@@ -115,39 +115,42 @@ module main(input clk, Reset); //input clk, input Reset);
 
         mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
 
-        initial begin
-                #2; //in tick 2 because clk = 1 on this tick 
+        
+        always @ (*) begin
+               // #2; //in tick 2 because clk = 1 on this tick 
+
                 $display(" ------- MUX 2x1 PCin (salida) -------- \n");
 
-                $display("PC4 - 0 %b ", PC4);
-                $display("TA - 1 %b ", TA);
-                $display("choose_ta_r_nop %b ", choose_ta_r_nop);
-                $display("PCin %b ", PCI);
+                $display("PC4 - 0: %b  clk: %0d", PC4, $time);
+                $display("TA - 1: %b   clk: %0d", TA, $time);
+                $display("choose_ta_r_nop: %b                         clk: %0d ", choose_ta_r_nop, $time);
+                $display("PCin: %b     clk: %0d \n\n", PCI, $time);
             end 
         
     
-        // initial begin
-        //     $display(" ------- INSTR MEM  -------- ");
+         always @ (*) begin
+             $display(" ------- INSTR MEM  -------- \n");
 
-        //     $display("PCout%b ", PCO);
-        //     $display("DataOut%b     PCout%b ", DO, PCO);
+             $display("PCout: %b  clk: %0d", PCO, $time);
+             $display("DataOut: %b     PCout%b  clk: %0d\n\n ", DO, PCO,$time);
 
-        // end 
+         end 
 
         //para conseguir PC+4
         //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
         alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
-       /*  initial begin
-                #2;
-                $display(" ------- ALU PC+4 -------- ");
 
-                $display("PCout _A %b ", PCO);
-                $display("Entrada B %b ", 32'd4);
-                $display("Suma A&B %b ", 4'b0100);
-                $display("Carry In %b ", 1'b0);
-                $display("PC + 4 %b ", PC4);
-                $display("Condition Codes %b ", cc_alu_1);
-            end */
+        always @ (*) begin
+            //#2;
+            $display(" ------- ALU PC+4 --------\n ");
+
+            $display("PCout _A: %b  clk: %0d", PCO, $time);
+            $display("Entrada B: %b  clk: %0d", 32'd4, $time);
+            $display("Suma A&B: %b  clk: %0d", 4'b0100, $time);
+            $display("Carry In: %b  clk: %0d", 1'b0, $time);
+            $display("PC + 4: %b  clk: %0d", PC4, $time);
+            $display("Condition Codes: %b  clk: %0d\n\n ", cc_alu_1, $time);
+        end 
 
 
         // //IF/ID reg
