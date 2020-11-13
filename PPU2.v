@@ -98,9 +98,9 @@ module main(input clk, Reset); //input clk, input Reset);
  
     initial begin
           
-     $display("\n\n                  ------------------ID State-------------------          ------------------EX State------------------       --------MEM State------     ------WB State------       -------Instruction-------      --Time--");
-     $display("         PC    B_instr | shift_imm |   alu  | load | R F | mem_r_w         shift_imm | alu  | load | R F | mem_r_w            load | R F | mem_r_w           load | R F          ");
-     $monitor("%d         %b   |     %b     |  %b  |  %b   |  %b  |  %b                    %b  | %b |   %b  |  %b  | %b                     %b |  %b  | %b                    %b |  %b           %b%d", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+     $display("\n\n                    --------------------ID State---------------------           ----------------EX State---------------       --------MEM State------        ---WB State---           -------Instruction-------        --Time--");
+     $display("           PC    B_instr | shift_imm |   alu  | load | R F | m_rw | m_s       shift_imm | alu  | load | R F | m_rw | m_s      load | R F | m_rw | m_s          load | R F          \n");
+     $monitor("  %d         %b   |     %b     |  %b  |  %b   |  %b  |   %b  |  %b               %b  | %b |   %b  |  %b  |   %b  |  %b         %b  |  %b  |   %b  |  %b             %b  |  %b           %b        %0d\n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  ID_mem_size, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, EX_mem_size, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
     end
 
@@ -315,7 +315,7 @@ module main(input clk, Reset); //input clk, input Reset);
         /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
         //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-        control_unit control_unit1(ID_B_instr, ID_mem_read_write, C_U_out,clk, Reset, asserted, DO_CU);
+        control_unit control_unit1(ID_B_instr, ID_mem_read_write, ID_mem_size, C_U_out,clk, Reset, asserted, DO_CU);
       /*  initial begin
                 #2;
                 $display(" ------- CONTROL UNIT -------- ");
@@ -501,7 +501,7 @@ module main(input clk, Reset); //input clk, input Reset);
             end */
 
         // //module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size);
-        data_ram256x8 data_ram(Data_RAM_Out, MEM_mem_read_write, MEM_A_O, MEM_MUX3, Size);
+        data_ram256x8 data_ram(Data_RAM_Out, MEM_mem_read_write, MEM_A_O, MEM_MUX3, MEM_mem_size);
         /*    initial begin
                 #2;
                 $display(" ------- DATA RAM -------- ");
@@ -627,7 +627,7 @@ endmodule
 
 
 //CONTROL UNIT
-module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
+module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -637,6 +637,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     reg l_instr = 0; 
     reg b_instr = 0; 
     reg m_rw = 0;
+    reg m_size = 0;
 
     reg [3:0] alu_op;
     reg b_bl; // branch or branch & link
@@ -650,6 +651,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
     assign ID_B_instr = b_instr;
     assign C_U_out[5:2] = alu_op;
     assign MemReadWrite = m_rw;
+    assign MemSize = m_size;
 
     always@(*)
    
@@ -662,6 +664,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
             l_instr = 0; 
             b_instr = 0; 
             m_rw = 0;
+            m_size = 0;
             alu_op = 4'b0000;
         end else begin 
             instr = A[27:25];
@@ -675,6 +678,7 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                     l_instr = 0; 
                     b_instr = 0;
                     alu_op = A[24:21];
+
                     
                 end
 
@@ -693,11 +697,12 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                     s_imm = 0; 
                     l_instr = A[20]; 
                     b_instr = 0;
+                    m_size = A[22];
 
                     if(l_instr == 0) begin
                         rf_instr = 0;
                         m_rw = 1;
-
+                        
                     end else begin
                         rf_instr = 0; 
                         m_rw = 0;
@@ -714,6 +719,8 @@ module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input
                 begin
                     u = A[23];
                     l_instr = A[20];
+                    m_size = A[22];
+
 
                     if(u == 1)
                         alu_op = 4'b0100; //suma
