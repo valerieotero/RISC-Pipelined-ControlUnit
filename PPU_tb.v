@@ -1,4 +1,4 @@
-`include "PPU2.v"
+`include "PPU.v"
 
 module ppu_tb;
 

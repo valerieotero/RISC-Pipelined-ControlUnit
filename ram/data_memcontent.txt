@@ -1,27 +1,17 @@
--------------- Reading Word from Addresses 0, 4, 8 and 12 ----------------
-
-ReadWrite: 0 | Address:          0 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 10101010101010101010101010101010 | Time:                   12
-ReadWrite: 0 | Address:          4 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 11111111111111110000000000000000 | Time:                   23
-ReadWrite: 0 | Address:          8 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 01010101010101010101010101010101 | Time:                   34
-ReadWrite: 0 | Address:         12 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 00000000000000001111111111111111 | Time:                   45
-
-
--------------- Reading Byte from Address 0; Half-Word from Addresses 2 and 4 ----------------
-
-ReadWrite: 0 | Address:          0 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 00000000000000000000000010101010 | Time:                   56
-ReadWrite: 0 | Address:          2 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 00000000000000001010101010101010 | Time:                   67
-ReadWrite: 0 | Address:          4 | DataIn: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | DataOut: 00000000000000001111111111111111 | Time:                   78
-
-
--------------- Writing Byte to Address 0; Half-Word to Addresses 2 and 4; Word to Address 8 ----------------
-
-ReadWrite: 1 | Address:          0 | DataIn: 00000000000000000000000010110101 | DataOut: 00000000000000001111111111111111 | Time:                   89
-ReadWrite: 1 | Address:          2 | DataIn: 00000000000000001111111111010011 | DataOut: 00000000000000001111111111111111 | Time:                  100
-ReadWrite: 1 | Address:          4 | DataIn: 00000000000000001111111111010011 | DataOut: 00000000000000001111111111111111 | Time:                  111
-ReadWrite: 1 | Address:          8 | DataIn: 11100011010111011000101011000101 | DataOut: 00000000000000001111111111111111 | Time:                  122
-
-
--------------- Reading Word from Addresses 4 and 8 ----------------
-
-ReadWrite: 0 | Address:          0 | DataIn: 11100011010111011000101011000101 | DataOut: 10110101101010101111111111010011 | Time:                  133
-ReadWrite: 0 | Address:          4 | DataIn: 11100011010111011000101011000101 | DataOut: 11111111110100110000000000000000 | Time:                  144
+Data en          4 = 11100010000000010000000000000000                    3
+Data en          8 = 11100011100000000001000000101000                    5
+Data en         12 = 11100111110100010010000000000000                    7
+Data en         16 = 11100101110100010011000000000010                    9
+Data en         20 = 11100000100000000101000000000000                   11
+Data en         24 = 11100000100000100101000000000101                   13
+Data en         28 = 11100010010100110011000000000001                   15
+Data en         32 = 00011010111111111111111111111101                   17
+Data en         36 = 11100101110000010101000000000011                   19
+Data en         40 = 11101010000000000000000000000001                   21
+Data en         44 = 00001011000001010000011100000100                   23
+Data en         48 = 11101010111111111111111111111111                   25
+Data en         52 = 00000000000000000000000000000000                   27
+Data en         56 = 00000000000000000000000000000000                   29
+Data en         60 = 00000000000000000000000000000000                   31
+Data en         64 = 00000000000000000000000000000000                   33
+Data en         68 = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   35

@@ -22,9 +22,25 @@ end
 initial begin
     fw = $fopen("data_memcontent.txt", "w");
     Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-    clk = 1'b0; ReadWrite = 1'b0; //Read  
+    clk = 1'b0; 
+    ReadWrite = 1'b0; //Read  
+    Size = 2'b10; //WORD
 
+    repeat (17) begin
+    #1 clk = 1'b1;
+    #1 clk = 1'b0;
+    Address = Address + 4;    
+    end
+    $finish;
+    end 
 
+    always @ (posedge clk)
+        begin
+        #1;   
+        $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);
+    end
+
+/*
     $fdisplay(fw, "-------------- Reading Word from Addresses 0, 4, 8 and 12 ----------------\n");   
     Size = 2'b10; //WORD
     ReadWrite = 1'b0; //Read
@@ -87,8 +103,8 @@ initial begin
         #5 clk = 1'b0;
         #1 $fdisplay(fw,"ReadWrite: %d | Address: %d | DataIn: %b | DataOut: %b | Time: %d",ReadWrite, Address, DataIn, DataOut, $time);
         Address = Address + 4;
-    end 
+    end */
 
-$finish;
-end
+//$finish; 
+//end
 endmodule

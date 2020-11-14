@@ -94,6 +94,21 @@ module main(input clk, Reset); //input clk, input Reset);
     Address = #1 32'b00000000000000000000000000000000; //make sure adress starts back in 0 after precharge
     end
       
+/*-------------------------------------- PRECHARGE DATA RAM --------------------------------------*/
+
+    initial begin
+        file = $fopen("ramintr.txt","rb");
+        Address = 32'b00000000000000000000000000000000;
+            while (!$feof(file)) begin //while not the end of file
+            code = $fscanf(file, "%b", data);
+            ram1.Mem[Address] = data;
+            Address = Address + 1;
+        end
+
+    $fclose(file);
+    Address = #1 32'b00000000000000000000000000000000; //make sure adress starts back in 0 after precharge
+    end  
+    
  /*--------------------------------------  Monitor  --------------------------------------*/ 
  
     initial begin
