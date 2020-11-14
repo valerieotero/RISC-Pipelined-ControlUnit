@@ -21,26 +21,26 @@ $fclose(file);
 end
 
 initial begin
-    fw = $fopen("inst_memcontent.txt", "w");
-    clk = 1'b0; 
-    Reset = 1'b0;
+    fw = $fopen("inst_memcontent.txt", "w");    
     Address = #1 32'b00000000000000000000000000000000; //make sure adress is in 0 after precharge
-
-    repeat (4) begin 
+    clk = 1'b0; 
+    //Reset = 1'b0;
+   
+  /*  repeat (4) begin 
     #1 Reset = 1'b1;        
     #1 clk = 1'b1;
     #1 Reset = 1'b0;   
     #1 clk = 1'b0;           
-end
+end */
 
-    repeat (9) begin
+    repeat (17) begin
     #1 clk = 1'b1;
     #1 clk = 1'b0;
     Address = Address + 4;    
 end
 $finish;
 end 
-always @ (posedge clk)
+always @ (clk)
     begin
     #1;   
     $fdisplay(fw,"Data en %d = %b %d", Address, DataOut, $time);

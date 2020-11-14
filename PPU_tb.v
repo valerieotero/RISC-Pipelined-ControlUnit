@@ -11,13 +11,13 @@ main PPU(clk, Reset);
 
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
 
-    initial #22 $finish; //finish simulation on tick 22
+    initial #18 $finish; //finish simulation on tick 22
 
     initial begin
 
         clk = 1'b0; //before tick starts, clk=0
 
-        repeat(10) #1 clk = ~clk; end  //enough repeats to read all instructions 
+        repeat(18) #1 clk = ~clk; end  //enough repeats to read all instructions 
 
 /*--------------------------------------  Toggle Reset  --------------------------------------*/
 
