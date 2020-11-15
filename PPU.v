@@ -709,7 +709,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                 3'b010: //Load/Store Immediate Offset
                 begin
                     u = A[23];
-                    s_imm = 0; 
+                    s_imm = 1; 
                     l_instr = A[20]; 
                     b_instr = 0;
                     m_size = A[22];
@@ -735,7 +735,8 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                     u = A[23];
                     l_instr = A[20];
                     m_size = A[22];
-
+                    s_imm = 0; 
+                    b_instr = 0;
 
                     if(u == 1)
                         alu_op = 4'b0100; //suma
@@ -758,8 +759,6 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         r_sr_off = 1;
                         
 
-                    s_imm = 0; 
-                    b_instr = 0;
             
                     
                 end
@@ -774,6 +773,8 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         l_instr = 0; 
                         alu_op = 4'b0010;
                         m_rw = 0;
+                        m_size = 0;
+
                     end else begin 
                         b_bl = A[24];
                         
@@ -784,6 +785,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                             l_instr = 0; 
                             alu_op = 4'b0010;
                             m_rw = 0;
+                            m_size = 0;
 
                         end else begin
                         //branch & link begin
@@ -792,6 +794,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                             l_instr = 0; 
                             alu_op = 4'b0100; //suma
                             m_rw = 0;
+                            m_size = 0;
 
                         end
                     end
