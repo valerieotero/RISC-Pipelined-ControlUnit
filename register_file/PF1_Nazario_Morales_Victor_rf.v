@@ -34,21 +34,21 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, C
 
 
     //16 Registers
-    register R0 (Q0, PW, E[0], CLK);
-    register R1 (Q1, PW, E[1], CLK);
-    register R2 (Q2, PW, E[2], CLK);
-    register R3 (Q3, PW, E[3], CLK);
-    register R4 (Q4, PW, E[4], CLK);
-    register R5 (Q5, PW, E[5], CLK);
-    register R6 (Q6, PW, E[6], CLK);
-    register R7 (Q7, PW, E[7], CLK);
-    register R8 (Q8, PW, E[8], CLK);
-    register R9 (Q9, PW, E[9], CLK);
-    register R10 (Q10, PW, E[10], CLK);
-    register R11 (Q11, PW, E[11], CLK);
-    register R12 (Q12, PW, E[12], CLK);
-    register R13 (Q13, PW, E[13], CLK);
-    register R14 (Q14, PW, E[14], CLK);
+    register R0 (Q0, PW, E[0], CLK, RST);
+    register R1 (Q1, PW, E[1], CLK, RST);
+    register R2 (Q2, PW, E[2], CLK, RST);
+    register R3 (Q3, PW, E[3], CLK, RST);
+    register R4 (Q4, PW, E[4], CLK, RST);
+    register R5 (Q5, PW, E[5], CLK, RST);
+    register R6 (Q6, PW, E[6], CLK, RST);
+    register R7 (Q7, PW, E[7], CLK, RST);
+    register R8 (Q8, PW, E[8], CLK, RST);
+    register R9 (Q9, PW, E[9], CLK, RST);
+    register R10 (Q10, PW, E[10], CLK, RST);
+    register R11 (Q11, PW, E[11], CLK, RST);
+    register R12 (Q12, PW, E[12], CLK, RST);
+    register R13 (Q13, PW, E[13], CLK, RST);
+    register R14 (Q14, PW, E[14], CLK, RST);
     PCregister R15 (Q15, MO, HZPCld, CLK, RST);
     assign PCout = Q15;
 
@@ -158,15 +158,18 @@ endmodule
 //endmodule
 
 
-module register(Q, PW, RFLd, CLK);
+module register(Q, PW, RFLd, CLK, RST);
     //Output
     output reg [31:0] Q;
     //Inputs
     input [31:0] PW;
-    input RFLd, CLK;
+    input RFLd, CLK, RST;
 
-    always @ (posedge CLK)
+    always @ (posedge CLK or RST)
     begin
+        if(RST)
+            Q <= 0;
+
         if (RFLd)
             Q <= PW;
     end
@@ -179,9 +182,8 @@ module PCregister(Q, MOin, HZPCld, CLK, RST);
     //Inputs
     input [31:0] MOin;
     input HZPCld, CLK, RST;
-    //wire CLK, RST;
 
-    always @ (CLK or  RST or HZPCld)
+    always @ (CLK or RST or HZPCld)
     begin
         if(HZPCld)
         begin
