@@ -249,25 +249,25 @@ wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
     // input RFLd, PCLd, CLK;
     
                 //    register_file(PA, PB, PD, PW, PCin, PCout,      C,            SA,         SB,     SD, RFLd,   HZPCld,  CLK,  RST);
-    register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12_out, ID_Bit19_16, ID_Bit3_0, SD, RFLd,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
+    register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12, ID_Bit19_16, ID_Bit3_0, SD, WB_RF_Enable,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
 
     //   initial begin
-    //         #10;
-    // //         $display(" ------- REGISTER FILE -------- ");
+    //         #1;
+    //         $display(" ------- REGISTER FILE -------- ");
 
-            // $display("PA %b ", PA);
-            // $display("PB %b ", PB);
-            // $display("PD %b ", PD);
-    // //         $display("PW %b ", PW);
-    // //         $display("PCin %b ", PCin);
-    // //         $display("PCout %b ", PCO);
-    // // //         $display("RW %b ", WB_Bit15_12_out);
-    //         $display("SA %b ", ID_Bit19_16);
-    //         $display("SB %b ", ID_Bit3_0);
-    //         $display("SD %b", SD);
-    //         // $display("RegFile LOAD %b ", RFLd);
-    //         $display("PC LOAD %b ", PC_RF_ld);
-    // //         $display("clk %b", clk);
+    //         $monitor("PA %b ", PA);
+    //         $monitor("PB %b ", PB);
+    //         $monitor("PD %b ", PD);
+    //         $monitor("PW %b ", PW);
+    //         $monitor("PCin %b ", PCin);
+    //         $monitor("PCout %b ", PCO);
+    //         $monitor("RW %b ", WB_Bit15_12);
+    //         $monitor("SA %b ", ID_Bit19_16);
+    //         $monitor("SB %b ", ID_Bit3_0);
+    //         $monitor("SD %b", SD);
+    //         $monitor("RegFile LOAD %b ", RFLd);
+    //         $monitor("PC LOAD %b ", PC_RF_ld);
+    //         $display("clk %b", clk);
 
         // end 
     // //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output [31:0] MUX_Out);
@@ -650,12 +650,27 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 
 /*--------------------------------------  Monitor  --------------------------------------*/ 
 
-initial begin
+// initial begin
         
-    $display("\n\n                    --------------------ID State---------------------           ----------------EX State---------------       --------MEM State------        ---WB State---           -------Instruction-------        --Time--");
-    $display("           PC    B_instr | shift_imm |   alu  | load | R F | m_rw | m_s       shift_imm | alu  | load | R F | m_rw | m_s      load | R F | m_rw | m_s          load | R F          \n");
-    $monitor("  %d         %b   |     %b     |  %b  |  %b   |  %b  |   %b  |  %b               %b  | %b |   %b  |  %b  |   %b  |  %b         %b  |  %b  |   %b  |  %b             %b  |  %b           %b        %0d\n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  ID_mem_size, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, EX_mem_size, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+//     $display("\n\n                    --------------------ID State---------------------           ----------------EX State---------------       --------MEM State------        ---WB State---           -------Instruction-------        --Time--");
+//     $display("           PC    B_instr | shift_imm |   alu  | load | R F | m_rw | m_s       shift_imm | alu  | load | R F | m_rw | m_s      load | R F | m_rw | m_s          load | R F          \n");
+//     $monitor("  %d         %b   |     %b     |  %b  |  %b   |  %b  |   %b  |  %b               %b  | %b |   %b  |  %b  |   %b  |  %b         %b  |  %b  |   %b  |  %b             %b  |  %b           %b        %0d\n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  ID_mem_size, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, EX_mem_size, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
+// end
+
+initial begin
+    $display("\n\n        PC      Destino       PW     Address Data Ram      -- SA --     -- RF SA --        -- PW R1 --       -- R1 --     RFLd in R1     RF Enable     -- SB --       -- R2 --        -- R3 --       -- R15 --      PC_RF_L ");
+    // $monitoron;
+    $monitor("%d        %d  %d    %d                %d           %d       %d          %d             %d              %d           %d     %d      %d      %d          %0d", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.PW, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R15.Q, PC_RF_ld);
 end
+
+
+// initial begin
+//     // #20;
+//     $monitoroff;
+//     $display("\n\n               --------------------------------------- MEMORY DATA --------------------------------------------------");
+//     $monitoron;
+//     $monitor(data_ram.DataOut);
+// end
   
 endmodule
