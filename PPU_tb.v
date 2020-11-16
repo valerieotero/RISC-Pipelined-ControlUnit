@@ -19,7 +19,7 @@ wire [23:0] ID_Bit23_0;
 wire [3:0] ID_Bit19_16, ID_Bit3_0;
 wire [3:0] ID_Bit31_28, cc_alu_1;
 wire [3:0] ID_Bit15_12, cc_main_alu_out;
-wire [11:0] ID_Bit11_0;
+wire [31:0] ID_Bit11_0;
 wire [31:0] EX_Bit11_0, EX_MUX_2X1_OUT,  PCIN;
 wire choose_ta_r_nop;
 wire IF_ID_Load; // = 1; // load pipeline viene de hazard unit
@@ -364,7 +364,7 @@ ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_ou
                                 EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write,
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, C_U_out,
-                                ID_Bit11_0, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
+                                DO_CU, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
         /*  initial begin
                         #2;
                         $display(" ------- ID_EX_PIPE REG -------- ");
@@ -659,9 +659,9 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 // end
 
 initial begin
-    $display("\n\n        PC      Destino       PW     Address Data Ram      -- SA --     -- RF SA --        -- PW R1 --       -- R1 --     RFLd in R1     RF Enable     -- SB --       -- R2 --        -- R3 --       -- R15 --      PC_RF_L ");
-    // $monitoron;
-    $monitor("%d        %d  %d    %d                %d           %d       %d          %d             %d              %d           %d     %d      %d      %d          %0d", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.PW, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R15.Q, PC_RF_ld);
+    $display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot  ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
+    //         PC      Destino        PW        Data Ram     SA         RF SA       R1      RFLd in R1    RF Enable        SB     R2        R3      R5        R15      PC_RF_L       R0       SSEout   MUXSSEAout     ALU    SSEA/MUX2_ID    SSEB   M2_ID_Sig  MUXS_Sig    LD
+    $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT, A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
 end
 
 

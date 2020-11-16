@@ -141,7 +141,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         b_bl = A[24];
                         
                        //branch
-                        if(b_bl == 0) begin
+                        // if(b_bl == 0) begin
                             s_imm = 0; 
                             rf_instr = 0; 
                             l_instr = 0; 
@@ -149,16 +149,16 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                             m_rw = 0;
                             m_size = 0;
 
-                        end else begin
-                        //branch & link begin
-                            s_imm = 0; 
-                            rf_instr = 1; 
-                            l_instr = 0; 
-                            alu_op = 4'b0100; //suma
-                            m_rw = 0;
-                            m_size = 0;
+                        // end else begin
+                        // //branch & link begin
+                        //     s_imm = 0; 
+                        //     rf_instr = 1; 
+                        //     l_instr = 0; 
+                        //     alu_op = 4'b0100; //suma
+                        //     m_rw = 0;
+                        //     m_size = 0;
 
-                        end
+                        // end
                     end
                 end
                 
@@ -386,7 +386,7 @@ endmodule
 
 //IF/ID PIPELINE REGISTER
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
-                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[11:0] ID_Bit11_0,
+                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[31:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
                                input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
 
@@ -401,11 +401,11 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit19_16 <= 4'b0;
             ID_Bit15_12 <= 4'b0;
             ID_Bit23_0 <= 24'b0;
-            ID_Bit11_0 <= 12'b0;
+            // ID_Bit11_0 <= 12'b0;
 
         end else begin
 
-          //  if(Hazard_Unit_Ld == 0 || asserted == 1|| choose_ta_r_nop == 0) begin
+           if(Hazard_Unit_Ld == 0 || asserted == 1|| choose_ta_r_nop == 0) begin
                 ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
@@ -413,35 +413,20 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <=  DataOut[19:16]; //{28'b0, DataOut[19:16]};
                 ID_Bit15_12 <= DataOut[15:12];
                 ID_Bit23_0 <= DataOut[23:0];
-                ID_Bit11_0 <= DataOut[11:0];
+                // ID_Bit11_0 <= DataOut[11:0];
                 
-            // end else begin
-            //     ID_Bit31_0 = 32'b0;
-            //     ID_Next_PC <= 32'b0;
-            //     ID_Bit3_0 <= 4'b0; //32'b0;
-            //     ID_Bit31_28 <= 4'b0;
-            //     ID_Bit19_16 <= 4'b0; //32'b0;
-            //     ID_Bit15_12 <= 4'b0;
-            //     ID_Bit23_0 <= 24'b0;
-            //     ID_Bit11_0 <= 12'b0;
-            // end
+            end else begin
+                ID_Bit31_0 = 32'b0;
+                ID_Next_PC <= 32'b0;
+                ID_Bit3_0 <= 4'b0; //32'b0;
+                ID_Bit31_28 <= 4'b0;
+                ID_Bit19_16 <= 4'b0; //32'b0;
+                ID_Bit15_12 <= 4'b0;
+                ID_Bit23_0 <= 24'b0;
+                // ID_Bit11_0 <= 12'b0;
+            end
         end
        
-
-
-    // $display("\n\n\n/*-------------------------------------- IF_ID_pipeline_register OUT --------------------------------------*/\n");   
-
-    //  $display("ID_Bit23_0 = %b | ID_Next_PC =%b | ID_Bit19_16=%b | ID_Bit3_0=%b\n",
-    //                            ID_Bit23_0, ID_Next_PC,
-    //                            ID_Bit19_16, ID_Bit3_0);
-
-    // $display("ID_Bit31_28=%b | ID_Bit11_0=%b | ID_Bit15_12=%b | ID_Bit31_0=%b | nop=%b | Hazard_Unit_Ld=%b\n",
-    //                            ID_Bit31_28, ID_Bit11_0,
-    //                            ID_Bit15_12, ID_Bit31_0,
-    //                            nop, Hazard_Unit_Ld);
-                               
-    //  $display("clk=%b | PC4=%b | DataOut=%b\n", clk, PC4, DataOut);    
-
     end
 endmodule
 
@@ -455,7 +440,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
                                input [3:0] ID_Bit15_12, input [6:0] ID_CU, 
-                               input [11:0] ID_Bit11_0,
+                               input [31:0] ID_Bit31_0,
                                input [7:0] ID_addresing_modes,
                                input ID_mem_size, ID_mem_read_write, input clk);
 
@@ -476,7 +461,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
      
         //Instruction bits
         EX_Bit15_12 <= ID_Bit15_12;
-        EX_Bit11_0 <= {20'b0, ID_Bit11_0};
+        EX_Bit11_0 <= ID_Bit31_0; // {20'b0, ID_Bit11_0};
         EX_addresing_modes <= ID_addresing_modes; //22-20
    
     //  $display("ID_EX reg");
@@ -692,10 +677,8 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
         twoscomp = ~(in1) + 1'b1;
 
         for(i=0; i<2; i= i+1)begin
-                            // tc = temp_reg[31];
-        temp_reg = {twoscomp[29:0], 2'b0};
+            temp_reg = {twoscomp[29:0], 2'b0};
         end
-                        // C = tc;
         shift_result = temp_reg;
 
         result = shift_result * 4;

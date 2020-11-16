@@ -12,6 +12,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
     reg relleno;
     reg Cin;
     reg U;
+
+   
   
 
     always@(*)
@@ -89,7 +91,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
             3'b010:
             begin //Immediate Offset
                 // if(U == 1)
-                shift_result = {20'b0, B[11:0]}; //effective address
+                shift_result = {20'b0, A[11:0]}; //effective address
                 // else 
                 //     shift_result = {20'b0, B[19:16]} - {20'b0, B[11:0]}; //effective address
 
@@ -99,7 +101,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
             begin 
                 if(B[11:4] == 8'b0) begin //Register Offset 
                 //  if(U == 1)
-                    shift_result = {28'b0, B[3:0]}; //effective address
+                    shift_result = {28'b0, A[3:0]}; //effective address
                 // else 
                 //     shift_result = {20'b0, B[19:16]} - A; //effective address
                 end else begin //Scaled Register Offset
@@ -155,7 +157,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                                     temp_reg1 = {temp_reg[30:0], 1'b0};
                                 end
                                 tc = temp_reg1[31];
-                                rm = {28'b0, B[3:0]};
+                                rm = {28'b0, A[3:0]};
                                 for(i=0; i<1; i= i+1)begin
                                    // tc = rm[0];
                                     temp_reg2 = {1'b0, rm[31:1]};
@@ -175,7 +177,13 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                     endcase
                     
                 end
-            end       
+            end 
+
+            // 3'b101:
+            // begin
+            //     if(B[24] == 1)
+
+            // end      
         endcase
 
 
