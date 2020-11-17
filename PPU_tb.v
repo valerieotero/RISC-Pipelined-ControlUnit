@@ -98,7 +98,7 @@ wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
         Address = 32'b00000000000000000000000000000000;
             while (!$feof(file)) begin //while not the end of file
             code = $fscanf(file, "%b", data);
-            ram1.Mem[Address] = data;
+            data_ram.Mem[Address] = data;
             Address = Address + 1;
         end
 
@@ -109,8 +109,7 @@ wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
 
 //initial begin 
     //  $display("\n\n/*--------------------------------------  IF Stage  --------------------------------------*/\n \n");       
-//end
-    // inst_ram256x8 ram1 (DO, PCO, Reset);
+//end   
 
     //IF Stage
     //para escoger entre TA & PC+4
@@ -650,27 +649,40 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 
 /*--------------------------------------  Monitor  --------------------------------------*/ 
 
-// initial begin
+ initial begin
         
-//     $display("\n\n                    --------------------ID State---------------------           ----------------EX State---------------       --------MEM State------        ---WB State---           -------Instruction-------        --Time--");
-//     $display("           PC    B_instr | shift_imm |   alu  | load | R F | m_rw | m_s       shift_imm | alu  | load | R F | m_rw | m_s      load | R F | m_rw | m_s          load | R F          \n");
-//     $monitor("  %d         %b   |     %b     |  %b  |  %b   |  %b  |   %b  |  %b               %b  | %b |   %b  |  %b  |   %b  |  %b         %b  |  %b  |   %b  |  %b             %b  |  %b           %b        %0d\n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  ID_mem_size, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, EX_mem_size, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, WB_load_instr, WB_RF_Enable, DO_CU, $time);
+     $display("\n\n                    --------------------ID State---------------------           ----------------EX State---------------       --------MEM State------        ---WB State---           -------Instruction-------        --Time--");
+     $display("           PC    B_instr | shift_imm |   alu  | load | R F | m_rw | m_s       shift_imm | alu  | load | R F | m_rw | m_s      load | R F | m_rw | m_s          load | R F          \n");
+     $monitor("  %d         %b   |     %b     |  %b  |  %b   |  %b  |   %b  |  %b               %b  | %b |   %b  |  %b  |   %b  |  %b         %b  |  %b  |   %b  |  %b             %b  |  %b           %b        %0d\n", PCO, ID_B_instr, C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0], ID_mem_read_write,  ID_mem_size, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,EX_mem_read_write, EX_mem_size, MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, WB_load_instr, WB_RF_Enable, DO_CU, $time);
 
-// end
+ end
 
-initial begin
-    $display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot  ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
+//initial begin
+  //  $display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot  ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
     //         PC      Destino        PW        Data Ram     SA         RF SA       R1      RFLd in R1    RF Enable        SB     R2        R3      R5        R15      PC_RF_L       R0       SSEout   MUXSSEAout     ALU    SSEA/MUX2_ID    SSEB   M2_ID_Sig  MUXS_Sig    LD
-    $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT, A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
-end
+   // $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT, A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
+//end
 
 
 // initial begin
-//     // #20;
-//     $monitoroff;
-//     $display("\n\n               --------------------------------------- MEMORY DATA --------------------------------------------------");
-//     $monitoron;
-//     $monitor(data_ram.DataOut);
+     // #20;
+ //    $monitoroff;
+ //   $display("\n\n               --------------------------------------- MEMORY DATA --------------------------------------------------");
+ //    $monitoron;
+ //    $monitor(data_ram.DataOut);
 // end
   
+
+/*
+ integer x=0; 
+ initial begin
+
+ $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
+
+ for (x=0; x<256; x = x +4) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
+ begin   
+     $display("Data en  %0d = %b %b %b %b", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3]);
+  
+ end
+ end */
 endmodule
