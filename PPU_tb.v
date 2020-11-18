@@ -144,9 +144,9 @@ wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
         $display("Condition Codes: %b  \n\n ", cc_alu_1);
     end */
 
-    mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
+    mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCIN);
 
-    mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
+    // mux_2x1_Stages mux_2x1_PCin(PCI, 32'b0, Reset, PCIN);
     /*   always @ (clk) begin
                 // #2; //in tick 2 because clk = 1 on this tick 
 
@@ -659,11 +659,29 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 // end
 
 initial begin
-    $display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot  ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
+    //$display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot   MUX1   ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
     //         PC      Destino        PW        Data Ram     SA         RF SA       R1      RFLd in R1    RF Enable        SB     R2        R3      R5        R15      PC_RF_L       R0       SSEout   MUXSSEAout     ALU    SSEA/MUX2_ID    SSEB   M2_ID_Sig  MUXS_Sig    LD
-    $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT, A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
+   // $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d   %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n",,  PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT,mux_out_1,  A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
+    $display("\n\nPC    Data Ram   R1    R2     R3     R5     R15   ");
+    $monitor("%0d         %0d        %0d    %0d      %0d      %0d       %0d\n", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q);
+
 end
 
+/*
+initial begin  
+ $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------");  
+
+end
+
+ integer x=0; 
+ initial begin
+
+    for (x=0; x<256; x = x +4)
+    begin   
+        $display("Data en  %0d = %b %b %b %b", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3]);
+    
+    end
+ end */
 
 // initial begin
 //     // #20;
