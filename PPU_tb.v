@@ -111,7 +111,8 @@ wire [6:0] ID_CU, C_U_out, NOP_S;// = 0010001;
     //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
     alu alu_1(PCO, 32'd4, 4'b0100, 1'b0, PC4, cc_alu_1);
 
-    mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCIN);
+    mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCI);
+    mux_2x1_Stages mux_2x1_stages_9(PCI, 32'b0, Reset, PCIN);
             
     // //IF/ID reg
     // //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
@@ -279,10 +280,10 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 //end
 
 
-initial begin
-    $display("\n\nPC      Destino        Data Ram                   DRO                      IDLD   EXLD    MLD  WBLD/LDRF    R0    R1     R2      R3     R5      R15     ALU      MUX1_ID     MXSEA_S             PW");
-       //     PC      Destino   Data Ram   DRO        IDLD     EXLD    MLD      WBLD/LDRF      R0       R1       R2       R3       R5       R15      ALU      MUX1_ID    MXSEA_S   PW
-    $monitor("%0d        %d       %d        %b        %0d       %0d      %0d        %0d       %0d      %0d      %0d       %0d      %0d       %0d        %0d        %0d         %0d     %b\n", PCO, WB_Bit15_12, MEM_A_O, Data_RAM_Out, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, A_O, mux_out_1_A, EX_MUX_2X1_OUT, PW);
+initial begin   
+    $display("\n\nPC   Destino   Address  -->              DRO                                PW                     instrIF                                    instrID                  IDLD    EXLD    MLD  WBLD/LDRF    R0    R1     R2      R3     R5");//      R15     ALU      MUX1_ID     MXSEA_S ");
+       //     PC      Destino   Data Ram   DRO    PW  instrID       IDLD     EXLD    MLD      WBLD/LDRF      R0       R1       R2       R3       R5       R15      ALU      MUX1_ID    MXSEA_S       %0d          %0d        %0d         %0d
+    $monitor("%0d     %d  %d        %b         %d        %b        %b        %0d       %0d      %0d        %0d       %0d      %0d      %0d       %0d      %0d\n", PCO, WB_Bit15_12, MEM_A_O, Data_RAM_Out, PW, DO, DO_CU, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q); //, register_file_1.R15.Q, A_O, mux_out_1_A, EX_MUX_2X1_OUT);
 end
 
 

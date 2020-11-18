@@ -81,7 +81,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         m_rw = 1;
                         
                     end else begin
-                        rf_instr = 0; 
+                        rf_instr = 1; 
                         m_rw = 0;
                         
                     end 
@@ -110,7 +110,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         rf_instr = 0;
                         m_rw = 1;
                     end else begin
-                        rf_instr = 0; 
+                        rf_instr = 1; 
                         m_rw = 0;
 
                     end
@@ -129,19 +129,19 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                 begin
                     b_instr = 1;
 
-                    if(asserted == 1)begin
-                        s_imm = 0; 
-                        rf_instr = 0; 
-                        l_instr = 0; 
-                        alu_op = 4'b0010;
-                        m_rw = 0;
-                        m_size = 0;
+                    // //if(asserted == 1)begin
+                    //     s_imm = 0; 
+                    //     rf_instr = 0; 
+                    //     l_instr = 0; 
+                    //     alu_op = 4'b0010;
+                    //     m_rw = 0;
+                    //     m_size = 0;
 
-                    end else begin 
-                        b_bl = A[24];
+                    // end else begin 
+                    b_bl = A[24];
                         
                        //branch
-                        // if(b_bl == 0) begin
+                        if(b_bl == 0) begin
                             s_imm = 0; 
                             rf_instr = 0; 
                             l_instr = 0; 
@@ -149,17 +149,17 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                             m_rw = 0;
                             m_size = 0;
 
-                        // end else begin
-                        // //branch & link begin
-                        //     s_imm = 0; 
-                        //     rf_instr = 1; 
-                        //     l_instr = 0; 
-                        //     alu_op = 4'b0100; //suma
-                        //     m_rw = 0;
-                        //     m_size = 0;
+                        end else begin
+                        //branch & link begin
+                            s_imm = 0; 
+                            rf_instr = 1; 
+                            l_instr = 0; 
+                            alu_op = 4'b0100; //suma
+                            m_rw = 0;
+                            m_size = 0;
 
-                        // end
-                    end
+                        end
+                    // end
                 end
                 
 
