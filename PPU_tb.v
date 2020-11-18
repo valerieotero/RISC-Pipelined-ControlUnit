@@ -242,14 +242,14 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
    
     
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
-
-   // initial #18 $finish; //finish simulation on tick 18 (If uncomented data ram content after simulation will not display)
+    //finish simulation on tick 30 (If commented, simulation will enter infinite loop, but if uncommented data ram content after simulation will not display)
+    initial #30 $finish; 
 
     initial begin
 
         clk = 1'b0; //before tick starts, clk=0
 
-        repeat(18) #1 clk = ~clk; end  //enough repeats to read all instructions 
+        forever #1 clk = ~clk; end  //enough repeats to read all instructions 
 
 /*--------------------------------------  Toggle Reset  --------------------------------------*/
 
@@ -271,21 +271,15 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 
 //  end
 
- /*--------------------------------------  MONITOR REGISTROS  --------------------------------------*/ 
 
-//initial begin
- //   $display("\n\nPC      Destino    PW     Data Ram     SA    RF SA    R1    RFLd in R1    RF Enable    SB     R2     R3     R5     R15   PC_RF_L    R0     SSEout   MXSEAot  ALU  SSEA/MUX2_ID   SSEB   M2ID_S   MXS_S  LD");
-    //        PC      Destino        PW        Data Ram     SA         RF SA       R1      RFLd in R1    RF Enable        SB     R2        R3      R5        R15      PC_RF_L       R0       SSEout   MUXSSEAout     ALU    SSEA/MUX2_ID    SSEB   M2_ID_Sig  MUXS_Sig    LD
-  //  $monitor("%0d        %0d         %0d         %0d         %0d        %0d        %0d         %0d           %0d        %0d     %0d      %0d      %0d       %0d        %0d        %0d      %0d        %0d        %0d        %0d         %0d        %0d      %0d      %0d\n", PCO, WB_Bit15_12, PW,  MEM_A_O,  ID_Bit19_16, register_file_1.SA, register_file_1.R1.Q, register_file_1.R1.RFLd, WB_RF_Enable, ID_Bit3_0,register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, PC_RF_ld, register_file_1.R0.Q, SSE_out, EX_MUX_2X1_OUT, A_O, mux_out_2_B, EX_Bit11_0, MUX2_signal, EX_Shift_imm, WB_load_instr);
-//end
-
+/*--------------------------------------  MONITOR REGISTROS  --------------------------------------*/ 
 
 initial begin   
-    $display("\n\nPC   Destino   Address  -->              DRO                                PW                     instrIF                                    instrID                  IDLD    EXLD    MLD  WBLD/LDRF    R0    R1     R2      R3     R5");//      R15     ALU      MUX1_ID     MXSEA_S ");
-       //     PC      Destino   Data Ram   DRO    PW  instrID       IDLD     EXLD    MLD      WBLD/LDRF      R0       R1       R2       R3       R5       R15      ALU      MUX1_ID    MXSEA_S       %0d          %0d        %0d         %0d
-    $monitor("%0d     %d  %d        %b         %d        %b        %b        %0d       %0d      %0d        %0d       %0d      %0d      %0d       %0d      %0d\n", PCO, WB_Bit15_12, MEM_A_O, Data_RAM_Out, PW, DO, DO_CU, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q); //, register_file_1.R15.Q, A_O, mux_out_1_A, EX_MUX_2X1_OUT);
-end
+    $display("\n\n         PC    DR-Address    R0         R1             R2             R3             R5           R15        RFEnable       PW       Destino             DR-Out                                 instrIF                              instrID               IDLD  EXLD   MLD  Time");
 
+       //     PC    DataRam  R0    R1     R2     R3     R5     R15     LDRF      PW   Destino DR-O  instrIF instrID IDLD   EXLD   MLD   time 
+    $monitor("%d  |  %d  |  %0d  | %d  |  %d  |  %d  |  %d  |  %d  |    %d    |  %d  |  %d  |  %b  |  %b  |  %b  |  %d  |  %d  |  %d  |  %0d", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, WB_RF_Enable, PW, WB_Bit15_12, Data_RAM_Out, DO, DO_CU, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, $time);
+end
 
 
 
@@ -298,7 +292,7 @@ end
 //end
 
 
-
+/*
  integer x=0; 
  initial begin
  #20;
@@ -309,6 +303,7 @@ end
      $display("Data en Address %0d = %b %b %b %b  at time: %0d", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3], $time);
   
  end
- end 
+ end */
+
 
 endmodule
