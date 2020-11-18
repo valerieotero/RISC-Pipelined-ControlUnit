@@ -282,8 +282,10 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,
 initial begin
     $display("\n\nPC      Destino        Data Ram                   DRO                      IDLD   EXLD    MLD  WBLD/LDRF    R0    R1     R2      R3     R5      R15     ALU      MUX1_ID     MXSEA_S             PW");
        //     PC      Destino   Data Ram   DRO        IDLD     EXLD    MLD      WBLD/LDRF      R0       R1       R2       R3       R5       R15      ALU      MUX1_ID    MXSEA_S   PW
-    $monitor("%0d        %d       %d        %b        %0d       %0d      %0d        %0d       %0d      %0d      %0d       %0d      %0d       %0d        %0d        %0d         %0d     %b\n", PCO, WB_Bit15_12, MEM_A_O, Data_RAM_Out, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, A_O, mux_out_1_A, EX_MUX_2X1_OUT, PW);
+    $monitor("%0d        %d       %d        %b        %0d       %0d      %0d        %0d       %0d      %0d      %0d       %0d      %0d       %0d        %6d        %3d         %3d     %b\n", PCO, WB_Bit15_12, MEM_A_O, Data_RAM_Out, C_U_out[0], EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, A_O, mux_out_1_A, EX_MUX_2X1_OUT, PW);
+    //$monitor("PC: %d | CRF: %d | CPPU: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | R15 %d | PW @ RF %d", PCO, register_file_1.C, WB_Bit15_12, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.PW);
 end
+
 
 
 
