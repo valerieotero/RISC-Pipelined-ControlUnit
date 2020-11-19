@@ -525,7 +525,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
     always @ (DataOut,Address,Reset)  
     begin
 
-        if (Reset) //&& Address == 32'b0)
+        if (Reset) 
         begin        
             DataOut = 32'b00000000000000000000000000000000; 
             // $display("Inside Reset\n");   
@@ -550,40 +550,48 @@ endmodule
               
 
 //DATA MEMORY
-module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size);
+module data_ram256x8(output reg[31:0] DataOut, input ReadWrite, input[31:0] Address, input[31:0] DataIn, input Size, Reset);
 
     reg[7:0] Mem[0:255]; //256 localizaciones 
 
-    always @ (DataOut, ReadWrite, Address, DataIn, Size)       
+    always @ (DataOut, ReadWrite, Address, DataIn, Size,Reset)       
 
-        casez(Size) //"casez" to ignore dont care values
-        1'b1: //BYTE
-        begin 
-            if (ReadWrite) //When Write 
-            begin
-                Mem[Address] = DataIn; 
+        if (Reset) 
+            begin        
+                DataOut = 32'b00000000000000000000000000000000;                   
             end
-            else //When Read
-            begin
-                DataOut= Mem[Address];
-            end                
-        end      
 
-        1'b0: //WORD
-        begin
-            if (ReadWrite) //When Write 
+        else
+          begin              
+            casez(Size) //"casez" to ignore dont care values
+            1'b1: //BYTE
+            begin 
+                if (ReadWrite) //When Write 
+                    begin
+                        Mem[Address] = DataIn; 
+                    end
+                else //When Read
+                    begin
+                        DataOut= Mem[Address];
+                    end                
+            end      
+
+            1'b0: //WORD
             begin
-                Mem[Address] = DataIn[31:24];
-                Mem[Address + 1] = DataIn[23:16];
-                Mem[Address + 2] = DataIn[15:8]; 
-                Mem[Address + 3] = DataIn[7:0]; 
-            end                 
-            else //When Read
-            begin
-                    DataOut = {Mem[Address + 0], Mem[Address + 1], Mem[Address + 2], Mem[Address + 3]}; 
-            end  
-        end        
-    endcase      
+                if (ReadWrite) //When Write 
+                    begin
+                        Mem[Address] = DataIn[31:24];
+                        Mem[Address + 1] = DataIn[23:16];
+                        Mem[Address + 2] = DataIn[15:8]; 
+                        Mem[Address + 3] = DataIn[7:0]; 
+                    end                 
+                else //When Read
+                    begin
+                            DataOut = {Mem[Address + 0], Mem[Address + 1], Mem[Address + 2], Mem[Address + 3]}; 
+                    end  
+            end        
+        endcase
+     end      
 endmodule
 
 
