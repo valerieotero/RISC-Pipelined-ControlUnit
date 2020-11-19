@@ -3,7 +3,7 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
@@ -22,7 +22,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, C
     //Multiplexers
     multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
     multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
-    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
+    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
 
 
     //loadDecoder r15decoder(E[15], R15MO);
@@ -165,7 +165,7 @@ module register(Q, PW, RFLd, CLK, RST);
     input [31:0] PW;
     input RFLd, CLK, RST;
 
-    always @ (posedge CLK or RST)
+    always @ ( CLK or RST)
     begin
         if(RST)
             Q <= 0;

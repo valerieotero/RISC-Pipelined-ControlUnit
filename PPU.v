@@ -697,11 +697,11 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
     always@(*)
     begin
         //DATA Hazard-By Load Instr
-        if(EX_load_instr && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12)))begin
+        if(EX_load_instr==1 && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12)))begin
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
-            MUXControlUnit_signal = 1'b0; //NOP
+            MUXControlUnit_signal = 1'b1; //NOP; its suppose to be 0
         end else begin
             IF_ID_load = 1'b1; //Disable pipeline Load
             PC_RF_load = 1'b1; //Disable PC load

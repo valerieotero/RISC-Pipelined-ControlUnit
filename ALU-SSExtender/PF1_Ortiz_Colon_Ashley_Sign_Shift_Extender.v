@@ -21,58 +21,85 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
     begin
         shifter_op = B[27:25];
         by_imm_shift = B[6:5];
-        // U = B[23];
+        temp_reg = A;
         case(shifter_op)
 
             3'b000:
             begin //Shift_by_Imm
-                temp_reg = A;
+                // temp_reg = A;
                 num_of_rot = B[11:7];
-                tc = C;
+                // tc = C;
                 
                 case(by_imm_shift)
                     2'b00:
                     begin //LSL
-                        for(i=0; i<num_of_rot; i= i+1)begin
-                            tc = temp_reg[31];
-                            temp_reg = {temp_reg[30:0], 1'b0};
+                        if(num_of_rot == 5'b0)begin
+                            shift_result = temp_reg;
+                            // C = Cflag
+                        end else begin
+                            // temp_reg = {20'b0, A[11:0]};
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[31];
+                                temp_reg = {temp_reg[30:0], 1'b0};
+                            end
+                            
+                            shift_result = temp_reg;
+                            C = A[32 - num_of_rot];
                         end
-                        C = tc;
-                        shift_result = temp_reg;
                     end 
 
                     2'b01:
                     begin //LSR
-                
-                        for(i=0; i<num_of_rot; i= i+1)begin
-                            tc = temp_reg[0];
-                            temp_reg = {1'b0, temp_reg[31:1]};
+                        if(num_of_rot == 5'b0)begin
+                            shift_result = 32'b0;
+                            C = A[31];
+                        end else begin
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {1'b0, temp_reg[31:1]};
+                            end
+                            
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
                         end
-                        C = tc;
-                        shift_result = temp_reg;
                     end 
                     
                     2'b10:
                     begin //ASR
-                    
-                        relleno = A[31];
-                        for(i=0; i<num_of_rot; i= i+1)begin
-                            tc = temp_reg[0];
-                            temp_reg = {relleno, temp_reg[31:1]};
+                        if(num_of_rot == 5'b0)begin   
+                            if(temp_reg[31] == 1'b0) begin
+                                shift_result = 32'b0;
+                                C = A[31];
+                            end else begin
+                                shift_result = 32'b11111111111111111111111111111111;
+                                C = A[31];
+                            end   
+                        end else begin 
+                            relleno = A[31];
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {relleno, temp_reg[31:1]};
+                            end
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
                         end
-                        C = tc;
-                        shift_result = temp_reg;
                     end 
 
                     2'b11:
                     begin //ROR
-                        
-                     for(i=0; i<num_of_rot; i= i+1)begin
-                        tc = temp_reg[0];
-                        temp_reg = {temp_reg[0], temp_reg[31:1]};
-                     end
-                     C = tc;
-                     shift_result = temp_reg;
+                        if(num_of_rot == 5'b0)begin
+                            
+                            shift_result = {1'b0, temp_reg[31:1]};
+                            C = A[0];
+                        end else begin
+                            
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {temp_reg[0], temp_reg[31:1]};
+                            end
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
+                        end
                     end
                 endcase
             end 
@@ -86,6 +113,10 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                     temp_reg = {temp_reg[0], temp_reg[31:1]};
                 end
                     shift_result = temp_reg;
+
+                if(B[11:8] != 4'b0)
+                    C = A[31];
+
             end 
 
             3'b010:
@@ -101,7 +132,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
             begin 
                 if(B[11:4] == 8'b0) begin //Register Offset 
                 //  if(U == 1)
-                    shift_result = {28'b0, A[3:0]}; //effective address
+                    shift_result = {28'b0, B[3:0]}; //effective address
                 // else 
                 //     shift_result = {20'b0, B[19:16]} - A; //effective address
                 end else begin //Scaled Register Offset
@@ -110,10 +141,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                         2'b00:
                         begin //LSL
                             for(i=0; i<num_of_rot; i= i+1)begin
-                                tc = temp_reg[31];
                                 temp_reg = {temp_reg[30:0], 1'b0};
                             end
-                            C = tc;
                             shift_result = temp_reg;
                         end 
 
@@ -123,11 +152,11 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                                 temp_reg = 32'b0;
                             else begin
                                 for(i=0; i<num_of_rot; i= i+1)begin
-                                    tc = temp_reg[0];
+                                    // tc = temp_reg[0];
                                     temp_reg = {1'b0, temp_reg[31:1]};
                                 end
                             end
-                            C = tc;
+                            // C = tc;
                             shift_result = temp_reg;
                         end 
                         
@@ -141,37 +170,37 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                             end else begin   
                                 relleno = A[31];
                                 for(i=0; i<num_of_rot; i= i+1)begin
-                                    tc = temp_reg[0];
+                                    // tc = temp_reg[0];
                                     temp_reg = {relleno, temp_reg[31:1]};
                                 end
                             end 
-                            C = tc;
+                            // C = tc;
                             shift_result = temp_reg;
                         end 
 
                         2'b11:
                         begin //ROR
                             if(num_of_rot == 0)begin                                
-                                for(i=0; i<31; i= i+1)begin
-                                    tc = temp_reg[31];
-                                    temp_reg1 = {temp_reg[30:0], 1'b0};
-                                end
-                                tc = temp_reg1[31];
-                                rm = {28'b0, A[3:0]};
-                                for(i=0; i<1; i= i+1)begin
+                                // for(i=0; i<31; i= i+1)begin
+                                //     tc = temp_reg[31];
+                                    // temp_reg1 = {temp_reg[30:0], 1'b0};
+                                // end
+                                // tc = temp_reg1[31];
+                                // rm = {28'b0, A[3:0]};
+                                // for(i=0; i<1; i= i+1)begin
                                    // tc = rm[0];
-                                    temp_reg2 = {1'b0, rm[31:1]};
-                                end
-                                rm1 = temp_reg2;
+                                temp_reg = {1'b0, A[31:1]};
+                                // end
+                                // rm1 = temp_reg2;
 
-                                temp_reg = tc || rm1;
+                                // temp_reg = tc || rm1;
                             end else begin
                                 for(i=0; i<num_of_rot; i= i+1)begin
-                                    tc = temp_reg[0];
+                                    // tc = temp_reg[0];
                                     temp_reg = {temp_reg[0], temp_reg[31:1]};
                                 end
                             end
-                            C = tc;
+                            // C = tc;
                             shift_result = temp_reg;
                         end
                     endcase
