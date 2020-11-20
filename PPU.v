@@ -390,7 +390,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                                output reg[3:0] ID_Bit15_12, output reg[31:0] ID_Bit31_0,
                                input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
 
-    always@(clk)
+    always@(posedge clk)
     begin
 
         if(Reset==1) begin
@@ -444,7 +444,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                input [7:0] ID_addresing_modes,
                                input ID_mem_size, ID_mem_read_write, input clk);
 
-    always@(clk)
+    always@(posedge clk)
     begin
         //Control Unit signals  
         EX_Shift_imm <= ID_CU[6];
@@ -478,7 +478,7 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
                                 output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
 
 
-    always@(clk)
+    always@(posedge clk)
     begin
         MEM_A_O <= A_O;
         MEM_MUX3 <= mux_out_3_C;
@@ -501,7 +501,7 @@ endmodule
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
                                     output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable);
 
-    always@(clk)
+    always@(posedge clk)
     begin
         wb_alu_out <= alu_out;
         wb_data_r_out <= data_r_out;
@@ -525,7 +525,7 @@ module inst_ram256x8(output reg[31:0] DataOut, input [31:0]Address, input Reset)
     always @ (DataOut,Address,Reset)  
     begin
 
-        if (Reset) 
+        if (Reset) //&& Address == 32'b0)
         begin        
             DataOut = 32'b00000000000000000000000000000000; 
             // $display("Inside Reset\n");   
@@ -709,7 +709,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
-            MUXControlUnit_signal = 1'b1; //NOP; its suppose to be 0
+            MUXControlUnit_signal = 1'b1; //NOP; its suppose to 
         end else begin
             IF_ID_load = 1'b1; //Disable pipeline Load
             PC_RF_load = 1'b1; //Disable PC load
@@ -718,26 +718,80 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
 
        
         //DATA Forwarding
-        if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+        if(EX_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
-            MUX1_signal = 2'b01;
-            MUX2_signal = 2'b01; 
-            MUX3_signal = 2'b01;
-        end else if(MEM_RF_Enable && ((ID_Bit19_16 == MEM_Bit15_12)||(ID_Bit3_0 == MEM_Bit15_12))) begin
-           // valor multiplexer MEM Stage
-            MUX1_signal = 2'b10;
-            MUX2_signal = 2'b10;
-            MUX3_signal = 2'b10;
-        end else if(WB_RF_Enable && ((ID_Bit19_16 == WB_Bit15_12)||(ID_Bit3_0 == WB_Bit15_12))) begin
-            //valor PW (multiplexer WB)
-            MUX1_signal = 2'b11;
-            MUX2_signal = 2'b11; 
-            MUX3_signal = 2'b11;
-        end else begin //valor del Register File 
+            if(ID_Bit19_16 == EX_Bit15_12)
+                MUX1_signal = 2'b01;
+            else
+                MUX1_signal = 2'b00;
+                     
+           
+            if(ID_Bit3_0 == EX_Bit15_12)
+                MUX2_signal = 2'b01;
+            else
+                MUX2_signal = 2'b00;          
+            
+            // MUX2_signal = 2'b01; 
+            // MUX3_signal = 2'b00;
+        end else if(MEM_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+            //Valor del Main ALU
+            if(ID_Bit19_16 == MEM_Bit15_12)
+                MUX1_signal = 2'b10;
+            else
+                MUX1_signal = 2'b00;
+                     
+           
+            if(ID_Bit3_0 == MEM_Bit15_12)
+                MUX2_signal = 2'b10;
+            else
+                MUX2_signal = 2'b00;          
+            
+            // MUX2_signal = 2'b01; 
+            // MUX3_signal = 2'b00;
+        end else if(WB_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+            //Valor del Main ALU
+            if(ID_Bit19_16 == WB_Bit15_12)
+                MUX1_signal = 2'b11;
+            else
+                MUX1_signal = 2'b00;
+                     
+           
+            if(ID_Bit3_0 == WB_Bit15_12)
+                MUX2_signal = 2'b11;
+            else
+                MUX2_signal = 2'b00;          
+            
+            // MUX2_signal = 2'b01; 
+            // MUX3_signal = 2'b00;
+        end  else begin //valor del Register File 
             MUX1_signal = 2'b00;
             MUX2_signal = 2'b00; 
             MUX3_signal = 2'b00;
         end
+        MUX3_signal = 2'b00;
+
+        //DATA Forwarding
+        // if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+        //     //Valor del Main ALU
+        //     MUX1_signal = 2'b01;
+        //     MUX2_signal = 2'b01; 
+        //     MUX3_signal = 2'b01;
+        // end else if(MEM_RF_Enable && ((ID_Bit19_16 == MEM_Bit15_12)||(ID_Bit3_0 == MEM_Bit15_12))) begin
+        //    // valor multiplexer MEM Stage
+        //     MUX1_signal = 2'b10;
+        //     MUX2_signal = 2'b10;
+        //     MUX3_signal = 2'b10;
+        // end else if(WB_RF_Enable && ((ID_Bit19_16 == WB_Bit15_12)||(ID_Bit3_0 == WB_Bit15_12))) begin
+        //     //valor PW (multiplexer WB)
+        //     MUX1_signal = 2'b11;
+        //     MUX2_signal = 2'b11; 
+        //     MUX3_signal = 2'b11;
+        // end else begin //valor del Register File 
+        //     MUX1_signal = 2'b00;
+        //     MUX2_signal = 2'b00; 
+        //     MUX3_signal = 2'b00;
+        // end
+
 
 
         // $display("pc_ld ", PC_RF_load);

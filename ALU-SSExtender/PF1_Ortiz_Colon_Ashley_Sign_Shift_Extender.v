@@ -122,7 +122,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
             3'b010:
             begin //Immediate Offset
                 // if(U == 1)
-                shift_result = {20'b0, A[11:0]}; //effective address
+                shift_result = {20'b0, B[11:0]}; //effective address
+                // $display("shift result imm offset", shift_result);
                 // else 
                 //     shift_result = {20'b0, B[19:16]} - {20'b0, B[11:0]}; //effective address
 
