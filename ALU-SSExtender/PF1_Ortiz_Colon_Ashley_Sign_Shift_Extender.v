@@ -164,7 +164,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                         2'b10:
                         begin //ASR
                             if(num_of_rot == 0)begin
-                                if(temp_reg[31] == 1)
+                                if(A[31] == 1)
                                     temp_reg = 32'b11111111111111111111111111111111;
                                 else 
                                     temp_reg = 32'b0;

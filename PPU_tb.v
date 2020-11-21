@@ -186,7 +186,7 @@ ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_ou
                                 EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write,
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_CU,
-                                DO_CU, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
+                                ID_Bit11_0, ID_addresing_modes, ID_mem_size, ID_mem_read_write, clk);    
   
 // //MAIN ALU    
 // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
@@ -297,8 +297,8 @@ initial begin
     
 
 /*------------------------------------------- FOR REGISTERS ONLY --------------------------------------------------------------------------*/
-    $display("\n\n         PC    DR-Address    R0         R1          R2      R3            R5    R15      time");   
-    $monitor("%d  |  %d  |  %3d  | %d  |  %3d  |  %d  |  %3d  |  %3d  | %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, $time);
+    // $display("\n\n         PC    DR-Address    R0         R1          R2      R3            R5    R15      time");   
+    // $monitor("%d  |  %d  |  %3d  | %d  |  %3d  |  %d  |  %3d  |  %3d  | %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, $time);
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
 
@@ -315,9 +315,18 @@ initial begin
    
 /*------------------------------------------- FOR ALU/SHIFT EXTENDER --------------------------------------------------------------------------*/
    
-    //  $display("\n\n         PC       ADDRS    PA   PB     PD      A_O           M_O         PW            MUX1        ALU_a          MUX2     SSE_A/MUX_A   SSEout    MUXSSEALU   MUX3    MUX1_S   MUX2_S  MUX3_S    Time"); //clk");  
-    // $monitor("%d  | %10d | %3d | %3d | %3d | %10d | %10d | %10d | %10d  | %10d | %10d | %10d | %10d | %6d | %6d | %6d | %6d | %6d |   %2d  ", PCO, MEM_A_O, PA, PB, PD, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT, mux_out_3, MUX1_signal,MUX2_signal,MUX3_signal, $time);//, clk);
-    
+    //  $display("\n\n PC       ADDRS    PA   PB     PD      A_O           M_O         PW            MUX1        ALU_a          MUX2     SSE_A/MUX_A   SSEout    MUXSSEALU   MUX3    MUX1_S   MUX2_S  MUX3_S    Time"); //clk");  
+    // $monitor("%2d  | %10d | %3d | %3d | %3d | %10d | %10d | %10d | %10d  | %10d | %10d | %10d | %10d | %6d | %6d | %6d | %6d | %6d |   %2d  ", PCO, MEM_A_O, PA, PB, PD, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT, mux_out_3, MUX1_signal,MUX2_signal,MUX3_signal, $time);//, clk);
+
+/*------------------------------------------- MUX IN MEM STAGE --------------------------------------------------------------------------*/
+//    $display("\n\n   PC   PCIN  MEM_A_O   Data_RAM_Out   MEM_Load_instr      M_O      EX_Load_instr   A_O    Time");  
+//     $monitor(" %3d  | %3d  |  %3d  | %12d  |  %12d | %10d | %12d | %3d  | %2d ", PCO, PCIN, MEM_A_O,Data_RAM_Out, MEM_load_instr, M_O, EX_load_instr,A_O,$time);
+ 
+ /*------------------------------------------- FOR ALU/SHIFT EXTENDER 2 --------------------------------------------------------------------------*/
+   
+     $display("\n\n PC       ADDRS     PA    PB      A_O           M_O         PW            MUX1        ALU_a          MUX2     SSE_A/MUX_A   SSEout    MUXSSEALU    MUX1_S   MUX2_S   Time"); //clk");  
+    $monitor("%2d  | %10d | %3d | %3d | %10d | %10d | %10d | %10d  | %10d | %10d | %10d | %10d | %6d |  %6b | %6b |   %2d  ", PCO, MEM_A_O, PA, PB, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT, MUX1_signal,MUX2_signal, $time);//, clk);
+
 //RF Testing
 
 //$monitor("CRF: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | PW @ RF %d | E %b | RST %b | PW  Reg %d | RFld %b | CLK: %b", register_file_1.C, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.PW, register_file_1.E[0], register_file_1.RST, register_file_1.R2.PW, register_file_1.R0.RFLd, register_file_1.CLK);

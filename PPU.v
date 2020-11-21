@@ -401,7 +401,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit19_16 <= 4'b0;
             ID_Bit15_12 <= 4'b0;
             ID_Bit23_0 <= 24'b0;
-            // ID_Bit11_0 <= 12'b0;
+            ID_Bit11_0 <= 32'b0;
 
         end else begin
 
@@ -413,7 +413,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <=  DataOut[19:16]; //{28'b0, DataOut[19:16]};
                 ID_Bit15_12 <= DataOut[15:12];
                 ID_Bit23_0 <= DataOut[23:0];
-                // ID_Bit11_0 <= DataOut[11:0];
+                ID_Bit11_0 <= DataOut;
                 
             end else begin
                 ID_Bit31_0 = 32'b0;
@@ -423,7 +423,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <= 4'b0; //32'b0;
                 ID_Bit15_12 <= 4'b0;
                 ID_Bit23_0 <= 24'b0;
-                // ID_Bit11_0 <= 12'b0;
+                ID_Bit11_0 <= 32'b0;
             end
         end
        
@@ -440,7 +440,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
                                input [3:0] ID_Bit15_12, input [6:0] ID_CU, 
-                               input [31:0] ID_Bit31_0,
+                               input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
                                input ID_mem_size, ID_mem_read_write, input clk);
 
@@ -461,7 +461,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
      
         //Instruction bits
         EX_Bit15_12 <= ID_Bit15_12;
-        EX_Bit11_0 <= ID_Bit31_0; // {20'b0, ID_Bit11_0};
+        EX_Bit11_0 <= ID_Bit11_0; // {20'b0, ID_Bit11_0};
         EX_addresing_modes <= ID_addresing_modes; //22-20
    
     //  $display("ID_EX reg");
@@ -732,43 +732,49 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
                 MUX2_signal = 2'b00;          
             
             // MUX2_signal = 2'b01; 
-            // MUX3_signal = 2'b00;
-        end else if(MEM_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+            MUX3_signal = 2'b00;
+        end 
+        
+        if(MEM_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
             if(ID_Bit19_16 == MEM_Bit15_12)
                 MUX1_signal = 2'b10;
-            else
-                MUX1_signal = 2'b00;
+            // else
+            //     MUX1_signal = 2'b00;
                      
            
             if(ID_Bit3_0 == MEM_Bit15_12)
                 MUX2_signal = 2'b10;
-            else
-                MUX2_signal = 2'b00;          
+            // else
+            //     MUX2_signal = 2'b00;          
             
             // MUX2_signal = 2'b01; 
-            // MUX3_signal = 2'b00;
-        end else if(WB_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
+            MUX3_signal = 2'b00;
+        end
+        
+        if(WB_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
             if(ID_Bit19_16 == WB_Bit15_12)
                 MUX1_signal = 2'b11;
-            else
-                MUX1_signal = 2'b00;
+            // else
+            //     MUX1_signal = 2'b00;
                      
            
             if(ID_Bit3_0 == WB_Bit15_12)
                 MUX2_signal = 2'b11;
-            else
-                MUX2_signal = 2'b00;          
+            // else
+            //     MUX2_signal = 2'b00;          
             
             // MUX2_signal = 2'b01; 
-            // MUX3_signal = 2'b00;
-        end  else begin //valor del Register File 
-            MUX1_signal = 2'b00;
-            MUX2_signal = 2'b00; 
             MUX3_signal = 2'b00;
-        end
-        MUX3_signal = 2'b00;
+        end  
+        
+    //     else begin //valor del Register File 
+    //         MUX1_signal = 2'b00;
+    //         MUX2_signal = 2'b00; 
+    //         MUX3_signal = 2'b00;
+    //    end
+        // MUX1_signal = 2'b00;
 
         //DATA Forwarding
         // if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
