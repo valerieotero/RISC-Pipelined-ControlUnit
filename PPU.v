@@ -4,7 +4,7 @@
 
 
 //CONTROL UNIT
-module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
+module control_unit(output ID_B_instr, output [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -27,8 +27,8 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
     assign C_U_out[1] = l_instr; 
     assign ID_B_instr = b_instr;
     assign C_U_out[5:2] = alu_op;
-    assign MemReadWrite = m_rw;
-    assign MemSize = m_size;
+    assign C_U_out[7]  = m_rw;
+    assign C_U_out[8]  = m_size;
 
     always@(*)
    
@@ -50,7 +50,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
 
                 3'b000: //Data Procesing Shift_by_imm
                 begin
-                    s_imm = 0; 
+                    s_imm = 1; 
                     rf_instr = 1; 
                     l_instr = 0; 
                     b_instr = 0;
@@ -142,7 +142,7 @@ module control_unit(output ID_B_instr, MemReadWrite, MemSize, output [6:0] C_U_o
                         
                        //branch
                         if(b_bl == 0) begin
-                            s_imm = 0; 
+                            s_imm = 1; 
                             rf_instr = 0; 
                             l_instr = 0; 
                             alu_op = 4'b0010;
@@ -376,7 +376,7 @@ module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
         if(asserted == 1 && b_instr == 1)
-            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0
+            choose_ta_r_nop = 1;//this is 1 for pHase 3 purposes it is 0
         else
             choose_ta_r_nop = 0; 
     end
@@ -405,7 +405,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
 
         end else begin
 
-           if(Hazard_Unit_Ld == 0 || asserted == 1|| choose_ta_r_nop == 0) begin
+           if(Hazard_Unit_Ld == 1 || asserted == 1|| choose_ta_r_nop == 0) begin
                 ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
@@ -415,7 +415,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit23_0 <= DataOut[23:0];
                 ID_Bit11_0 <= DataOut;
                 
-            end else begin
+           end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
                 ID_Bit31_0 = 32'b0;
                 ID_Next_PC <= 32'b0;
                 ID_Bit3_0 <= 4'b0; //32'b0;
@@ -439,31 +439,52 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg EX_mem_size, EX_mem_read_write,
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
-                               input [3:0] ID_Bit15_12, input [6:0] ID_CU, 
+                               input [3:0] ID_Bit15_12, input [8:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
-                               input ID_mem_size, ID_mem_read_write, input clk);
+                               input  clk, Reset);
 
     always@(posedge clk)
     begin
-        //Control Unit signals  
-        EX_Shift_imm <= ID_CU[6];
-        EX_ALU_OP <= ID_CU[5:2];
-        EX_load_instr <= ID_CU[1]; 
-        EX_RF_instr <= ID_CU[0];
-        EX_mem_size <= ID_mem_size;
-        EX_mem_read_write <= ID_mem_read_write;
+        
+        if(Reset==1) begin
+            EX_Shift_imm <= 1'b0;
+            EX_ALU_OP <= 4'b0;
+            EX_load_instr <= 1'b0; 
+            EX_RF_instr <= 1'b0;
+            EX_mem_size <= 1'b0;
+            EX_mem_read_write <= 1'b0;
 
-        //Register File operands
-        mux_out_1_A <= mux_out_1;
-        mux_out_2_B <= mux_out_2;
-        mux_out_3_C <= mux_out_3;
-     
-        //Instruction bits
-        EX_Bit15_12 <= ID_Bit15_12;
-        EX_Bit11_0 <= ID_Bit11_0; // {20'b0, ID_Bit11_0};
-        EX_addresing_modes <= ID_addresing_modes; //22-20
+            //Register File operands
+            mux_out_1_A <= 32'b0;
+            mux_out_2_B <= 32'b0;
+            mux_out_3_C <= 32'b0;
+        
+            //Instruction bits
+            EX_Bit15_12 <= 4'b0;
+            EX_Bit11_0 <= 32'b0; // {20'b0, ID_Bit11_0};
+            EX_addresing_modes <= 8'b0; //22-20
    
+
+        end else begin
+        //Control Unit signals  
+            EX_Shift_imm <= ID_CU[6];
+            EX_ALU_OP <= ID_CU[5:2];
+            EX_load_instr <= ID_CU[1]; 
+            EX_RF_instr <= ID_CU[0];
+            EX_mem_size <= ID_CU[8];
+            EX_mem_read_write <= ID_CU[7];
+
+            //Register File operands
+            mux_out_1_A <= mux_out_1;
+            mux_out_2_B <= mux_out_2;
+            mux_out_3_C <= mux_out_3;
+        
+            //Instruction bits
+            EX_Bit15_12 <= ID_Bit15_12;
+            EX_Bit11_0 <= ID_Bit11_0; // {20'b0, ID_Bit11_0};
+            EX_addresing_modes <= ID_addresing_modes; //22-20
+        end
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
     //  $display("EX_shift_imm = %b | EX_alu= %b | EX_load = %b | EX_RF= %b", EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_instr);     
@@ -475,18 +496,29 @@ endmodule
 
 //EX/MEM PIPELINE REGISTER
 module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk,
-                                output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);
+                                output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset);
 
 
     always@(posedge clk)
     begin
-        MEM_A_O <= A_O;
-        MEM_MUX3 <= mux_out_3_C;
-        MEM_Bit15_12 <= EX_Bit15_12;
-        MEM_load_instr <= EX_load_instr;
-        MEM_RF_Enable <= EX_RF_instr;
-        MEM_mem_read_write <= EX_mem_read_write;
-        MEM_mem_size <=  EX_mem_size;
+
+        if(Reset==1) begin
+            MEM_A_O <= 32'b0;
+            MEM_MUX3 <= 32'b0;
+            MEM_Bit15_12 <= 4'b0;
+            MEM_load_instr <= 1'b0;
+            MEM_RF_Enable <= 1'b0;
+            MEM_mem_read_write <= 1'b0;
+            MEM_mem_size <=  1'b0;
+        end else begin
+             MEM_A_O <= A_O;
+            MEM_MUX3 <= mux_out_3_C;
+            MEM_Bit15_12 <= EX_Bit15_12;
+            MEM_load_instr <= EX_load_instr;
+            MEM_RF_Enable <= EX_RF_instr;
+            MEM_mem_read_write <= EX_mem_read_write;
+            MEM_mem_size <=  EX_mem_size;
+        end
     
     //  $display("EX_MEM reg");
     //  $display("EX_load = %b | EX_RF= %b", EX_load_instr, EX_RF_instr);     
@@ -499,15 +531,23 @@ endmodule
 
 //MEM/WB PIPELINE REGISTER
 module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
-                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable);
+                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset);
 
     always@(posedge clk)
     begin
-        wb_alu_out <= alu_out;
-        wb_data_r_out <= data_r_out;
-        wb_bit15_12 <= bit15_12;
-        WB_load_instr <= MEM_load_instr;
-        WB_RF_Enable <= MEM_RF_Enable;
+        if(Reset==1) begin
+            wb_alu_out <= 32'b0;
+            wb_data_r_out <= 32'b0;
+            wb_bit15_12 <= 4'b0;
+            WB_load_instr <= 1'b0;
+            WB_RF_Enable <= 1'b0;
+        end else begin
+            wb_alu_out <= alu_out;
+            wb_data_r_out <= data_r_out;
+            wb_bit15_12 <= bit15_12;
+            WB_load_instr <= MEM_load_instr;
+            WB_RF_Enable <= MEM_RF_Enable;
+        end
     // $display("MEM_WB reg");
      
     // $display("MEM_load = %b | MEM_RF= %b", MEM_load_instr, MEM_RF_Enable);  
@@ -623,7 +663,7 @@ module mux_4x2_ID(input [31:0] A_O, PW, M_O, X, input [1:0] HF_U, output [31:0] 
 endmodule
 
 //Multiplexer control Unit
-module mux_2x1_ID(input [6:0] C_U, input HF_U, output [6:0] MUX_Out);
+module mux_2x1_ID(input [8:0] C_U, input HF_U, output [8:0] MUX_Out);
     reg [6:0] salida;
 
     assign MUX_Out = salida;
@@ -632,7 +672,7 @@ module mux_2x1_ID(input [6:0] C_U, input HF_U, output [6:0] MUX_Out);
     begin
         case(HF_U)
             1'b0: // NOP
-            salida = 6'b0;
+            salida = 9'b0;
 
             1'b1://Control Unit
             salida = C_U;
@@ -684,13 +724,20 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
         in1 = {8'b0, in[23:0]};
         twoscomp = ~(in1) + 1'b1;
 
+        // if(in[23] ==1) begin
+        //     twoscomp = ~(in1) + 1'b1;
+        //     result = twoscomp <<< 2;
+        // end else begin
+        //     in1 = {8'b0, in[23:0]}; 
+        //     result = in1 <<< 2;
+        // end
         for(i=0; i<2; i= i+1)begin
-            temp_reg = {twoscomp[29:0], 2'b0};
+            temp_reg = {twoscomp[30:0], 1'b0};
         end
         shift_result = temp_reg;
 
         result = shift_result * 4;
-        // result = in1 <<< 2;
+       
 
 
     end
@@ -709,7 +756,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
-            MUXControlUnit_signal = 1'b1; //NOP; its suppose to 
+            MUXControlUnit_signal = 1'b0; //NOP; its suppose to 
         end else begin
             IF_ID_load = 1'b1; //Disable pipeline Load
             PC_RF_load = 1'b1; //Disable PC load
