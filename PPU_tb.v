@@ -167,7 +167,7 @@ wire [8:0] ID_CU, C_U_out, NOP_S;// = 0010001;
     mux_4x2_ID mux_4x2_ID_3(A_O, PW, M_O, PD, MUX3_signal, mux_out_3);
   
 
-    // //ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,
+    // //ID_EX_pipeline_register(output reg [31:0] register_file_port_MUX1_out, register_file_port_MUX2_out, register_file_port_MUX3_out,/
     // //                            output reg [3:0] EX_Bit15_12_out, output reg [6:0] EX_CU,
     // //                            output reg [11:0] EX_Bit11_0_out,
     // //                            output reg [7:0] EX_addresing_modes_out,

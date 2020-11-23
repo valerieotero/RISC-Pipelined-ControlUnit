@@ -1,6 +1,6 @@
-`include "register_file/PF1_Nazario_Morales_Victor_rf.v"
-`include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_Sign_Shift_Extender.v"
-`include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_ALU.v"
+// `include "register_file/PF1_Nazario_Morales_Victor_rf.v"
+// `include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_Sign_Shift_Extender.v"
+// `include "ALU-SSExtender/PF1_Ortiz_Colon_Ashley_ALU.v"
 
 
 //CONTROL UNIT
@@ -895,6 +895,566 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
 
 
         // $display("pc_ld ", PC_RF_load);
+    end
+
+endmodule
+
+module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, output reg C);
+    reg [31:0] temp_reg, temp_reg1, temp_reg2, rm, rm1;
+    integer num_of_rot;
+    integer i;
+    reg [1:0] by_imm_shift;
+    reg [2:0] shifter_op;
+    reg [1:0] shift;
+ 
+    reg tc;
+    reg relleno;
+    reg Cin;
+    reg U;
+
+    always@(*)
+
+    begin
+        shifter_op = B[27:25];
+        by_imm_shift = B[6:5];
+        temp_reg = A;
+        case(shifter_op)
+
+            3'b000:
+            begin //Shift_by_Imm
+                // temp_reg = A;
+                num_of_rot = B[11:7];
+                // tc = C;
+                
+                case(by_imm_shift)
+                    2'b00:
+                    begin //LSL
+                        if(num_of_rot == 5'b0)begin
+                            shift_result = temp_reg;
+                            // C = Cflag
+                        end else begin
+                            // temp_reg = {20'b0, A[11:0]};
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[31];
+                                temp_reg = {temp_reg[30:0], 1'b0};
+                            end
+                            
+                            shift_result = temp_reg;
+                            C = A[32 - num_of_rot];
+                        end
+                    end 
+
+                    2'b01:
+                    begin //LSR
+                        if(num_of_rot == 5'b0)begin
+                            shift_result = 32'b0;
+                            C = A[31];
+                        end else begin
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {1'b0, temp_reg[31:1]};
+                            end
+                            
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
+                        end
+                    end 
+                    
+                    2'b10:
+                    begin //ASR
+                        if(num_of_rot == 5'b0)begin   
+                            if(temp_reg[31] == 1'b0) begin
+                                shift_result = 32'b0;
+                                C = A[31];
+                            end else begin
+                                shift_result = 32'b11111111111111111111111111111111;
+                                C = A[31];
+                            end   
+                        end else begin 
+                            relleno = A[31];
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {relleno, temp_reg[31:1]};
+                            end
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
+                        end
+                    end 
+
+                    2'b11:
+                    begin //ROR
+                        if(num_of_rot == 5'b0)begin
+                            
+                            shift_result = {1'b0, temp_reg[31:1]};
+                            C = A[0];
+                        end else begin
+                            
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                // tc = temp_reg[0];
+                                temp_reg = {temp_reg[0], temp_reg[31:1]};
+                            end
+                            shift_result = temp_reg;
+                            C = A[num_of_rot - 1];
+                        end
+                    end
+                endcase
+            end 
+            
+            3'b001:
+            begin //Imm_shift_op_32_Imm
+                temp_reg = {24'b0, B[7:0]};
+                num_of_rot = 2*(B[11:8]);
+
+                for(i = 0; i<num_of_rot; i=i+1)begin
+                    temp_reg = {temp_reg[0], temp_reg[31:1]};
+                end
+                    shift_result = temp_reg;
+
+                if(B[11:8] != 4'b0)
+                    C = A[31];
+
+            end 
+
+            3'b010:
+            begin //Immediate Offset
+                shift_result = {20'b0, B[11:0]}; //effective address
+               
+            end 
+            
+            3'b011:
+            begin 
+                if(B[11:4] == 8'b0) begin //Register Offset 
+                //  if(U == 1)
+                    shift_result = {28'b0, B[3:0]}; //effective address
+                // else 
+                //     shift_result = {20'b0, B[19:16]} - A; //effective address
+                end else begin //Scaled Register Offset
+                    shift = B[6:5];
+                    case(shift)
+                        2'b00:
+                        begin //LSL
+                            for(i=0; i<num_of_rot; i= i+1)begin
+                                temp_reg = {temp_reg[30:0], 1'b0};
+                            end
+                            shift_result = temp_reg;
+                        end 
+
+                        2'b01:
+                        begin //LSR
+                            if(num_of_rot == 0)
+                                temp_reg = 32'b0;
+                            else begin
+                                for(i=0; i<num_of_rot; i= i+1)begin
+                                    // tc = temp_reg[0];
+                                    temp_reg = {1'b0, temp_reg[31:1]};
+                                end
+                            end
+                            // C = tc;
+                            shift_result = temp_reg;
+                        end 
+                        
+                        2'b10:
+                        begin //ASR
+                            if(num_of_rot == 0)begin
+                                if(A[31] == 1)
+                                    temp_reg = 32'b11111111111111111111111111111111;
+                                else 
+                                    temp_reg = 32'b0;
+                            end else begin   
+                                relleno = A[31];
+                                for(i=0; i<num_of_rot; i= i+1)begin
+                                    // tc = temp_reg[0];
+                                    temp_reg = {relleno, temp_reg[31:1]};
+                                end
+                            end 
+                            // C = tc;
+                            shift_result = temp_reg;
+                        end 
+
+                        2'b11:
+                        begin //ROR
+                            if(num_of_rot == 0)begin                                
+                                // for(i=0; i<31; i= i+1)begin
+                                //     tc = temp_reg[31];
+                                    // temp_reg1 = {temp_reg[30:0], 1'b0};
+                                // end
+                                // tc = temp_reg1[31];
+                                // rm = {28'b0, A[3:0]};
+                                // for(i=0; i<1; i= i+1)begin
+                                   // tc = rm[0];
+                                temp_reg = {1'b0, A[31:1]};
+                                // end
+                                // rm1 = temp_reg2;
+
+                                // temp_reg = tc || rm1;
+                            end else begin
+                                for(i=0; i<num_of_rot; i= i+1)begin
+                                    // tc = temp_reg[0];
+                                    temp_reg = {temp_reg[0], temp_reg[31:1]};
+                                end
+                            end
+                            // C = tc;
+                            shift_result = temp_reg;
+                        end
+                    endcase
+                    
+                end
+            end 
+
+            // 3'b101:
+            // begin
+            //     if(B[24] == 1)
+
+            // end      
+        endcase
+    end
+endmodule
+
+
+//Author: Víctor A. Nazario Morales
+//Created on: September 20, 2020
+//Description: Defines all the needed components (here modules) for the correct functionality of
+//a register file according to PF1 specifications.
+
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST);
+    //Outputs
+    output [31:0] PA, PB, PD, PCout;
+    output [31:0] MO; //output of the 2x1 multiplexer
+    output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
+    //Inputs
+    input [31:0] PW, PCin;
+    input [3:0] SA, SB, C;
+    input RFLd, CLK, RST, HZPCld;
+
+    wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
+    wire [15:0] E;
+
+    //Binary Decoder
+    binary_decoder bc (E, C, RFLd);
+
+    //Multiplexers
+    multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
+    multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
+    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
+
+
+    //loadDecoder r15decoder(E[15], R15MO);
+
+    //Added this 2x1 multi to handle R15 input variations
+    //Here PC is equivalent to PW in the diagram and PCin
+    //is the equivalent to the PC (which gets increaed by 4)
+    twoToOneMultiplexer r15mux (PW, PCin, E[15], MO);
+
+
+    //16 Registers
+    register R0 (Q0, PW, E[0], CLK, RST);
+    register R1 (Q1, PW, E[1], CLK, RST);
+    register R2 (Q2, PW, E[2], CLK, RST);
+    register R3 (Q3, PW, E[3], CLK, RST);
+    register R4 (Q4, PW, E[4], CLK, RST);
+    register R5 (Q5, PW, E[5], CLK, RST);
+    register R6 (Q6, PW, E[6], CLK, RST);
+    register R7 (Q7, PW, E[7], CLK, RST);
+    register R8 (Q8, PW, E[8], CLK, RST);
+    register R9 (Q9, PW, E[9], CLK, RST);
+    register R10 (Q10, PW, E[10], CLK, RST);
+    register R11 (Q11, PW, E[11], CLK, RST);
+    register R12 (Q12, PW, E[12], CLK, RST);
+    register R13 (Q13, PW, E[13], CLK, RST);
+    register R14 (Q14, PW, E[14], CLK, RST);
+    PCregister R15 (Q15, MO, HZPCld, CLK, RST);
+    assign PCout = Q15;
+
+endmodule
+
+module binary_decoder(E, C, Ld);
+    //Output
+    output reg [15:0] E;
+    //Inputs
+    input [3:0] C;
+    input Ld;
+
+    always @(C, Ld)
+
+        if(Ld)
+            case(C)
+                4'b0000: E <= 16'b0000000000000001;
+                4'b0001: E <= 16'b0000000000000010;
+                4'b0010: E <= 16'b0000000000000100;
+                4'b0011: E <= 16'b0000000000001000;
+                4'b0100: E <= 16'b0000000000010000;
+                4'b0101: E <= 16'b0000000000100000;
+                4'b0110: E <= 16'b0000000001000000;
+                4'b0111: E <= 16'b0000000010000000;
+                4'b1000: E <= 16'b0000000100000000;
+                4'b1001: E <= 16'b0000001000000000;
+                4'b1010: E <= 16'b0000010000000000;
+                4'b1011: E <= 16'b0000100000000000;
+                4'b1100: E <= 16'b0001000000000000;
+                4'b1101: E <= 16'b0010000000000000;
+                4'b1110: E <= 16'b0100000000000000;
+                4'b1111: E <= 16'b1000000000000000;
+            endcase
+        else  E <= 16'b0000000000000000;
+
+endmodule
+
+module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15, S);
+    //Output
+    output reg [31:0] P;
+    //Inputs
+    input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
+    input [3:0] S;
+
+    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
+
+    case (S)
+        4'b0000: P <= I0;
+        4'b0001: P <= I1;
+        4'b0010: P <= I2;
+        4'b0011: P <= I3;
+        4'b0100: P <= I4;
+        4'b0101: P <= I5;
+        4'b0110: P <= I6;
+        4'b0111: P <= I7;
+        4'b1000: P <= I8;
+        4'b1001: P <= I9;
+        4'b1010: P <= I10;
+        4'b1011: P <= I11;
+        4'b1100: P <= I12;
+        4'b1101: P <= I13;
+        4'b1110: P <= I14;
+        4'b1111: P <= I15;
+
+    endcase
+endmodule
+
+//This defines the multiplexer used to change inputs to r15 conditionally
+module twoToOneMultiplexer(PW, PC, PWLd, MO);
+    //Output
+    output reg [31:0] MO;
+    //Input
+    input[31:0] PW, PC;
+    input PWLd;
+
+    //Whenever a change is produced in the signals, change the output
+    //according with the stablished logic.
+    always @(PW, PC, PWLd)
+    begin
+        if (PWLd)
+            MO <= PW;
+        else
+            MO <= PC;
+    end
+endmodule
+
+//module loadDecoder(RFLd, R15MO);
+////When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
+//// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
+////Otherwise we set it to 0 and PCin is loaded into the register.
+//output reg[1:0] R15MO;
+//input RFLd;
+//
+////What happens when both = 1?
+////Does this means that the following is accomplished?
+//
+////El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
+////ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
+////el mismo, lo cual tiene prioridad.
+//always @ (RFLd)
+//    begin
+//        if(RFLd)
+//          R15MO <= 1'b1;
+//        else
+//          R15MO <= 1'b0;
+//    end
+//endmodule
+
+
+module register(Q, PW, RFLd, CLK, RST);
+    //Output
+    output reg [31:0] Q;
+    //Inputs
+    input [31:0] PW;
+    input RFLd, CLK, RST;
+
+    always @ (posedge CLK, posedge RST)
+        if(RST) Q <= 0;
+
+        else if(RFLd) Q <= PW;
+
+endmodule
+
+module PCregister(Q, MOin, HZPCld, CLK, RST);
+    //Output
+    output reg [31:0] Q;
+    //Inputs
+    input [31:0] MOin;
+    input HZPCld, CLK, RST;
+
+    always @ (posedge CLK, posedge RST)
+        if(RST)
+            Q <= 32'b0;
+
+        else if(HZPCld)
+            Q <= MOin;
+endmodule
+
+
+/*Creator: Ashley Ortiz Colon
+*/
+
+module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
+
+    reg [32:0] OPS_result;
+
+    integer tn = 0; 
+    integer tz = 0; 
+    integer tc = 0; 
+    integer tv = 0; 
+    integer ol = 0;
+
+    assign Alu_Out[3] = tn; //Negative
+    assign Alu_Out[2] = tz; //Zero 
+    assign Alu_Out[1] = tc; //Carry Out
+    assign Alu_Out[0] = tv; //Overflow
+
+    // integer mod_cond_codes;
+
+    assign S = OPS_result[31:0];
+   
+    always@(A, OPS)
+    begin
+
+        // mod_cond_codes = B[20];
+
+        case(OPS)
+            //0
+            4'b0000: //Logical AND
+            OPS_result = A & B;
+
+            //1
+            4'b0001: //Logical Exclusive OR
+            OPS_result = A ^ B;
+
+            //2
+            4'b0010: //Subtract
+            begin
+                OPS_result = A - B;  
+                ol = 1;
+            end
+      
+
+            //3
+            4'b0011: //Reverse Subtract
+            begin
+                OPS_result = B - A;  
+                ol = 2;
+            end
+                     
+            //4
+            4'b0100: //Add
+            begin
+                OPS_result = A + B;
+                ol = 3;
+            end
+            //5
+            4'b0101: //Add w. Carry
+            OPS_result = A + B + Cin;
+
+            //6
+            4'b0110: //Subtract w. Carry
+            begin
+                OPS_result = A - B -(~{31'b0,Cin});
+                ol = 1;
+            end 
+            //7
+            4'b0111: //Reverse Subtract w. Carr
+            begin 
+                OPS_result = B - A -(~{31'b0,Cin}); 
+                ol = 2;
+            end
+            
+            //8
+            4'b1000: //Test 
+            OPS_result = A & B;
+            //flag update 
+
+            //9
+            4'b1001: //Test Equivalence
+            OPS_result = A ^ B;
+            //flag update
+
+            //10
+            4'b1010: //Compare
+            OPS_result = A - B;  
+
+            //11
+            4'b1011: //Compare Negated
+            // begin
+            OPS_result = A + B;
+            // end
+
+
+            //12
+            4'b1100: //Logical Or
+            OPS_result = A | B;
+
+            //13
+            4'b1101: //Move
+            OPS_result = B;
+
+            //14
+            4'b1110: //Bit Clear
+            OPS_result = A & (~B);
+
+            //15
+            4'b1111: //Move Not
+            OPS_result = ~B;
+        endcase
+
+        //for when result is zero
+        tz = (OPS_result == 32'b0) ? 1:0;
+    
+        
+        //for when result is negative
+        tn = (OPS_result[31] == 1'b1) ? 1:0;
+        
+        //for Carry out
+        tc = OPS_result[32];
+
+        //for when result provokes overflow
+        if(ol == 1) begin // subtract
+            if(A[31] != B[31]) begin
+                if(OPS_result[31] == B[31])
+                    tv = 1;
+                else
+                    tv = 0;
+            end else
+                tv = 0;
+        end
+
+        if(ol == 2) begin //revers sub
+            if(B[31] != A[31]) begin
+                if(OPS_result[31] == A[31])
+                    tv = 1;
+                else
+                    tv = 0;
+            end else
+                tv = 0;
+        end
+
+        if(ol ==3)begin // addition
+            if(A[31] == B[31])begin
+                if(A[31] != OPS_result[31])
+                    tv = 1;
+                else 
+                    tv = 0;
+            end else
+                tv = 0;
+
+        end
+        // $display("alu result:", OPS_result);
     end
 
 endmodule
