@@ -44,6 +44,13 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
             alu_op = 4'b0000;
         end else begin 
             instr = A[27:25];
+             s_imm = 0; 
+            rf_instr = 0; 
+            l_instr = 0; 
+            b_instr = 0; 
+            m_rw = 0;
+            m_size = 0;
+            alu_op = 4'b0000;
        
             case(instr)
 
@@ -240,135 +247,135 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition,input cl
             4'b0000: //(EQ) Equal
             begin
                 if(z == 1)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //1
             4'b0001: //(NE) Not Equal
             begin
                 if(z == 0)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //2
             4'b0010: //(CS/HS) Carry set/unsigned higher or same
            begin
                 if(c == 1)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //3
             4'b0011: //(CC/LO) carry clear/ unsigned lower
            begin
                 if(c == 0)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
                      
             //4
             4'b0100: //(MI) Minus/negative
             begin
                 if(n == 1)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //5
             4'b0101: //(PL) plus/positive or zero 
             begin
                 if(n == 0)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //6
             4'b0110: //(VS) Overflow
             begin
                 if(v == 1)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //7
             4'b0111: //(VC) No Overflow
             begin
                 if(v == 0)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
             
             //8
             4'b1000: //(HI) Unsigned Higher 
             begin
                 if(c == 1 && z ==0)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //9
             4'b1001: //(LS) Unsigned Lower or same
             begin
                 if(c == 0 || z == 1)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //10
             4'b1010: //(GE) Signed greater than or equal 
             begin
                 if(v == n)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //11
             4'b1011: //(LT) Signed less than
             begin
                 if(v != n)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end
 
             //12
             4'b1100: //(GT) Signed greater than
             begin
                 if(z == 0 || n == v)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end 
 
             //13
             4'b1101: // (LE) Signed Less than or equal
              begin
                 if(z == 1 || n != v)
-                    assrt <= 1;
+                    assrt = 1;
                 else
-                    assrt <= 0;
+                    assrt = 0;
             end 
 
             //14
             4'b1110: //Always
-            assrt <= 1;
+            assrt = 1;
 
             //15
             4'b1111: 
-            assrt <= 0;
+            assrt = 0;
 
         endcase
         // $display("condition arsserted %b", assrt);
