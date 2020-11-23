@@ -29,12 +29,12 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
     assign C_U_out[5:2] = alu_op;
     assign C_U_out[7]  = m_rw;
     assign C_U_out[8]  = m_size;
-    always@( posedge Reset, posedge clk)
+    always@(*)
    
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 ||  asserted == 0) begin // || asserted == 0) begin
+        if(Reset == 1'b1 || A  == 32'b0 ||  asserted == 0) begin // || asserted == 0) begin
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -44,13 +44,13 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
             alu_op = 4'b0000;
         end else begin 
             instr = A[27:25];
-             s_imm = 0; 
-            rf_instr = 0; 
-            l_instr = 0; 
-            b_instr = 0; 
-            m_rw = 0;
-            m_size = 0;
-            alu_op = 4'b0000;
+            //  s_imm = 0; 
+            // rf_instr = 0; 
+            // l_instr = 0; 
+            // b_instr = 0; 
+            // m_rw = 0;
+            // m_size = 0;
+            // alu_op = 4'b0000;
        
             case(instr)
 
@@ -190,8 +190,8 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, inpu
     always @ (posedge clk)
     begin
         if (S)
-            cc_out <= 5'b00000;
-        else 
+            // cc_out <= 5'b00000;
+        // else 
             cc_out <= cc_in;
     
         // if(clk == 0)
@@ -785,7 +785,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
                    input EX_load_instr, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, ID_shift_imm, clk,
                    input [3:0] EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, ID_Bit3_0, 
                    ID_Bit19_16);
-    always@(*)
+    always@(posedge  clk)//*)
     begin
         
         IF_ID_load = 1'b1; //Disable pipeline Load
@@ -1323,11 +1323,11 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output [31:0] S, outpu
 
     assign S = OPS_result[31:0];
    
-    always@(A, OPS)
+    always@(*)
     begin
 
         // mod_cond_codes = B[20];
-
+        // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
         case(OPS)
             //0
             4'b0000: //Logical AND
