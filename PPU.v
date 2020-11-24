@@ -176,7 +176,8 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
                 
 
             endcase
-            // $display("alu %b",alu_op);
+            // $display("size", m_size);
+                        // $display("alu %b",alu_op);
             // $display("instr %b", instr);
         end//  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
     //    
@@ -194,36 +195,10 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, inpu
         // else 
             cc_out <= cc_in;
     
-        // if(clk == 0)
-            // cc_out = 4'b0;
-        // else
-        // if(S == 1)
-        //     cc_out <= cc_in;
     end
 
-    //    begin
-    //     if(clk == 0)
-    //         cc_out = 4'b0;
-    //     else
-    //         if(S == 1)
-    //             cc_out = cc_in;
-    //         else
-    //             cc_out = 4'b0; //si no lo modifica va un register con el valor anterior
-  //  end
 
 endmodule
-
-
-//Reigster for status register needs
-//module sr_subregister(output reg [3:0] cc_out, input [3:0] cc_in, input S, input CLK);
-//
-//    always @ (posedge CLK)
-//    begin
-//        if (S)
-//            cc_out <= cc_in;
-//    end
-//
-//endmodule
 
 
 //Condition verification
@@ -676,7 +651,7 @@ endmodule
 
 //Multiplexer control Unit
 module mux_2x1_ID(input [8:0] C_U, input HF_U, output [8:0] MUX_Out);
-    reg [6:0] salida;
+    reg [8:0] salida;
 
     assign MUX_Out = salida;
 
@@ -689,7 +664,7 @@ module mux_2x1_ID(input [8:0] C_U, input HF_U, output [8:0] MUX_Out);
             1'b1://Control Unit
             salida = C_U;
         endcase
-
+        // $display("CU MEX OUT %b ", salida );//
     end
 
 endmodule
