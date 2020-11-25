@@ -4,7 +4,7 @@
 
 
 //CONTROL UNIT
-module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
+module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -29,12 +29,14 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
     assign C_U_out[5:2] = alu_op;
     assign C_U_out[7]  = m_rw;
     assign C_U_out[8]  = m_size;
+    assign BL = b_bl;
+
     always@(*)
    
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 || A  == 32'b0 ||  asserted == 0) begin // || asserted == 0) begin
+        if(Reset == 1'b1 || A  == 32'b0) begin // ||  asserted == 0) begin // || asserted == 0) begin
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -56,13 +58,22 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
 
                 3'b000: //Data Procesing Shift_by_imm
                 begin
-                    if(A[4] == 0)  begin
+                    // if(A[4] == 0)  begin
                         s_imm = 1; 
                         rf_instr = 1; 
                         l_instr = 0; 
                         b_instr = 0;
                         alu_op = A[24:21];
-                    end
+                    // end
+                    
+                    // if(A[11:7] == 5'b0) begin
+                    //     s_imm = 0; 
+                    //     rf_instr = 1; 
+                    //     l_instr = 0; 
+                    //     b_instr = 0;
+                    //     alu_op = A[24:21];
+                    // end
+
 
                     
                 end
@@ -106,7 +117,7 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
                         u = A[23];
                         l_instr = A[20];
                         m_size = A[22];
-                        // s_imm = 0; 
+                        s_imm = 0; 
                         b_instr = 0;
 
                         if(u == 1)
@@ -126,11 +137,11 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
                     
                         if(A[11:4] == 8'b00000000)begin
                             r_sr_off = 0;
-                            s_imm = 0; 
+                            // s_imm = 0; 
 
                         end else begin
                             r_sr_off = 1;
-                            s_imm = 1; 
+                            // s_imm = 1; 
                         end   
 
                     end
@@ -154,7 +165,7 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
                         
                        //branch
                         if(b_bl == 0) begin
-                            s_imm = 1; 
+                            s_imm = 0; 
                             rf_instr = 0; 
                             l_instr = 0; 
                             alu_op = 4'b0010;
@@ -180,21 +191,22 @@ module control_unit(output  ID_B_instr, output  [8:0] C_U_out, input clk, Reset,
                         // $display("alu %b",alu_op);
             // $display("instr %b", instr);
         end//  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
-    //    
+    //    $monitor("A: %b | s_imm: %b", A, C_U_out[6]);
     end
 endmodule
 
 
 //Status Register
-module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk); //verify
+module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk, Reset); //verify
     //Recordar que el registro se declara aquí y luego
     always @ (posedge clk)
     begin
-        if (S)
-            // cc_out <= 5'b00000;
-        // else 
-            cc_out <= cc_in;
-    
+        if(Reset)
+            cc_out <= 4'b0;
+        else begin
+            if (S)
+                cc_out <= cc_in;
+        end
     end
 
 
@@ -202,7 +214,7 @@ endmodule
 
 
 //Condition verification
-module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition,input clk, output asserted);
+module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
     //N - 3, Z - 2, C - 1, V - 0
     integer n = 0;
     integer z = 0;
@@ -214,10 +226,10 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition,input cl
 
     always@(*) //posedge clk)
     begin
-        n <= cc_in[3];
-        z <= cc_in[2];
-        c <= cc_in[1];
-        v <= cc_in[0];
+        n = cc_in[3];
+        z = cc_in[2];
+        c = cc_in[1];
+        v = cc_in[0];
         case(instr_condition)
             4'b0000: //(EQ) Equal
             begin
@@ -363,7 +375,7 @@ module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
         if(asserted == 1 && b_instr == 1)
-            choose_ta_r_nop = 0;//this is 1 for pHase 3 purposes it is 0
+            choose_ta_r_nop = 1;//this is 1 for pHase 3 purposes it is 0
         else
             choose_ta_r_nop = 0; 
     end
@@ -403,7 +415,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit11_0 <= DataOut;
                 
            end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
-                ID_Bit31_0 = 32'b0;
+                ID_Bit31_0 <= 32'b0;
                 ID_Next_PC <= 32'b0;
                 ID_Bit3_0 <= 4'b0; //32'b0;
                 ID_Bit31_28 <= 4'b0;
@@ -693,22 +705,42 @@ module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
 
 endmodule
 
-module SExtender(input [23:0] in, output signed [31:0] out1);
+module SExtender(input [23:0] in, output reg [31:0] out1);
 
-    reg signed [23:0] twoscomp;
+    reg signed [31:0] twoscomp;
     reg  [31:0] result;
     reg  [31:0] shift_result; 
     reg signed [31:0] temp_reg;
     reg [7:0] fill;
     reg relleno;
 
-    reg [23:0] in1;
-    assign out1 = result; 
+    reg [31:0] in1;
+    // assign out1 = result; 
 
     integer i=0;
 
     always@(*)
     begin
+// 
+        if(in[23] == 1) begin
+            in1 = {8'b11111111, in[23:0]};
+            twoscomp = ~(in1) + 1'b1;
+          
+            temp_reg = in1 <<< 2;
+            // end
+            out1 = temp_reg ;
+        end else begin
+            in1 = {8'b0, in[23:0]}; 
+            out1 = in1 <<< 2;
+        end
+        // $display("for bbranch: %b", out1);
+        // result = shift_result * 4;
+       
+
+
+    end
+endmodule
+
 //  begin
          // $display("in: %d ",in);
           
@@ -725,11 +757,10 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
         // end
         // if(in[23] ==1) begin
             // in1 = {8'b0, in[23:0]};
-            twoscomp = ~(in) + 1'b1;
-
-            relleno = twoscomp[23];
-            fill = {relleno,relleno,relleno,relleno,relleno,relleno,relleno,relleno};
-            temp_reg = {fill, twoscomp};
+  // $display("in1:%b  |  twoscomp:%b", in1, twoscomp);
+            // relleno = twoscomp[23];
+            // fill = {relleno,relleno,relleno,relleno,relleno,relleno,relleno,relleno};
+            // temp_reg = {fill, twoscomp};
 
             // if(in[23] ==1) begin
             //     twoscomp = ~(in1) + 1'b1;
@@ -738,29 +769,18 @@ module SExtender(input [23:0] in, output signed [31:0] out1);
             //     in1 = {8'b0, in[23:0]}; 
             //     result = in1 <<< 2;
             // end
-            for(i=0; i<2; i= i+1)begin
-                temp_reg = {temp_reg[30:0], 1'b0};
-            end
+            // for(i=0; i<2; i= i+1)begin
+            //     temp_reg = {twoscomp[30:0], 1'b0};
+            // end
 
-        // end else begin
-            
-        // end
-        result = temp_reg;
-
-        // result = shift_result * 4;
-       
-
-
-    end
-endmodule
-
+           // end else begin
 //HAZARD UNIT
 module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, output reg MUXControlUnit_signal, 
                    output reg IF_ID_load, PC_RF_load,
                    input EX_load_instr, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, ID_shift_imm, clk,
                    input [3:0] EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, ID_Bit3_0, 
                    ID_Bit19_16);
-    always@(posedge  clk)//*)
+    always@(*)//posedge  clk)//*)
     begin
         
         IF_ID_load = 1'b1; //Disable pipeline Load
@@ -769,81 +789,60 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         MUX1_signal = 2'b00;
         MUX2_signal = 2'b00;
         MUX3_signal = 2'b00;
-        //DATA Hazard-By Load Instr
 
-
-        if(EX_load_instr==1 && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12 && ID_shift_imm==0)))begin
+        // DATA Hazard-By Load Instr
+        if(EX_load_instr && ID_Bit3_0 == EX_Bit15_12) begin// && ID_shift_imm==0)begin
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
             MUXControlUnit_signal = 1'b0; //NOP; its suppose to 
-        end else begin
-            IF_ID_load = 1'b1; //Disable pipeline Load
-            PC_RF_load = 1'b1; //Disable PC load
-            MUXControlUnit_signal = 1'b1; //NOP
+        end
+        if(EX_load_instr  && ID_Bit19_16 == EX_Bit15_12) begin
+            IF_ID_load = 1'b0; //Disable pipeline Load
+            PC_RF_load = 1'b0; //Disable PC load
+            MUXControlUnit_signal = 1'b0; //NOP
         end
 
-        
+        //DATA Forwarding
         if(WB_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
             if(ID_Bit19_16 == WB_Bit15_12)
                 MUX1_signal = 2'b11;
-            else
-                MUX1_signal = 2'b00;
+          
                      
            
-            if(ID_Bit3_0 == WB_Bit15_12)
+            if(ID_Bit3_0 == WB_Bit15_12 && ID_shift_imm==0)
                 MUX2_signal = 2'b11;
-            else
-                MUX2_signal = 2'b00;          
-            
-            // MUX2_signal = 2'b01; 
-            MUX3_signal = 2'b00;
+          
         end  
         
-        //DATA Forwarding
-       
+        
         if(MEM_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
-            if(ID_Bit19_16 == MEM_Bit15_12)
+            if(ID_Bit19_16 == MEM_Bit15_12  )
                 MUX1_signal = 2'b10;
-            else
-                MUX1_signal = 2'b00;
-                     
+                             
            
-            if(ID_Bit3_0 == MEM_Bit15_12)
+            if(ID_Bit3_0 == MEM_Bit15_12 && ID_shift_imm==0)
                 MUX2_signal = 2'b10;
-            else
-                MUX2_signal = 2'b00;          
-            
-            // MUX2_signal = 2'b01; 
-            MUX3_signal = 2'b00;
+           
         end
 
         if(EX_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
             if(ID_Bit19_16 == EX_Bit15_12)
                 MUX1_signal = 2'b01;
-            else
-                MUX1_signal = 2'b00;
-                     
+                              
            
-            if(ID_Bit3_0 == EX_Bit15_12)
+            if(ID_Bit3_0 == EX_Bit15_12 && ID_shift_imm==0)
                 MUX2_signal = 2'b01;
-            else
-                MUX2_signal = 2'b00;          
-            
-            // MUX2_signal = 2'b01; 
-            MUX3_signal = 2'b00;
-        end 
-        
-      
-    //     else begin //valor del Register File 
-    //         MUX1_signal = 2'b00;
-    //         MUX2_signal = 2'b00; 
-    //         MUX3_signal = 2'b00;
-    //    end
-        // MUX1_signal = 2'b00;
+       end
+   
+    end
+
+endmodule
+
+     // MUX1_signal = 2'b00;
 
         //DATA Forwarding
         // if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
@@ -870,9 +869,6 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
 
 
         // $display("pc_ld ", PC_RF_load);
-    end
-
-endmodule
 
 module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, output reg C);
     reg [31:0] temp_reg, temp_reg1, temp_reg2, rm, rm1;
@@ -1429,7 +1425,10 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output [31:0] S, outpu
                 tv = 0;
 
         end
-        // $display("alu result:", OPS_result);
+
+        // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+
+        // $monitor("alu result:", OPS_result);
     end
 
 endmodule
