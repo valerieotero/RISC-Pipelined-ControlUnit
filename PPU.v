@@ -89,7 +89,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b010: //Load/Store Immediate Offset
                 begin
-                    u = A[23];
+                    // u = A[23];
                     s_imm = 1; 
                     l_instr = A[20]; 
                     b_instr = 0;
@@ -105,7 +105,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                         
                     end 
 
-                    if(u == 1)
+                    if(A[23] == 1)
                         alu_op = 4'b0100; //suma
                     else
                         alu_op = 4'b0010; //resta              
@@ -113,14 +113,14 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b011: //Load/Store Register Offset
                 begin
-                    if(A[4] != 1'b1  )begin
-                        u = A[23];
+                    // if(A[4] != 1'b1  )begin
+                        // u = A[23];
                         l_instr = A[20];
                         m_size = A[22];
                         s_imm = 0; 
                         b_instr = 0;
 
-                        if(u == 1)
+                        if(A[23]== 1)
                             alu_op = 4'b0100; //suma
                         else
                             alu_op = 4'b0010; //resta
@@ -144,7 +144,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                             // s_imm = 1; 
                         end   
 
-                    end
+                    // end
                     
                 end
 
@@ -192,6 +192,8 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
             // $display("instr %b", instr);
         end//  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", C_U_out[6], C_U_out[5:2], C_U_out[1], C_U_out[0]);     
     //    $monitor("A: %b | s_imm: %b", A, C_U_out[6]);
+                            // $monitor("alu %b | A: %b",alu_op, A);
+
     end
 endmodule
 
@@ -385,7 +387,7 @@ endmodule
 
 //IF/ID PIPELINE REGISTER
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
-                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, output reg[31:0] ID_Bit11_0,
+                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, //output reg[31:0] ID_Bit11_0,
                                output reg[3:0] ID_Bit15_12, output reg [31:0] ID_Bit31_0,
                                input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
 
@@ -400,11 +402,11 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit19_16 <= 4'b0;
             ID_Bit15_12 <= 4'b0;
             ID_Bit23_0 <= 24'b0;
-            ID_Bit11_0 <= 32'b0;
+            // ID_Bit11_0 <= 32'b0;
 
         end else begin
 
-           if(Hazard_Unit_Ld == 1 || asserted == 1|| choose_ta_r_nop == 0) begin
+           if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
                 ID_Bit31_0 <= DataOut;
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
@@ -412,7 +414,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <=  DataOut[19:16]; //{28'b0, DataOut[19:16]};
                 ID_Bit15_12 <= DataOut[15:12];
                 ID_Bit23_0 <= DataOut[23:0];
-                ID_Bit11_0 <= DataOut;
+                // ID_Bit11_0 <= DataOut;
                 
            end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
                 ID_Bit31_0 <= 32'b0;
@@ -422,10 +424,12 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <= 4'b0; //32'b0;
                 ID_Bit15_12 <= 4'b0;
                 ID_Bit23_0 <= 24'b0;
-                ID_Bit11_0 <= 32'b0;
+                // ID_Bit11_0 <= 32'b0;
             end
         end
-       
+    //    $monitor("PC4: %d | instr:%b | asserted:%b ", PC4, ID_Bit31_0, asserted);
+        // $monitor(" EX_alu_op: %b, ID_alu_op: %b,  ID_instr: %b, ex  instr: %b",  ID_CU[5:2], EX_ALU_OP, ID_Bit11_0, EX_Bit11_0);
+
     end
 endmodule
 
@@ -487,7 +491,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
     //  $display("EX_shift_imm = %b | EX_alu= %b | EX_load = %b | EX_RF= %b", EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_instr);     
-
+        // $monitor("ID_alu_op: %b,  EX_alu_op: %b, ID_instr: %b, ex  instr: %b",  ID_CU[5:2], EX_ALU_OP, ID_Bit11_0, EX_Bit11_0);
     end
    
 endmodule
@@ -791,13 +795,13 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         MUX3_signal = 2'b00;
 
         // DATA Hazard-By Load Instr
-        if(EX_load_instr && ID_Bit3_0 == EX_Bit15_12) begin// && ID_shift_imm==0)begin
+        if(EX_load_instr && ID_Bit3_0 == EX_Bit15_12 && ID_shift_imm==0) begin// && ID_shift_imm==0)begin
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
-            MUXControlUnit_signal = 1'b0; //NOP; its suppose to 
+            MUXControlUnit_signal = 1'b1; //NOP; its suppose to 
         end
-        if(EX_load_instr  && ID_Bit19_16 == EX_Bit15_12) begin
+        if(EX_load_instr  && ID_Bit19_16 == EX_Bit15_12 && ID_shift_imm==0) begin
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
             MUXControlUnit_signal = 1'b0; //NOP
