@@ -3,7 +3,7 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST, BL);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
@@ -11,7 +11,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, C;
-    input RFLd, CLK, RST, HZPCld;
+    input RFLd, CLK, RST, HZPCld, BL;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -25,7 +25,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
 
 
-    //loadDecoder r15decoder(E[15], R15MO);
+    linker linker(Q14, Q15, BL);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -93,25 +93,25 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
     input [3:0] S;
 
-    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
+    always @(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15, S)
 
     case (S)
-        4'b0000: P <= I0;
-        4'b0001: P <= I1;
-        4'b0010: P <= I2;
-        4'b0011: P <= I3;
-        4'b0100: P <= I4;
-        4'b0101: P <= I5;
-        4'b0110: P <= I6;
-        4'b0111: P <= I7;
-        4'b1000: P <= I8;
-        4'b1001: P <= I9;
-        4'b1010: P <= I10;
-        4'b1011: P <= I11;
-        4'b1100: P <= I12;
-        4'b1101: P <= I13;
-        4'b1110: P <= I14;
-        4'b1111: P <= I15;
+        4'b0000 : P <= I0;
+        4'b0001 : P <= I1;
+        4'b0010 : P <= I2;
+        4'b0011 : P <= I3;
+        4'b0100 : P <= I4;
+        4'b0101 : P <= I5;
+        4'b0110 : P <= I6;
+        4'b0111 : P <= I7;
+        4'b1000 : P <= I8;
+        4'b1001 : P <= I9;
+        4'b1010 : P <= I10;
+        4'b1011 : P <= I11;
+        4'b1100 : P <= I12;
+        4'b1101 : P <= I13;
+        4'b1110 : P <= I14;
+        4'b1111 : P <= I15;
 
     endcase
 endmodule
@@ -135,28 +135,16 @@ module twoToOneMultiplexer(PW, PC, PWLd, MO);
     end
 endmodule
 
-//module loadDecoder(RFLd, R15MO);
-////When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
-//// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
-////Otherwise we set it to 0 and PCin is loaded into the register.
-//output reg[1:0] R15MO;
-//input RFLd;
-//
-////What happens when both = 1?
-////Does this means that the following is accomplished?
-//
-////El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
-////ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
-////el mismo, lo cual tiene prioridad.
-//always @ (RFLd)
-//    begin
-//        if(RFLd)
-//          R15MO <= 1'b1;
-//        else
-//          R15MO <= 1'b0;
-//    end
-//endmodule
+//Will handle internals for a branch and link condition
+module linker(Q14, Q15, BL);
+  input BL;
+  input [32:0] Q15;
+  output reg [32:0] Q14;
 
+  always @(BL)
+    if(BL)
+        assign Q14 = Q15;
+endmodule
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
