@@ -251,7 +251,7 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
 
         forever #1 clk = ~clk; 
         
-    end  //enough repeats to read all instructions 
+    end  
 
 /*--------------------------------------  Toggle Reset  --------------------------------------*/
 
@@ -307,7 +307,7 @@ initial begin
 
 /*------------------------------------------- FOR REGISTERS ONLY --------------------------------------------------------------------------*/
     //  $monitor("PC: %d  |  DR-Address: %d  |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | ALU Salida: %d  |  DATA RAM OUT: %d  | Size_Mem:%b | Size CU:%b |  Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q,A_O, Data_RAM_Out, MEM_mem_size, ID_CU[8], $time);
-         $monitor("PC: %d  |  DR-Address: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, $time);
+     //    $monitor("PC: %d  |  DR-Address: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -350,28 +350,20 @@ initial begin
 //$monitor("CRF: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | PW @ RF %d | E %b | RST %b | PW  Reg %d | RFld %b | CLK: %b", register_file_1.C, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.PW, register_file_1.E[0], register_file_1.RST, register_file_1.R2.PW, register_file_1.R0.RFLd, register_file_1.CLK);
 //$monitor("PC: %d | CRF: %d | CPPU: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | R15 %d | PW @ RF %d | E %b", PCO, register_file_1.C, WB_Bit15_12, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.PW, register_file_1.E[15]);
 
+    $monitor("\n DataIn = %2d | Address: %2d | ReadWrite: %d | Size = %b | Data_RAM_Out: %d  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
+
 end
-
-
-
- /*--------------------------------------  MONITOR MUX 1, 2 and 3  --------------------------------------*/ 
-
-//initial begin
-    
- //   $monitor("\nMux1: %d | Mux2: %d | Mux3: %d  at time: %0d\n",mux_out_1,mux_out_2,mux_out_3, $time);
-
-//end
 
 
 
  integer x=0; 
  initial begin
-    #1899;
+    #69;
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
-    for (x=0; x<256; x = x +4) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
+    for (x=0; x<100; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
     begin   
-        $display("Data en Address %0d = %b %b %b %b  at time: %0d", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3], $time);
+        $display("Data en Address %0d = %d at time: %0d", x, data_ram.Mem[x], $time);
     
     end
  end 
