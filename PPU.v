@@ -36,7 +36,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 || A  == 32'b0) begin // ||  asserted == 0) begin // || asserted == 0) begin
+        if(Reset == 1'b1 || A  == 32'b0 || asserted ==0) begin // ||  asserted == 0) begin // || asserted == 0) begin
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -58,21 +58,21 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b000: //Data Procesing Shift_by_imm
                 begin
-                    // if(A[4] == 0)  begin
+                    if(A[4] == 0)  begin
                         s_imm = 1; 
                         rf_instr = 1; 
                         l_instr = 0; 
                         b_instr = 0;
                         alu_op = A[24:21];
-                    // end
+                    end
                     
-                    // if(A[11:7] == 5'b0) begin
-                    //     s_imm = 0; 
-                    //     rf_instr = 1; 
-                    //     l_instr = 0; 
-                    //     b_instr = 0;
-                    //     alu_op = A[24:21];
-                    // end
+                    if(A[11:7] == 5'b0) begin
+                        s_imm = 0; 
+                        rf_instr = 1; 
+                        l_instr = 0; 
+                        b_instr = 0;
+                        alu_op = A[24:21];
+                    end
 
 
                     
@@ -113,7 +113,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b011: //Load/Store Register Offset
                 begin
-                    // if(A[4] != 1'b1  )begin
+                    if(A[4] == 1'b0  )begin
                         // u = A[23];
                         l_instr = A[20];
                         m_size = A[22];
@@ -144,7 +144,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                             // s_imm = 1; 
                         end   
 
-                    // end
+                    end
                     
                 end
 
@@ -709,7 +709,7 @@ module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
 
 endmodule
 
-module SExtender(input [23:0] in, output reg [31:0] out1);
+module SExtender(input [23:0] in, output reg signed [31:0] out1);
 
     reg signed [31:0] twoscomp;
     reg  [31:0] result;
@@ -1279,7 +1279,7 @@ endmodule
 /*Creator: Ashley Ortiz Colon
 */
 
-module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
+module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
 
     reg [32:0] OPS_result;
 

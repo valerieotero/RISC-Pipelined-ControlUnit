@@ -277,6 +277,7 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
 /*--------------------------------------  MONITOR REGISTROS  --------------------------------------*/ 
 
 initial begin
+    // #70;
     /*------------------------------------------- IF_ID STAGE --------------------------------------------------------------------------*/
                 
     //   
@@ -362,18 +363,18 @@ end
 //end
 
 
-/*
+
  integer x=0; 
  initial begin
- #20;
- $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
+    #1899;
+    $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
- for (x=0; x<256; x = x +4) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
- begin   
-     $display("Data en Address %0d = %b %b %b %b  at time: %0d", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3], $time);
-  
- end
- end */
+    for (x=0; x<256; x = x +4) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
+    begin   
+        $display("Data en Address %0d = %b %b %b %b  at time: %0d", x, data_ram.Mem[x],data_ram.Mem[x+1],data_ram.Mem[x+2],data_ram.Mem[x+3], $time);
+    
+    end
+ end 
 
 
 endmodule
