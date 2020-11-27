@@ -358,7 +358,7 @@ initial begin
 end
 
 
-
+/*
  integer x=0; 
  initial begin
     #82; //Profe said 82 was good time to print content
@@ -369,7 +369,7 @@ end
         $display("Data en Address %0d = %d at time: %0d", x, data_ram.Mem[x], $time);
     
     end
- end 
+ end */
 
 
 endmodule
