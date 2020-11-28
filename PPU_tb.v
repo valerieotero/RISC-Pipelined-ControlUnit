@@ -243,7 +243,7 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
     
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
     //finish simulation on tick 30 (If commented, simulation will enter infinite loop, but if uncommented data ram content after simulation will not display)
-    initial #70 $finish; 
+    initial #80 $finish; 
 
     initial begin
 
@@ -307,7 +307,7 @@ initial begin
 
 /*------------------------------------------- FOR REGISTERS ONLY --------------------------------------------------------------------------*/
     //  $monitor("PC: %d  |  DR-Address: %d  |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | ALU Salida: %d  |  DATA RAM OUT: %d  | Size_Mem:%b | Size CU:%b |  Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q,A_O, Data_RAM_Out, MEM_mem_size, ID_CU[8], $time);
-     //    $monitor("PC: %d  |  DR-Address: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, $time);
+        $monitor("PC: %d  |  DR-Address: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -350,7 +350,7 @@ initial begin
 //$monitor("CRF: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | PW @ RF %d | E %b | RST %b | PW  Reg %d | RFld %b | CLK: %b", register_file_1.C, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.PW, register_file_1.E[0], register_file_1.RST, register_file_1.R2.PW, register_file_1.R0.RFLd, register_file_1.CLK);
 //$monitor("PC: %d | CRF: %d | CPPU: %d | RFLd %d | R0 %d | R1 %d | R2 %d | R3 %d | R5 %d | R15 %d | PW @ RF %d | E %b", PCO, register_file_1.C, WB_Bit15_12, register_file_1.RFLd, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.PW, register_file_1.E[15]);
 
-    $monitor("\n DataIn = %2d | Address: %2d | ReadWrite: %d | Size = %b | Data_RAM_Out: %d  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
+    // $monitor("\n DataIn = %2d | Address: %2d | ReadWrite: %d | Size = %b | Data_RAM_Out: %d  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 
 end
 
@@ -358,7 +358,7 @@ end
 
  integer x=0; 
  initial begin
-    #69;
+    #79;
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
     for (x=0; x<100; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
