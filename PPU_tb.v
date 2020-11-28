@@ -76,7 +76,7 @@ wire [8:0] ID_CU, C_U_out, NOP_S;// = 0010001;
     integer file, fw, code, i; reg [31:0] data;   
     reg [31:0] Address; wire [31:0] DataOut;
 
-    inst_ram256x8 ram1 (DO, PCO); // Reset);
+    inst_ram256x8 ram1 (DO, PCO);
 
     initial
         begin
@@ -242,8 +242,8 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
    
     
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
-    //finish simulation on tick 30 (If commented, simulation will enter infinite loop, but if uncommented data ram content after simulation will not display)
-    initial #80 $finish; 
+  
+    initial #90 $finish;  //finish simulation on tick 90 (If commented, simulation will enter infinite loop)
 
     initial begin
 
@@ -352,21 +352,25 @@ initial begin
 
     // $monitor("\n DataIn = %2d | Address: %2d | ReadWrite: %d | Size = %b | Data_RAM_Out: %d  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 
+/*---------------------------------------------------------------- DATA RAM --------------------------------------------------------------------------*/
+
+   // $monitor("\n DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %d  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
+
 end
 
 
-
+/*
  integer x=0; 
  initial begin
-    #79;
+    #82; //Profe said 82 was good time to print content
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
-    for (x=0; x<100; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
+    for (x=0; x<256; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
     begin   
         $display("Data en Address %0d = %d at time: %0d", x, data_ram.Mem[x], $time);
     
     end
- end 
+ end */
 
 
 endmodule
