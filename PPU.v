@@ -4,11 +4,12 @@
 
 
 //CONTROL UNIT
-module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
+module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
+    reg change = 0;
     reg s_imm = 0; 
     reg rf_instr = 0; 
     reg l_instr = 0; 
@@ -30,6 +31,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
     assign C_U_out[7]  = m_rw;
     assign C_U_out[8]  = m_size;
     assign BL = b_bl;
+    assign S = change;
 
     always@(*)
    
@@ -44,9 +46,11 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
             m_rw = 0;
             m_size = 0;
             alu_op = 4'b0000;
+            change = 0;
             // b_bl=0;
         end else begin 
             instr = A[27:25];
+            // change = A[20];
             //  s_imm = 0; 
             // rf_instr = 0; 
             // l_instr = 0; 
@@ -59,6 +63,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b000: //Data Procesing Shift_by_imm
                 begin
+                    change = A[20];
                     if(A[4] == 0)  begin
                         s_imm = 1; 
                         rf_instr = 1; 
@@ -83,6 +88,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b001: //Data Procesing Immediate
                 begin
+                    change = A[20];
                     s_imm = 1; 
                     rf_instr = 1; 
                     l_instr = 0; 
@@ -94,6 +100,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                 3'b010: //Load/Store Immediate Offset
                 begin
                     // u = A[23];
+                    change = 0;
                     s_imm = 1; 
                     l_instr = A[20]; 
                     b_instr = 0;
@@ -118,6 +125,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
 
                 3'b011: //Load/Store Register Offset
                 begin
+                    change = 0;
                     if(A[4] == 1'b0  )begin
                         // u = A[23];
                         l_instr = A[20];
@@ -157,6 +165,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                 3'b101: //branches
                 begin
                     b_instr = 1;
+                    change = 0;
 
                     // //if(asserted == 1)begin
                     //     s_imm = 0; 
@@ -507,8 +516,8 @@ endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk, EXBL,
-                                output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset, output reg MEMBL);
+module EX_MEM_pipeline_register(input signed [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk, EXBL,
+                                output reg signed [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset, output reg MEMBL);
 
 
     always@(posedge clk, posedge Reset)
@@ -544,8 +553,8 @@ endmodule
 
 
 //MEM/WB PIPELINE REGISTER
-module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk, MEMBL,
-                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset, output reg WBBL);
+module MEM_WB_pipeline_register(input signed [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk, MEMBL,
+                                    output reg signed [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset, output reg WBBL);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -812,7 +821,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
-            MUXControlUnit_signal = 1'b1; //NOP; its suppose to 
+            MUXControlUnit_signal = 1'b0; //NOP; its suppose to 
         end
         if(EX_load_instr  && ID_Bit19_16 == EX_Bit15_12 && ID_shift_imm==0) begin
             IF_ID_load = 1'b0; //Disable pipeline Load
@@ -971,6 +980,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
 
                     2'b11:
                     begin //ROR
+                        // $display("temp_reg: %d ", temp_reg);
                         if(num_of_rot == 5'b0)begin
                             
                             shift_result = {1'b0, temp_reg[31:1]};
@@ -983,6 +993,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                             end
                             shift_result = temp_reg;
                             C = A[num_of_rot - 1];
+                            // $display("shift_result: %d | num_of_rot:%d ", shift_result,num_of_rot );
                         end
                     end
                 endcase
@@ -1110,11 +1121,12 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     output [31:0] MO; //output of the 2x1 multiplexer
     output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
     //Inputs
-    input [31:0] PW, PCin;
+    input signed [31:0] PW;
+    input [31:0] PCin;
     input [3:0] SA, SB, C;
     input RFLd, CLK, RST, HZPCld, BL;
 
-    wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
+    wire signed [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
 
     //Binary Decoder
@@ -1126,7 +1138,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
 
 
-    // linker linker(Q14, Q15, BL);
+    linker linker(Q14, Q15, BL, CLK);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -1236,17 +1248,17 @@ module twoToOneMultiplexer(PW, PC, PWLd, MO);
     end
 endmodule
 
-/*
-//Will handle internals for a branch and link condition
-module linker(Q14, Q15, BL);
-  input BL;
+
+// Will handle internals for a branch and link condition
+module linker(Q14, Q15, BL, CLK);
+  input BL, CLK;
   input [31:0] Q15;
   output reg [31:0] Q14;
 
-  always @(BL)
+  always @(posedge CLK, BL)
     if(BL)
-        assign Q14 = Q15;
-endmodule */
+       Q14 <= Q15;
+endmodule 
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
@@ -1276,6 +1288,7 @@ module PCregister(Q, MOin, HZPCld, CLK, RST);
         else if(HZPCld)
             Q <= MOin;
 endmodule
+
 
 
 

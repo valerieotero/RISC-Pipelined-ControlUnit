@@ -56,7 +56,7 @@ wire [3:0] cc_alu_2;
 //Hazard Unit
 wire MUXControlUnit_signal; 
 wire EX_load_instr;  
-wire S = 1; 
+wire S; // = 1; 
 wire MEM_RF_Enable;
 wire WB_RF_Enable;
 wire [3:0] EX_Bit15_12, cc_out;
@@ -130,7 +130,7 @@ wire [9:0] ID_CU;
     /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
     //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-    control_unit control_unit1(ID_B_instr, bl, C_U_out,clk, Reset, asserted, DO_CU);
+    control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU);
 
     // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
     mux_2x1_ID mux_2x1_ID(C_U_out, bl, MUXControlUnit_signal, ID_CU);
@@ -321,7 +321,7 @@ initial begin
 /*------------------------------------------- FOR HAZARD UNIT --------------------------------------------------------------------------*/
 
     // $monitor("PC: %2d  |PA: %d  | PB: %d | PD: %d | A_O: %d | M_O: %d | PW: %d | MUX1: %d  | MUX2: %d | MUX3: %d | MUX1_S: %b | MUX2_S: %b | MUX3_S: %b | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  | EX_RF_E: %d  | MEM_RF_E: %d  | WB_RF_E: %d | Time: %0d  ", PCO, PA, PB, PD, A_O, M_O, PW, mux_out_1, mux_out_2, mux_out_3, MUX1_signal,MUX2_signal,MUX3_signal, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, $time);
-    // $monitor("PC: %2d  | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  |  MUX1_S: %b | MUX2_S: %b | Time: %0d  ", PCO, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12,  MUX1_signal,MUX2_signal, $time);
+    // $monitor("PC: %3d  | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  |  MUX1_S: %b | MUX2_S: %b | Time: %0d  ", PCO, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12,  MUX1_signal,MUX2_signal, $time);
 
 /*------------------------------------------- FOR ALU/SHIFT EXTENDER --------------------------------------------------------------------------*/
    
@@ -343,7 +343,7 @@ initial begin
 
 
  /*------------------------------------------- CONDITION ASSERTED --------------------------------------------------------------------------*/
-    // $monitor("PC: %d | Instr: %b | cc_out: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_out, ID_Bit31_28, asserted);
+    // $monitor("PC: %d | Instr: %b | cc_out: %b | S: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_out, S, ID_Bit31_28, asserted);
 
  /*------------------------------------------- REGISTER FILE --------------------------------------------------------------------------*/
     //  $monitor("PC: %d  |  DR-Address: %d  |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | RF_PA: %d | PA: %d  |  RF_PB: %d | PB: %d | PW: %d  | BL: %d | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.muxA.P, PA, register_file_1.muxB.P,PB, PW, wb_bl, $time);
@@ -373,18 +373,18 @@ initial begin
 end
 
 
-/*
+
  integer x=0; 
  initial begin
-    #16; //Profe said 82 was good time to print content
+    #192; //Profe said 82 was good time to print content
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
     for (x=0; x<256; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram
     begin   
-        $display("Data en Address %0d = %d at time: %0d", x, data_ram.Mem[x], $time);
+        $display("Data en Address %0d = %b at time: %0d", x, data_ram.Mem[x], $time);
     
     end
- end */
+ end 
 
 
 endmodule
