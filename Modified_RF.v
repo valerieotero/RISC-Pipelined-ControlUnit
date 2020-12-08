@@ -3,15 +3,15 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST, BL);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, CLK, RST);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
     output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
     //Inputs
     input [31:0] PW, PCin;
-    input [3:0] SA, SB, C;
-    input RFLd, CLK, RST, HZPCld, BL;
+    input [3:0] SA, SB, SD, C;
+    input RFLd, CLK, RST, HZPCld;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -22,10 +22,10 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     //Multiplexers
     multiplexer muxA (PA, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SA);
     multiplexer muxB (PB, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SB);
-    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
+    multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, SD);
 
 
-    linker linker(Q14, Q15, BL, CLK);
+    //loadDecoder r15decoder(E[15], R15MO);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -93,25 +93,25 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
     input [3:0] S;
 
-    always @(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15, S)
+    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
 
     case (S)
-        4'b0000 : P <= I0;
-        4'b0001 : P <= I1;
-        4'b0010 : P <= I2;
-        4'b0011 : P <= I3;
-        4'b0100 : P <= I4;
-        4'b0101 : P <= I5;
-        4'b0110 : P <= I6;
-        4'b0111 : P <= I7;
-        4'b1000 : P <= I8;
-        4'b1001 : P <= I9;
-        4'b1010 : P <= I10;
-        4'b1011 : P <= I11;
-        4'b1100 : P <= I12;
-        4'b1101 : P <= I13;
-        4'b1110 : P <= I14;
-        4'b1111 : P <= I15;
+        4'b0000: P <= I0;
+        4'b0001: P <= I1;
+        4'b0010: P <= I2;
+        4'b0011: P <= I3;
+        4'b0100: P <= I4;
+        4'b0101: P <= I5;
+        4'b0110: P <= I6;
+        4'b0111: P <= I7;
+        4'b1000: P <= I8;
+        4'b1001: P <= I9;
+        4'b1010: P <= I10;
+        4'b1011: P <= I11;
+        4'b1100: P <= I12;
+        4'b1101: P <= I13;
+        4'b1110: P <= I14;
+        4'b1111: P <= I15;
 
     endcase
 endmodule
@@ -135,18 +135,28 @@ module twoToOneMultiplexer(PW, PC, PWLd, MO);
     end
 endmodule
 
-//Will handle internals for a branch and link condition
-module linker(Q, Q15, BL, CLK);
-  //helper values
-  output reg [31:0] Q;
-  //Inputs
-  input BL, CLK;
-  input [31:0] Q15;
+//module loadDecoder(RFLd, R15MO);
+////When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
+//// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
+////Otherwise we set it to 0 and PCin is loaded into the register.
+//output reg[1:0] R15MO;
+//input RFLd;
+//
+////What happens when both = 1?
+////Does this means that the following is accomplished?
+//
+////El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
+////ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
+////el mismo, lo cual tiene prioridad.
+//always @ (RFLd)
+//    begin
+//        if(RFLd)
+//          R15MO <= 1'b1;
+//        else
+//          R15MO <= 1'b0;
+//    end
+//endmodule
 
-  always @ (posedge CLK)
-    if(BL) Q <= Q15;
-
-endmodule
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
@@ -181,7 +191,7 @@ endmodule
 //    //Variable for loop
 //    integer index;
 //    //Inputs
-//    reg CLK, RFLd, RST, HZPCLd, BL;
+//    reg CLK, RFLd, RST, HZPCLd;
 //    reg [3:0] SA, SB, SD, SPCout, C;
 //    reg [31:0] PW, PCin;
 //
@@ -193,8 +203,6 @@ endmodule
 //    initial CLK = 1'b0;
 //
 //    initial HZPCLd = 1'b1;
-//
-//    initial BL = 1'b0;
 //
 //    //int i;
 //    //for(i = 0; i < 1; i++)
@@ -225,11 +233,11 @@ endmodule
 ////    without trailing zeroes, binary otherwise.
 //     always @ (CLK)
 //     begin
-//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | C:%b | PCout: %3d | LD: %b |RFLD: %b | CLK: %b | Time: %d | BL %b | R14: %d", PCin, PW, SA, SB, SD, PA, PB, C, PCout, HZPCLd, RFLd, CLK, $time, BL, test.linker.Q);
+//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCout: %3d | LD: %b |RFLD: %b | CLK: %b | Time: %d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCout, HZPCLd, RFLd, CLK, $time);
 //         //$display("PC:%3d | PCout: %3d", PCin, PCout);
 //     end
 //
-//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .RFLd(RFLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST), .BL(BL));
+//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
 //    initial begin
 //    //$monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
 //        //Initial values
@@ -273,8 +281,6 @@ endmodule
 //        SA = 4'b0010;
 //        SB = 4'b0010;
 //        SD = 4'b0010;
-//        //Cause BL condition
-//        BL = 1'b1;
 //
 //        //Register 3
 //        #30;
@@ -288,7 +294,6 @@ endmodule
 //        #40;
 //        C = 4'b0100;
 //        PW = 32'd17;
-//        BL = 1'b0;
 //
 //        //Register 5
 //        #50;
@@ -343,7 +348,7 @@ endmodule
 //        //Register 14
 //        #140;
 //        C = 4'b1110;
-////        PW = 32'd83;
+//        PW = 32'd83;
 //
 //
 //        //Register 15
