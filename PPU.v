@@ -47,7 +47,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
             m_size = 0;
             alu_op = 4'b0000;
             change = 0;
-            // b_bl=0;
+            b_bl=0;
         end else begin 
             instr = A[27:25];
             // change = A[20];
@@ -71,6 +71,8 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                         b_instr = 0;
                         alu_op = A[24:21];
                         b_bl =0;
+                        m_rw = 0;
+
                     end
                     
                     if(A[11:7] == 5'b0) begin
@@ -80,6 +82,8 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                         b_instr = 0;
                         alu_op = A[24:21];
                         b_bl=0;
+                        m_rw = 0;
+
                     end
 
 
@@ -95,6 +99,8 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                     b_instr = 0;
                     alu_op = A[24:21];
                     b_bl= 0;
+                    m_rw = 0;
+
                 end
 
                 3'b010: //Load/Store Immediate Offset
@@ -516,8 +522,8 @@ endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register(input signed [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk, EXBL,
-                                output reg signed [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset, output reg MEMBL);
+module EX_MEM_pipeline_register(input  [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk, EXBL,
+                                output reg  [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset, output reg MEMBL);
 
 
     always@(posedge clk, posedge Reset)
@@ -553,8 +559,8 @@ endmodule
 
 
 //MEM/WB PIPELINE REGISTER
-module MEM_WB_pipeline_register(input signed [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk, MEMBL,
-                                    output reg signed [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset, output reg WBBL);
+module MEM_WB_pipeline_register(input  [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk, MEMBL,
+                                    output reg  [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset, output reg WBBL);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -767,39 +773,7 @@ module SExtender(input [23:0] in, output reg signed [31:0] out1);
     end
 endmodule
 
-//  begin
-         // $display("in: %d ",in);
-          
-        // if (in[23]) begin
-        //     in1 = ~(in);
-        //     shift_result =  {8'b0, in1}  +1;
-        // end else
-        // //	begin
-        //      shift_result = {8'b0, in};
-        // 	// end
-        
-        // result = shift_result <<< 2;
-         // $display("result: %d",result);
-        // end
-        // if(in[23] ==1) begin
-            // in1 = {8'b0, in[23:0]};
-  // $display("in1:%b  |  twoscomp:%b", in1, twoscomp);
-            // relleno = twoscomp[23];
-            // fill = {relleno,relleno,relleno,relleno,relleno,relleno,relleno,relleno};
-            // temp_reg = {fill, twoscomp};
 
-            // if(in[23] ==1) begin
-            //     twoscomp = ~(in1) + 1'b1;
-            //     result = twoscomp <<< 2;
-            // end else begin
-            //     in1 = {8'b0, in[23:0]}; 
-            //     result = in1 <<< 2;
-            // end
-            // for(i=0; i<2; i= i+1)begin
-            //     temp_reg = {twoscomp[30:0], 1'b0};
-            // end
-
-           // end else begin
 //HAZARD UNIT
 module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, output reg MUXControlUnit_signal, 
                    output reg IF_ID_load, PC_RF_load,
@@ -926,6 +900,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                 case(by_imm_shift)
                     2'b00:
                     begin //LSL
+                        // $display("temp_reg: %b", temp_reg);
+
                         if(num_of_rot == 5'b0)begin
                             shift_result = temp_reg;
                             // C = Cflag
@@ -939,6 +915,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                             shift_result = temp_reg;
                             C = A[32 - num_of_rot];
                         end
+                        // $display("Shift_LSL: %b", shift_result);
+
                     end 
 
                     2'b01:
@@ -959,6 +937,8 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                     
                     2'b10:
                     begin //ASR
+                        // $display("temp_reg: %b", temp_reg);
+
                         if(num_of_rot == 5'b0)begin   
                             if(temp_reg[31] == 1'b0) begin
                                 shift_result = 32'b0;
@@ -976,11 +956,13 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                             shift_result = temp_reg;
                             C = A[num_of_rot - 1];
                         end
+                        // $display("Shift_ASR: %b", shift_result);
+
                     end 
 
                     2'b11:
                     begin //ROR
-                        // $display("temp_reg: %d ", temp_reg);
+                        // $display("temp_reg: %b ", temp_reg);
                         if(num_of_rot == 5'b0)begin
                             
                             shift_result = {1'b0, temp_reg[31:1]};
@@ -993,7 +975,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                             end
                             shift_result = temp_reg;
                             C = A[num_of_rot - 1];
-                            // $display("shift_result: %d | num_of_rot:%d ", shift_result,num_of_rot );
+                            // $display("shift_result_ROR: %b ", shift_result);
                         end
                     end
                 endcase
@@ -1054,6 +1036,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                         
                         2'b10:
                         begin //ASR
+                            // $display("temp_reg: %b", temp_reg);
                             if(num_of_rot == 0)begin
                                 if(A[31] == 1)
                                     temp_reg = 32'b11111111111111111111111111111111;
