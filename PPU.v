@@ -17,7 +17,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
     reg m_size = 0;
 
     reg [3:0] alu_op;
-    reg b_bl; // branch or branch & link
+    reg b_bl =0; // branch or branch & link
     reg r_sr_off; // register or Scaled register offset
     reg u;
     // integer condAsserted;// = Cond_Is_Asserted (input [3:0] cc_in, A[31:28], asserted);; // 0 Cond no se da, 1 cond se da
@@ -44,6 +44,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
             m_rw = 0;
             m_size = 0;
             alu_op = 4'b0000;
+            // b_bl=0;
         end else begin 
             instr = A[27:25];
             //  s_imm = 0; 
@@ -64,6 +65,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                         l_instr = 0; 
                         b_instr = 0;
                         alu_op = A[24:21];
+                        b_bl =0;
                     end
                     
                     if(A[11:7] == 5'b0) begin
@@ -72,6 +74,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                         l_instr = 0; 
                         b_instr = 0;
                         alu_op = A[24:21];
+                        b_bl=0;
                     end
 
 
@@ -85,6 +88,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                     l_instr = 0; 
                     b_instr = 0;
                     alu_op = A[24:21];
+                    b_bl= 0;
                 end
 
                 3'b010: //Load/Store Immediate Offset
@@ -94,6 +98,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                     l_instr = A[20]; 
                     b_instr = 0;
                     m_size = A[22];
+                    b_bl= 0;
 
                     if(l_instr == 0) begin
                         rf_instr = 0;
@@ -119,6 +124,7 @@ module control_unit(output  ID_B_instr,BL, output  [8:0] C_U_out, input clk, Res
                         m_size = A[22];
                         s_imm = 0; 
                         b_instr = 0;
+                        b_bl = 0;
 
                         if(A[23]== 1)
                             alu_op = 4'b0100; //suma
@@ -439,10 +445,10 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg [3:0] EX_Bit15_12, output reg EX_Shift_imm, output reg [3:0]  EX_ALU_OP, output reg EX_load_instr, EX_RF_instr, 
                                output reg [31:0] EX_Bit11_0,
                                output reg [7:0] EX_addresing_modes,
-                               output reg EX_mem_size, EX_mem_read_write,
+                               output reg EX_mem_size, EX_mem_read_write,EXBL,
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
-                               input [3:0] ID_Bit15_12, input [8:0] ID_CU, 
+                               input [3:0] ID_Bit15_12, input [9:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
                                input  clk, Reset);
@@ -467,7 +473,8 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_Bit15_12 <= 4'b0;
             EX_Bit11_0 <= 32'b0; // {20'b0, ID_Bit11_0};
             EX_addresing_modes <= 8'b0; //22-20
-   
+
+            EXBL <= 1'b0;
 
         end else begin
         //Control Unit signals  
@@ -487,6 +494,8 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_Bit15_12 <= ID_Bit15_12;
             EX_Bit11_0 <= ID_Bit11_0; // {20'b0, ID_Bit11_0};
             EX_addresing_modes <= ID_addresing_modes; //22-20
+
+            EXBL <= ID_CU[9]; 
         end
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
@@ -498,8 +507,8 @@ endmodule
 
 
 //EX/MEM PIPELINE REGISTER
-module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk,
-                                output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset);
+module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk, EXBL,
+                                output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size, input Reset, output reg MEMBL);
 
 
     always@(posedge clk, posedge Reset)
@@ -513,6 +522,7 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
             MEM_RF_Enable <= 1'b0;
             MEM_mem_read_write <= 1'b0;
             MEM_mem_size <=  1'b0;
+            MEMBL <= 1'b0;
         end else begin
              MEM_A_O <= A_O;
             MEM_MUX3 <= mux_out_3_C;
@@ -521,6 +531,7 @@ module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bi
             MEM_RF_Enable <= EX_RF_instr;
             MEM_mem_read_write <= EX_mem_read_write;
             MEM_mem_size <=  EX_mem_size;
+            MEMBL <= EXBL;
         end
     
     //  $display("EX_MEM reg");
@@ -533,8 +544,8 @@ endmodule
 
 
 //MEM/WB PIPELINE REGISTER
-module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk,
-                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset);
+module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bit15_12, input MEM_load_instr, MEM_RF_Enable, clk, MEMBL,
+                                    output reg [31:0] wb_alu_out, wb_data_r_out, output reg [3:0] wb_bit15_12, output reg WB_load_instr, WB_RF_Enable, input Reset, output reg WBBL);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -544,12 +555,14 @@ module MEM_WB_pipeline_register(input [31:0] alu_out, data_r_out, input [3:0] bi
             wb_bit15_12 <= 4'b0;
             WB_load_instr <= 1'b0;
             WB_RF_Enable <= 1'b0;
+            WBBL <= 1'b0;
         end else begin
             wb_alu_out <= alu_out;
             wb_data_r_out <= data_r_out;
             wb_bit15_12 <= bit15_12;
             WB_load_instr <= MEM_load_instr;
             WB_RF_Enable <= MEM_RF_Enable;
+            WBBL <= MEMBL;
         end
     // $display("MEM_WB reg");
      
@@ -666,8 +679,8 @@ module mux_4x2_ID(input [31:0] A_O, PW, M_O, X, input [1:0] HF_U, output [31:0] 
 endmodule
 
 //Multiplexer control Unit
-module mux_2x1_ID(input [8:0] C_U, input HF_U, output [8:0] MUX_Out);
-    reg [8:0] salida;
+module mux_2x1_ID(input [8:0] C_U, input BL, input HF_U, output [9:0] MUX_Out);
+    reg [9:0] salida;
 
     assign MUX_Out = salida;
 
@@ -675,10 +688,10 @@ module mux_2x1_ID(input [8:0] C_U, input HF_U, output [8:0] MUX_Out);
     begin
         case(HF_U)
             1'b0: // NOP
-            salida = 9'b0;
+            salida = 10'b0;
 
             1'b1://Control Unit
-            salida = C_U;
+            salida = {BL, C_U};
         endcase
         // $display("CU MEX OUT %b ", salida );//
     end
@@ -1091,7 +1104,7 @@ endmodule
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST, BL);
     //Outputs
     output [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
@@ -1099,7 +1112,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     //Inputs
     input [31:0] PW, PCin;
     input [3:0] SA, SB, C;
-    input RFLd, CLK, RST, HZPCld;
+    input RFLd, CLK, RST, HZPCld, BL;
 
     wire [31:0] Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15;
     wire [15:0] E;
@@ -1113,7 +1126,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
 
 
-    //loadDecoder r15decoder(E[15], R15MO);
+    // linker linker(Q14, Q15, BL);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -1181,25 +1194,25 @@ module multiplexer(P, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13
     input [31:0] I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15;
     input [3:0] S;
 
-    always @(S, I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15)
+    always @(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15, S)
 
     case (S)
-        4'b0000: P <= I0;
-        4'b0001: P <= I1;
-        4'b0010: P <= I2;
-        4'b0011: P <= I3;
-        4'b0100: P <= I4;
-        4'b0101: P <= I5;
-        4'b0110: P <= I6;
-        4'b0111: P <= I7;
-        4'b1000: P <= I8;
-        4'b1001: P <= I9;
-        4'b1010: P <= I10;
-        4'b1011: P <= I11;
-        4'b1100: P <= I12;
-        4'b1101: P <= I13;
-        4'b1110: P <= I14;
-        4'b1111: P <= I15;
+        4'b0000 : P <= I0;
+        4'b0001 : P <= I1;
+        4'b0010 : P <= I2;
+        4'b0011 : P <= I3;
+        4'b0100 : P <= I4;
+        4'b0101 : P <= I5;
+        4'b0110 : P <= I6;
+        4'b0111 : P <= I7;
+        4'b1000 : P <= I8;
+        4'b1001 : P <= I9;
+        4'b1010 : P <= I10;
+        4'b1011 : P <= I11;
+        4'b1100 : P <= I12;
+        4'b1101 : P <= I13;
+        4'b1110 : P <= I14;
+        4'b1111 : P <= I15;
 
     endcase
 endmodule
@@ -1223,28 +1236,17 @@ module twoToOneMultiplexer(PW, PC, PWLd, MO);
     end
 endmodule
 
-//module loadDecoder(RFLd, R15MO);
-////When the binary decoder assigns a value of one to E[15] that means R15 has RFLd = 1,
-//// thus we write PW instead of PCin. So R15 is going to be 1 which in terms means PW will be loaded.
-////Otherwise we set it to 0 and PCin is loaded into the register.
-//output reg[1:0] R15MO;
-//input RFLd;
-//
-////What happens when both = 1?
-////Does this means that the following is accomplished?
-//
-////El PC tendrá una señal de “load enable” que cuando esté activa permitirá que el valor externo se cargue en el PC cuando
-////ocurra el “rising edge” del reloj del sistema, excepto cuando el puerto de entrada trate de escribir
-////el mismo, lo cual tiene prioridad.
-//always @ (RFLd)
-//    begin
-//        if(RFLd)
-//          R15MO <= 1'b1;
-//        else
-//          R15MO <= 1'b0;
-//    end
-//endmodule
+/*
+//Will handle internals for a branch and link condition
+module linker(Q14, Q15, BL);
+  input BL;
+  input [31:0] Q15;
+  output reg [31:0] Q14;
 
+  always @(BL)
+    if(BL)
+        assign Q14 = Q15;
+endmodule */
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
@@ -1274,6 +1276,7 @@ module PCregister(Q, MOin, HZPCld, CLK, RST);
         else if(HZPCld)
             Q <= MOin;
 endmodule
+
 
 
 /*Creator: Ashley Ortiz Colon
