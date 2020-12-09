@@ -200,9 +200,9 @@ endmodule
 
 
 //Status Register
-module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, cch, input clk, Reset); //verify
+module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk, Reset); //verify
     //Recordar que el registro se declara aquí y luego
-    always @ (posedge clk)
+    always @ (negedge clk)
     begin
         // cc_out <= 4'b0000;
         if(Reset)// && S == 0)
@@ -211,7 +211,7 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, cch,
             // cc_out
         if (S)
             cc_out <= cc_in;
-            cch = cc_in;
+            // cch = cc_in;
         // end
         // $display("cc_out: %b | cc_in: %b", cc_out, cc_in);
     end
@@ -411,13 +411,13 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         end else begin
             if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
             //     // DataOut = 32'b11100001101000001110000000001111; 
-                ID_Bit31_0 <= DataOut;// {DataOut[31:28], 28'b0001101000001110000000001111};
+                ID_Bit31_0 <= {DataOut[31:28], 28'b0001101000001110000000001111};
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  4'b1111; 
                 ID_Bit31_28 <= DataOut[31:28];
                 ID_Bit19_16 <=  4'b0000; 
                 ID_Bit15_12 <= 4'b1110;
-                ID_Bit23_0 <= DataOut[23:0]; //24'b101000001110000000001111;
+                ID_Bit23_0 <= 24'b101000001110000000001111; // DataOut[23:0]; //
                 // $display("DOUT 31 28: %b", DataOut[31:28]);
             end else begin
 
@@ -1092,7 +1092,7 @@ endmodule
 
 module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, RST, BL);
     //Outputs
-    output [31:0] PA, PB, PD, PCout;
+    output signed [31:0] PA, PB, PD, PCout;
     output [31:0] MO; //output of the 2x1 multiplexer
     output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
     //Inputs

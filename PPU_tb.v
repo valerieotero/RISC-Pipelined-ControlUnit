@@ -37,7 +37,7 @@ wire RFLd; // = 1;
 wire PC_RF_ld; // = 1; //load pc viene de Hazard unit
 
 //multiplexers 4x2
-wire  [31:0] A_O; // = 32'd15;
+wire signed [31:0] A_O; // = 32'd15;
 wire signed [31:0] M_O; // = 32'd16;
 // wire [31:0] PB = 32'd7; 
 wire [31:0] mux_out_1, mux_out_2, mux_out_3, Data_RAM_Out, WB_A_O, WB_Data_RAM_Out; //PA, PB, PD,PW,
@@ -137,7 +137,7 @@ wire [9:0] ID_CU;
     // //ID_Stage
         // Status_register Status_register(cc_main_alu_out, S_M, cc_out, clk, Reset);
 
-    Status_register Status_register(cc_main_alu_out, EX_S_M, cc_out, cch, clk, Reset);
+    Status_register Status_register(cc_main_alu_out, EX_S_M, cc_out, clk, Reset);
       
     // //SEx4
     // // SExtender(input reg [23:0] in, output signed [31:0] out1);
@@ -202,7 +202,7 @@ Sign_Shift_Extender sign_shift_extender_1(mux_out_2_B, EX_Bit11_0, cc_out, SSE_o
 mux_2x1_Stages  mux_2x1_stages_2(mux_out_2_B, SSE_out, EX_Shift_imm, EX_MUX_2X1_OUT);
    
 // //Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
-Cond_Is_Asserted Cond_Is_Assert (cch, ID_Bit31_28, asserted);
+Cond_Is_Asserted Cond_Is_Assert (cc_out, ID_Bit31_28, asserted);
 
 // //Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
 Condition_Handler Condition_Hand (asserted, ID_B_instr, choose_ta_r_nop);
@@ -315,7 +315,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-       $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+       $monitor("PC: %3d  |  DR-Address: %d  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
