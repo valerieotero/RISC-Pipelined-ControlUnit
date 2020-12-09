@@ -310,8 +310,8 @@ initial begin
     //  $monitor("PC: %d  |  DR-Address: %d  |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | ALU Salida: %d  |  DATA RAM OUT: %d  | Size_Mem:%b | Size CU:%b |  Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q,A_O, Data_RAM_Out, MEM_mem_size, ID_CU[8], $time);
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-     //   $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-       // $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %2d  |R15: %2d  | R14: %2d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+    //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+    //    $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -346,7 +346,7 @@ initial begin
 
  /*------------------------------------------- CONDITION ASSERTED --------------------------------------------------------------------------*/
     // $display (" N Z C V");
-    // $monitor("PC: %d | Instr: %b | cc_out: %b | S: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_out, S, ID_Bit31_28, asserted);
+    $monitor("PC: %d | Instr: %b | CC_IN: %b | cc_out: %b | S: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_main_alu_out, cc_out, S, ID_Bit31_28, asserted);
 
  /*------------------------------------------- REGISTER FILE --------------------------------------------------------------------------*/
     //  $monitor("PC: %d  |  DR-Address: %d  | ALU_EX: %d |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | RF_PA: %d | PA: %d  |  RF_PB: %d | PB: %d | PW: %d  | RD: %d | BL: %d | Time: %2d ", PCO, MEM_A_O, A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.muxA.P, PA, register_file_1.muxB.P,PB, PW, WB_Bit15_12, wb_bl, $time);
@@ -371,12 +371,13 @@ initial begin
 
 /*---------------------------------------------------------------- DATA RAM --------------------------------------------------------------------------*/
 
-   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
+//    $monitor(" PD: %d | A_O: %d | M_O = %d | PW: %d | MUX3_signal: %b | ID MUX_3: %d | EX_MUX3: %d | DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", PD, A_O, M_O, PW, MUX3_signal, mux_out_3, mux_out_3_C, MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
+//   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 
 end
 
-/*
 
+/*
  integer x=0; 
  initial begin
     #348; //Profe said 82 was good time to print content

@@ -21,7 +21,6 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
     reg b_bl =0; // branch or branch & link
     reg r_sr_off; // register or Scaled register offset
     reg u;
-    // integer condAsserted;// = Cond_Is_Asserted (input [3:0] cc_in, A[31:28], asserted);; // 0 Cond no se da, 1 cond se da
 
     assign C_U_out[6] = s_imm;
     assign C_U_out[0] = rf_instr;
@@ -38,7 +37,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 || A  == 32'b0 || asserted ==0) begin // ||  asserted == 0) begin // || asserted == 0) begin
+        if(Reset == 1'b1 || A  == 32'b0 || asserted ==0) begin 
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -50,15 +49,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
             b_bl=0;
         end else begin 
             instr = A[27:25];
-            // change = A[20];
-            //  s_imm = 0; 
-            // rf_instr = 0; 
-            // l_instr = 0; 
-            // b_instr = 0; 
-            // m_rw = 0;
-            // m_size = 0;
-            // alu_op = 4'b0000;
-       
+              
             case(instr)
 
                 3'b000: //Data Procesing Shift_by_imm
@@ -105,7 +96,6 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
 
                 3'b010: //Load/Store Immediate Offset
                 begin
-                    // u = A[23];
                     change = 0;
                     s_imm = 1; 
                     l_instr = A[20]; 
@@ -133,7 +123,6 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                 begin
                     change = 0;
                     if(A[4] == 1'b0  )begin
-                        // u = A[23];
                         l_instr = A[20];
                         m_size = A[22];
                         s_imm = 0; 
@@ -173,15 +162,6 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                     b_instr = 1;
                     change = 0;
 
-                    // //if(asserted == 1)begin
-                    //     s_imm = 0; 
-                    //     rf_instr = 0; 
-                    //     l_instr = 0; 
-                    //     alu_op = 4'b0010;
-                    //     m_rw = 0;
-                    //     m_size = 0;
-
-                    // end else begin 
                     b_bl = A[24];
                         
                        //branch
@@ -224,9 +204,10 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, inpu
     //Recordar que el registro se declara aquí y luego
     always @ (posedge clk)
     begin
-        if(Reset)
-            cc_out <= 4'b0;
+        if(Reset == 1)
+            cc_out <= 4'b0000;
         else begin
+            // cc_out
             if (S)
                 cc_out <= cc_in;
         end
@@ -398,7 +379,7 @@ module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
         if(asserted == 1 && b_instr == 1)
-            choose_ta_r_nop = 1;//this is 1 for pHase 3 purposes it is 0
+            choose_ta_r_nop = 1;
         else
             choose_ta_r_nop = 0; 
     end
@@ -408,7 +389,7 @@ endmodule
 
 //IF/ID PIPELINE REGISTER
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
-                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, //output reg[31:0] ID_Bit11_0,
+                               output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, 
                                output reg[3:0] ID_Bit15_12, output reg [31:0] ID_Bit31_0,
                                input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
 
@@ -423,30 +404,39 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit19_16 <= 4'b0;
             ID_Bit15_12 <= 4'b0;
             ID_Bit23_0 <= 24'b0;
-            // ID_Bit11_0 <= 32'b0;
 
         end else begin
-
-           if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
-                ID_Bit31_0 <= DataOut;
+            if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
+                // DataOut = 32'b11100001101000001110000000001111; 
+                ID_Bit31_0 <= 32'b11100001101000001110000000001111;
                 ID_Next_PC <= PC4;
-                ID_Bit3_0 <=  DataOut[3:0]; //{28'b0, DataOut[3:0]};
-                ID_Bit31_28 <= DataOut[31:28];
-                ID_Bit19_16 <=  DataOut[19:16]; //{28'b0, DataOut[19:16]};
-                ID_Bit15_12 <= DataOut[15:12];
-                ID_Bit23_0 <= DataOut[23:0];
-                // ID_Bit11_0 <= DataOut;
-                
-           end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
-                ID_Bit31_0 <= 32'b0;
-                ID_Next_PC <= 32'b0;
-                ID_Bit3_0 <= 4'b0; //32'b0;
-                ID_Bit31_28 <= 4'b0;
-                ID_Bit19_16 <= 4'b0; //32'b0;
-                ID_Bit15_12 <= 4'b0;
-                ID_Bit23_0 <= 24'b0;
-                // ID_Bit11_0 <= 32'b0;
+                ID_Bit3_0 <=  4'b1111; 
+                ID_Bit31_28 <= 4'b1110;
+                ID_Bit19_16 <=  4'b0000; 
+                ID_Bit15_12 <= 4'b1110;
+                ID_Bit23_0 <= 24'b101000001110000000001111;
+            end else begin
+
+                if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
+                        ID_Bit31_0 <= DataOut;
+                        ID_Next_PC <= PC4;
+                        ID_Bit3_0 <=  DataOut[3:0]; 
+                        ID_Bit31_28 <= DataOut[31:28];
+                        ID_Bit19_16 <=  DataOut[19:16]; 
+                        ID_Bit15_12 <= DataOut[15:12];
+                        ID_Bit23_0 <= DataOut[23:0];
+                        
+                end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
+                        ID_Bit31_0 <= 32'b0;
+                        ID_Next_PC <= 32'b0;
+                        ID_Bit3_0 <= 4'b0; 
+                        ID_Bit31_28 <= 4'b0;
+                        ID_Bit19_16 <= 4'b0; 
+                        ID_Bit15_12 <= 4'b0;
+                        ID_Bit23_0 <= 24'b0;
+                end
             end
+
         end
     //    $monitor("PC4: %d | instr:%b | asserted:%b ", PC4, ID_Bit31_0, asserted);
         // $monitor(" EX_alu_op: %b, ID_alu_op: %b,  ID_instr: %b, ex  instr: %b",  ID_CU[5:2], EX_ALU_OP, ID_Bit11_0, EX_Bit11_0);
@@ -774,6 +764,8 @@ module SExtender(input [23:0] in, output reg signed [31:0] out1);
 endmodule
 
 
+
+
 //HAZARD UNIT
 module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, output reg MUXControlUnit_signal, 
                    output reg IF_ID_load, PC_RF_load,
@@ -788,7 +780,7 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         MUXControlUnit_signal = 1'b1; //NOP; its suppose to 
         MUX1_signal = 2'b00;
         MUX2_signal = 2'b00;
-        MUX3_signal = 2'b00;
+        MUX3_signal = 2'b01;
 
         // DATA Hazard-By Load Instr
         if(EX_load_instr && ID_Bit3_0 == EX_Bit15_12 && ID_shift_imm==0) begin// && ID_shift_imm==0)begin
@@ -1083,10 +1075,15 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
                 end
             end 
 
-            // 3'b101:
+            // 3'b100:
             // begin
-            //     if(B[24] == 1)
-
+            //     other_tmp = B[15:0];
+            //     for(i = 0; i<=16; i = i+1)begin
+            //         if(other_tmp[i] == 1)
+            //             count = count + 1;
+            //     end
+            //     tmp1 = {27'b0, 5'b{count}};
+            //     shift_result = tmp1 * 4; 
             // end      
         endcase
     end
@@ -1121,7 +1118,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, RFLd, HZPCld, CLK, 
     multiplexer muxD (PD, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, C);
 
 
-    linker linker(Q14, Q15, BL, CLK);
+    // linker linker(Q14, Q15, BL, CLK);
 
     //Added this 2x1 multi to handle R15 input variations
     //Here PC is equivalent to PW in the diagram and PCin
@@ -1233,15 +1230,15 @@ endmodule
 
 
 // Will handle internals for a branch and link condition
-module linker(Q14, Q15, BL, CLK);
-  input BL, CLK;
-  input [31:0] Q15;
-  output reg [31:0] Q14;
+// module linker(Q14, Q15, BL, CLK);
+//   input BL, CLK;
+//   input [31:0] Q15;
+//   output reg [31:0] Q14;
 
-  always @(posedge CLK, BL)
-    if(BL)
-       Q14 <= Q15;
-endmodule 
+//   always @(posedge CLK, BL)
+//     if(BL)
+//        Q14 <= Q15;
+// endmodule 
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
