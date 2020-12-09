@@ -37,7 +37,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 || A  == 32'b0 || asserted ==0) begin 
+        if(Reset == 1'b1 || A  == 32'b0) begin // || asserted ==0) begin 
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -200,17 +200,20 @@ endmodule
 
 
 //Status Register
-module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk, Reset); //verify
+module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, cch, input clk, Reset); //verify
     //Recordar que el registro se declara aquí y luego
     always @ (posedge clk)
     begin
-        if(Reset == 1)
+        // cc_out <= 4'b0000;
+        if(Reset)// && S == 0)
             cc_out <= 4'b0000;
-        else begin
+        // else begin
             // cc_out
-            if (S)
-                cc_out <= cc_in;
-        end
+        if (S)
+            cc_out <= cc_in;
+            cch = cc_in;
+        // end
+        // $display("cc_out: %b | cc_in: %b", cc_out, cc_in);
     end
 
 
@@ -407,14 +410,15 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
 
         end else begin
             if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
-                // DataOut = 32'b11100001101000001110000000001111; 
-                ID_Bit31_0 <= 32'b11100001101000001110000000001111;
+            //     // DataOut = 32'b11100001101000001110000000001111; 
+                ID_Bit31_0 <= DataOut;// {DataOut[31:28], 28'b0001101000001110000000001111};
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  4'b1111; 
-                ID_Bit31_28 <= 4'b1110;
+                ID_Bit31_28 <= DataOut[31:28];
                 ID_Bit19_16 <=  4'b0000; 
                 ID_Bit15_12 <= 4'b1110;
-                ID_Bit23_0 <= 24'b101000001110000000001111;
+                ID_Bit23_0 <= DataOut[23:0]; //24'b101000001110000000001111;
+                // $display("DOUT 31 28: %b", DataOut[31:28]);
             end else begin
 
                 if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
@@ -450,13 +454,13 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg [3:0] EX_Bit15_12, output reg EX_Shift_imm, output reg [3:0]  EX_ALU_OP, output reg EX_load_instr, EX_RF_instr, 
                                output reg [31:0] EX_Bit11_0,
                                output reg [7:0] EX_addresing_modes,
-                               output reg EX_mem_size, EX_mem_read_write,EXBL,
+                               output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M,
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
                                input [3:0] ID_Bit15_12, input [9:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
-                               input  clk, Reset);
+                               input  clk, Reset, s_M);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -480,6 +484,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_addresing_modes <= 8'b0; //22-20
 
             EXBL <= 1'b0;
+            ex_S_M  <= 1'b0;
 
         end else begin
         //Control Unit signals  
@@ -501,6 +506,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_addresing_modes <= ID_addresing_modes; //22-20
 
             EXBL <= ID_CU[9]; 
+            ex_S_M <= s_M;
         end
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
@@ -684,19 +690,27 @@ module mux_4x2_ID(input [31:0] A_O, PW, M_O, X, input [1:0] HF_U, output [31:0] 
 endmodule
 
 //Multiplexer control Unit
-module mux_2x1_ID(input [8:0] C_U, input BL, input HF_U, output [9:0] MUX_Out);
+module mux_2x1_ID(input [8:0] C_U, input BL,S, input HF_U, output [9:0] MUX_Out, output S_M);
     reg [9:0] salida;
+    reg change;
 
     assign MUX_Out = salida;
+    assign S_M = change;
 
     always@(*)
     begin
         case(HF_U)
             1'b0: // NOP
-            salida = 10'b0;
+            begin
+                salida = 10'b0;
+                change = 1'b0;
+            end
 
             1'b1://Control Unit
-            salida = {BL, C_U};
+            begin
+                salida = {BL, C_U};
+                change = S;
+            end
         endcase
         // $display("CU MEX OUT %b ", salida );//
     end
@@ -783,18 +797,25 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
         MUX3_signal = 2'b01;
 
         // DATA Hazard-By Load Instr
-        if(EX_load_instr && ID_Bit3_0 == EX_Bit15_12 && ID_shift_imm==0) begin// && ID_shift_imm==0)begin
+
+        if(EX_load_instr)begin
+            if (ID_Bit3_0 == EX_Bit15_12  && ID_shift_imm==0) begin// && ID_shift_imm==0)begin
          
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
             MUXControlUnit_signal = 1'b0; //NOP; its suppose to 
-        end
-        if(EX_load_instr  && ID_Bit19_16 == EX_Bit15_12 && ID_shift_imm==0) begin
+            end
+        // if(EX_load_instr  )
+            if(ID_Bit19_16 == EX_Bit15_12 && ID_shift_imm==0) begin
             IF_ID_load = 1'b0; //Disable pipeline Load
             PC_RF_load = 1'b0; //Disable PC load
             MUXControlUnit_signal = 1'b0; //NOP
+            end else begin
+                //    IF_ID_load = 1'b0; //Disable pipeline Load
+            // PC_RF_load = 1'b0; //Disable PC load
+            MUXControlUnit_signal = 1'b1; 
+            end
         end
-
         //DATA Forwarding
         if(WB_RF_Enable) begin// && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
             //Valor del Main ALU
@@ -834,35 +855,8 @@ module hazard_unit(output reg [1:0] MUX1_signal, MUX2_signal, MUX3_signal, outpu
 
 endmodule
 
-     // MUX1_signal = 2'b00;
 
-        //DATA Forwarding
-        // if(EX_RF_Enable && ((ID_Bit19_16 == EX_Bit15_12)||(ID_Bit3_0 == EX_Bit15_12))) begin
-        //     //Valor del Main ALU
-        //     MUX1_signal = 2'b01;
-        //     MUX2_signal = 2'b01; 
-        //     MUX3_signal = 2'b01;
-        // end else if(MEM_RF_Enable && ((ID_Bit19_16 == MEM_Bit15_12)||(ID_Bit3_0 == MEM_Bit15_12))) begin
-        //    // valor multiplexer MEM Stage
-        //     MUX1_signal = 2'b10;
-        //     MUX2_signal = 2'b10;
-        //     MUX3_signal = 2'b10;
-        // end else if(WB_RF_Enable && ((ID_Bit19_16 == WB_Bit15_12)||(ID_Bit3_0 == WB_Bit15_12))) begin
-        //     //valor PW (multiplexer WB)
-        //     MUX1_signal = 2'b11;
-        //     MUX2_signal = 2'b11; 
-        //     MUX3_signal = 2'b11;
-        // end else begin //valor del Register File 
-        //     MUX1_signal = 2'b00;
-        //     MUX2_signal = 2'b00; 
-        //     MUX3_signal = 2'b00;
-        // end
-
-
-
-        // $display("pc_ld ", PC_RF_load);
-
-module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, output reg C);
+module Sign_Shift_Extender (input [31:0]A, B, input [3:0] Cin_1, output reg [31:0]shift_result, output reg C);
     reg [31:0] temp_reg, temp_reg1, temp_reg2, rm, rm1;
     integer num_of_rot;
     integer i;
@@ -881,6 +875,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
         shifter_op = B[27:25];
         by_imm_shift = B[6:5];
         temp_reg = A;
+        Cin = Cin_1[1];
         case(shifter_op)
 
             3'b000:
@@ -896,7 +891,7 @@ module Sign_Shift_Extender (input [31:0]A, B, output reg [31:0]shift_result, out
 
                         if(num_of_rot == 5'b0)begin
                             shift_result = temp_reg;
-                            // C = Cflag
+                            C = Cin;
                         end else begin
                             // temp_reg = {20'b0, A[11:0]};
                             for(i=0; i<num_of_rot; i= i+1)begin
@@ -1242,7 +1237,7 @@ endmodule
 
 module register(Q, PW, RFLd, CLK, RST);
     //Output
-    output reg [31:0] Q;
+    output reg signed [31:0] Q;
     //Inputs
     input [31:0] PW;
     input RFLd, CLK, RST;

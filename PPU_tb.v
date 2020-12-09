@@ -28,7 +28,7 @@ wire IF_ID_Load; // = 1; // load pipeline viene de hazard unit
 wire [31:0] PA; // = 32'd6;
 wire [31:0] PB; // = 32'd7; 
 wire [31:0] PD; // = 32'd9; 
-wire [31:0] PW; // = 32'd17; // = 32'b0;
+wire signed  [31:0] PW; // = 32'd17; // = 32'b0;
 
 wire [31:0] PCin; // = 32'd4;
 wire [3:0] WB_Bit15_12_out; // = 4'b0; // registro destino valor del WB
@@ -37,8 +37,8 @@ wire RFLd; // = 1;
 wire PC_RF_ld; // = 1; //load pc viene de Hazard unit
 
 //multiplexers 4x2
-wire [31:0] A_O; // = 32'd15;
-wire [31:0] M_O; // = 32'd16;
+wire  [31:0] A_O; // = 32'd15;
+wire signed [31:0] M_O; // = 32'd16;
 // wire [31:0] PB = 32'd7; 
 wire [31:0] mux_out_1, mux_out_2, mux_out_3, Data_RAM_Out, WB_A_O, WB_Data_RAM_Out; //PA, PB, PD,PW,
 wire [1:0] MUX1_signal;
@@ -65,8 +65,8 @@ wire [3:0] WB_Bit15_12;
 
 //ID_EX
 wire [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
-wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, Carry, bl, ex_bl,mem_bl,wb_bl;
-wire [3:0] EX_ALU_OP;
+wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, Carry, bl, ex_bl,mem_bl,wb_bl, S_M, EX_S_M;
+wire [3:0] EX_ALU_OP, cch;
 wire[7:0] EX_addresing_modes, ID_addresing_modes;
 wire [8:0] C_U_out, NOP_S;// = 0010001;
 wire [9:0] ID_CU;
@@ -133,9 +133,11 @@ wire [9:0] ID_CU;
     control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU);
 
     // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
-    mux_2x1_ID mux_2x1_ID(C_U_out, bl, MUXControlUnit_signal, ID_CU);
+    mux_2x1_ID mux_2x1_ID(C_U_out, bl, S, MUXControlUnit_signal, ID_CU, S_M);
     // //ID_Stage
-    Status_register Status_register(cc_main_alu_out, S, cc_out, clk, Reset);
+        // Status_register Status_register(cc_main_alu_out, S_M, cc_out, clk, Reset);
+
+    Status_register Status_register(cc_main_alu_out, EX_S_M, cc_out, cch, clk, Reset);
       
     // //SEx4
     // // SExtender(input reg [23:0] in, output signed [31:0] out1);
@@ -184,26 +186,26 @@ wire [9:0] ID_CU;
 
 ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_out_3_C,
                                 EX_Bit15_12, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,
-                                EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write, ex_bl,
+                                EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write, ex_bl, EX_S_M,
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_CU,
-                                DO_CU, ID_addresing_modes, clk, Reset);    
+                                DO_CU, ID_addresing_modes, clk, Reset, S_M);    
   
 // //MAIN ALU    
 // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
 alu alu_main(mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, Carry, A_O, cc_main_alu_out);
        
 // //Sign_Shift_Extender (input [31:0]A, input [11:0]B, output reg [31:0]shift_result, output reg C);
-Sign_Shift_Extender sign_shift_extender_1(mux_out_2_B, EX_Bit11_0, SSE_out, Carry);
+Sign_Shift_Extender sign_shift_extender_1(mux_out_2_B, EX_Bit11_0, cc_out, SSE_out, Carry);
   
 // //mux between Shifter extender & ALU
 mux_2x1_Stages  mux_2x1_stages_2(mux_out_2_B, SSE_out, EX_Shift_imm, EX_MUX_2X1_OUT);
    
 // //Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output asserted);
-Cond_Is_Asserted Cond_Is_Asserted (cc_out, ID_Bit31_28, asserted);
+Cond_Is_Asserted Cond_Is_Assert (cch, ID_Bit31_28, asserted);
 
 // //Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
-Condition_Handler Condition_Handler(asserted, ID_B_instr, choose_ta_r_nop);
+Condition_Handler Condition_Hand (asserted, ID_B_instr, choose_ta_r_nop);
 
 /*module EX_MEM_pipeline_register(input [31:0] mux_out_3_C, A_O, input [3:0] EX_Bit15_12, cc_main_alu_out, input EX_load_instr, EX_RF_instr, EX_mem_read_write, EX_mem_size, input clk,
                         output reg [31:0] MEM_A_O, MEM_MUX3, output reg [3:0] MEM_Bit15_12, output reg MEM_load_instr, MEM_RF_Enable, MEM_mem_read_write, MEM_mem_size);*/
@@ -244,7 +246,7 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
     
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
   
-    initial #350 $finish;  //finish simulation on tick 90 (If commented, simulation will enter infinite loop)
+    initial #110 $finish;  //finish simulation on tick 90 (If commented, simulation will enter infinite loop)
 
     initial begin
 
@@ -281,6 +283,7 @@ initial begin
     // #70;
     /*------------------------------------------- IF_ID STAGE --------------------------------------------------------------------------*/
                 
+
     //   
     // $monitor("PC: %d  | DR-Address: %d  | Destino: %d  | instrIF: %b  |  instrID: %b  |  ID_Bit23_0: %d  | Next_PC: %d  | RN: %d  |  RM:  %d    | INSTR_SHIFTEREXT: %d  | RD: %d  | NOP_COND_HANDLER: %b  |  PP_LOAD(hfu): %b  | asserted: %b  |  PC4: %3d  | RESET: %d | BL: %d | TA:%2d", PCO, MEM_A_O, WB_Bit15_12, DO, DO_CU, ID_Bit23_0, Next_PC, ID_Bit19_16, ID_Bit3_0, DO_CU, ID_Bit15_12, choose_ta_r_nop, IF_ID_Load, asserted, PC4,Reset, bl, TA);
 
@@ -288,9 +291,10 @@ initial begin
     /*------------------------------------------- CONTROL SIGNALS --------------------------------------------------------------------------*/
 
 
-    // $monitor( "PC: %d  | ADDRS: %d | Instr_ID: %b  | Branch?: %d  |  Mem_Size: %d  | Read_W:  %d    |  Shift_imm: %d  | Alu_op: %b  | load_instr: %b  | RegFile_load:  %d  | time: %3d  | reset: %d  | asserted: %d | CU_MUX_OUT: %b | mux signal: %b", PCO, MEM_A_O, DO_CU, ID_B_instr, ID_CU[8], ID_CU[7], ID_CU[6], ID_CU[5:2],ID_CU[1],ID_CU[0] ,$time, Reset, asserted, C_U_out, MUXControlUnit_signal );
+    // $monitor( "PC: %d  | ADDRS: %d | Instr_ID: %b  | Branch?: %d  | BL?: %d | S: %b | Mem_Size: %d  | Read_W:  %d  |  Shift_imm: %d  | Alu_op: %b  | load_instr: %b  | RegFile_load:  %d  | time: %3d  | reset: %d  | asserted: %d | CU_MUX_OUT: %b | mux signal: %b", PCO, MEM_A_O, DO_CU, ID_B_instr, ID_CU[9], S_M, ID_CU[8], ID_CU[7], ID_CU[6], ID_CU[5:2],ID_CU[1],ID_CU[0] ,$time, Reset, asserted, C_U_out, MUXControlUnit_signal );
     // $monitor("PC:%d | Instr -IF: %b | time:%d ", PCO, DO, $time);
     // $monitor("PC:%d | Instr -IF: %b | Instr -ID: %b | time:%d ", PCO, DO, DO_CU, $time);
+    // $monitor("PC: %d | C_U_out: %b | bl: %b | S: %b | MUXControlUnit_signal: %b | ID_CU: %b | S_M: %b", PCO, C_U_out, bl, S, MUXControlUnit_signal, ID_CU, S_M);
 
     /*------------------------------------------- ID_EX STAGE --------------------------------------------------------------------------*/
 
@@ -311,7 +315,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-    //    $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+       $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -323,7 +327,7 @@ initial begin
 /*------------------------------------------- FOR HAZARD UNIT --------------------------------------------------------------------------*/
 
     // $monitor("PC: %2d  |PA: %d  | PB: %d | PD: %d | A_O: %d | M_O: %d | PW: %d | MUX1: %d  | MUX2: %d | MUX3: %d | MUX1_S: %b | MUX2_S: %b | MUX3_S: %b | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  | EX_RF_E: %d  | MEM_RF_E: %d  | WB_RF_E: %d | Time: %0d  ", PCO, PA, PB, PD, A_O, M_O, PW, mux_out_1, mux_out_2, mux_out_3, MUX1_signal,MUX2_signal,MUX3_signal, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12, EX_RF_Enable, MEM_RF_Enable, WB_RF_Enable, $time);
-    // $monitor("PC: %3d  | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  |  MUX1_S: %b | MUX2_S: %b | Time: %0d  ", PCO, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12,  MUX1_signal,MUX2_signal, $time);
+    // $monitor("PC: %3d  | ID_B3_0: %d  | ID_B19_16: %d  | ID_Shift_imm: %d | EX_B15_12: %d  | MEM_B15_12: %d  | WB_B15_12: %d  |  MUX1_S: %b | MUX2_S: %b | MUXControlUnit_signal: %b | Time: %0d  ", PCO, ID_Bit3_0, ID_Bit19_16, ID_CU[6],EX_Bit15_12, MEM_Bit15_12, WB_Bit15_12,  MUX1_signal,MUX2_signal, MUXControlUnit_signal, $time);
 
 /*------------------------------------------- FOR ALU/SHIFT EXTENDER --------------------------------------------------------------------------*/
    
@@ -342,11 +346,13 @@ initial begin
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | PA: %d | PB: %d | A_O: %d | M_O: %d | PW: %d | MUX1: %3d  | ALU_a: %3d | MUX2: %3d | SSE_A/MUX_A: %3d | SSEout: %3d | MUXSSEALU: %3d |  MUXSSEALU_Sig: %b |  Shift_imm_ID: %b | MUX1_S: %b | MUX2_S: %b | Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, PA, PB, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT,EX_Shift_imm, ID_CU[6], MUX1_signal,MUX2_signal, EX_ALU_OP, $time);//, clk);
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | Ist_ID: %b |  Ist_EX: %b |  ALU_a: %d | MUX_A: %d | MUX_B: %d | SSE: %d | MUXSSEALU_Sig: %b |  MUXSSE_ALU_b: %d |  A_O: %d |  Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, DO_CU, EX_Bit11_0, mux_out_1_A, mux_out_2_B, EX_Bit11_0, SSE_out, EX_Shift_imm,  EX_MUX_2X1_OUT, A_O, EX_ALU_OP, $time);//, clk);
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | PA: %d | PB: %d | A_O: %d |Data Ram-mem: %d | M_O: %d | PW: %d | MUX1: %d  | ALU_a: %d | MUX2: %d | MUX1_S: %b | MUX2_S: %b | Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, PA, PB, A_O, Data_RAM_Out, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, MUX1_signal,MUX2_signal, EX_ALU_OP, $time);//, clk);
+// $monitor("PC: %d | ADDRS %d |  Ist_EX: %b | CC_stat Reg (N Z C V): %b | ALU_a: %d | ALU_b: %d | ALU_op: %b | A_O: %d | CC_alu_out (N Z C V): %b | S: %b ",PCO, MEM_A_O, EX_Bit11_0, cc_out, mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, A_O, cc_main_alu_out, S_M);
+// $monitor("PC: %d | ADDRS %d |  Ist_EX: %b | CC_stat Reg (N Z C V): %b | ALU_a: %d | ALU_b: %d | ALU_op: %b | A_O: %d | CC_alu_out (N Z C V): %b | S: %b ",PCO, MEM_A_O, EX_Bit11_0, cc_out, mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, A_O, cc_main_alu_out, EX_S_M);
 
 
  /*------------------------------------------- CONDITION ASSERTED --------------------------------------------------------------------------*/
     // $display (" N Z C V");
-    $monitor("PC: %d | Instr: %b | CC_IN: %b | cc_out: %b | S: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_main_alu_out, cc_out, S, ID_Bit31_28, asserted);
+    // $monitor("PC: %d | Instr: %b | CC_IN (N Z C V): %b | A_O: %d | cc_out - Sale de Stat Reg (N Z C V): %b | S: %b | ID_Bit31_28:%b | asserted: %b", PCO, DO_CU, cc_main_alu_out, A_O, cc_out, EX_S_M, ID_Bit31_28, asserted);
 
  /*------------------------------------------- REGISTER FILE --------------------------------------------------------------------------*/
     //  $monitor("PC: %d  |  DR-Address: %d  | ALU_EX: %d |  R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | RF_PA: %d | PA: %d  |  RF_PB: %d | PB: %d | PW: %d  | RD: %d | BL: %d | Time: %2d ", PCO, MEM_A_O, A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.muxA.P, PA, register_file_1.muxB.P,PB, PW, WB_Bit15_12, wb_bl, $time);
