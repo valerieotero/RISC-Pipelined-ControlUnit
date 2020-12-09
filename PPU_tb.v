@@ -386,7 +386,7 @@ end
 /*
  integer x=0; 
  initial begin
-    #348; //Profe said 82 was good time to print content
+    #108; //Profe said 82 was good time to print content
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
     for (x=0; x<256; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram

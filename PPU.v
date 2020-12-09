@@ -204,14 +204,12 @@ module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, inpu
     //Recordar que el registro se declara aquí y luego
     always @ (negedge clk)
     begin
-        // cc_out <= 4'b0000;
-        if(Reset)// && S == 0)
+
+        if(Reset)
             cc_out <= 4'b0000;
         // else begin
-            // cc_out
         if (S)
             cc_out <= cc_in;
-            // cch = cc_in;
         // end
         // $display("cc_out: %b | cc_in: %b", cc_out, cc_in);
     end
