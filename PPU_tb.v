@@ -64,7 +64,7 @@ wire [3:0] MEM_Bit15_12;
 wire [3:0] WB_Bit15_12; 
 
 //ID_EX
-wire [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
+wire signed [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
 wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, Carry, bl, ex_bl,mem_bl,wb_bl, S_M, EX_S_M;
 wire [3:0] EX_ALU_OP, cch;
 wire[7:0] EX_addresing_modes, ID_addresing_modes;
@@ -315,7 +315,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-       $monitor("PC: %3d  |  DR-Address: %d  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+    //    $monitor("PC: %3d  |  DR-Address: %d  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -345,6 +345,8 @@ initial begin
 //    $monitor("PC: %d  | ADDRS: %d | Ist_ID: %b | PA: %3d | PB: %3d | A_O: %d | M_O: %d | PW: %d | MUX1: %3d  | ALU_a: %3d | MUX2: %3d | SSE_A/MUX_A: %3d | SSEout: %3d | MUXSSEALU: %3d |  MUXSSEALU_Sig: %b |  Shift_imm_ID: %b | MUX1_S: %b | MUX2_S: %b | Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO_CU, PA, PB, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT,EX_Shift_imm, ID_CU[6], MUX1_signal,MUX2_signal, EX_ALU_OP, $time);//, clk);
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | PA: %d | PB: %d | A_O: %d | M_O: %d | PW: %d | MUX1: %3d  | ALU_a: %3d | MUX2: %3d | SSE_A/MUX_A: %3d | SSEout: %3d | MUXSSEALU: %3d |  MUXSSEALU_Sig: %b |  Shift_imm_ID: %b | MUX1_S: %b | MUX2_S: %b | Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, PA, PB, A_O, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, mux_out_2_B, SSE_out,EX_MUX_2X1_OUT,EX_Shift_imm, ID_CU[6], MUX1_signal,MUX2_signal, EX_ALU_OP, $time);//, clk);
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | Ist_ID: %b |  Ist_EX: %b |  ALU_a: %d | MUX_A: %d | MUX_B: %d | SSE: %d | MUXSSEALU_Sig: %b |  MUXSSE_ALU_b: %d |  A_O: %d |  Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, DO_CU, EX_Bit11_0, mux_out_1_A, mux_out_2_B, EX_Bit11_0, SSE_out, EX_Shift_imm,  EX_MUX_2X1_OUT, A_O, EX_ALU_OP, $time);//, clk);
+   $monitor("PC: %d  | ADDRS: %d | RD: %d | PW: %d | Ist_EX: %b | MUX1: %d  | ALU_a: %d | SSE_A: %d | SSE_B: %b | SSE: %d | MUXSSEALU_Sig: %b |  MUXSSE_ALU_b: %d |  A_O: %d |  Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, WB_Bit15_12, PW, EX_Bit11_0, mux_out_1, mux_out_1_A, mux_out_2_B, EX_Bit11_0, SSE_out, EX_Shift_imm,  EX_MUX_2X1_OUT, A_O, EX_ALU_OP, $time);//, clk);
+
 //    $monitor("PC: %d  | ADDRS: %d | Ist_IF: %b | PA: %d | PB: %d | A_O: %d |Data Ram-mem: %d | M_O: %d | PW: %d | MUX1: %d  | ALU_a: %d | MUX2: %d | MUX1_S: %b | MUX2_S: %b | Alu_op: %b |  Time: %0d  ", PCO, MEM_A_O, DO, PA, PB, A_O, Data_RAM_Out, M_O, PW, mux_out_1, mux_out_1_A, mux_out_2, MUX1_signal,MUX2_signal, EX_ALU_OP, $time);//, clk);
 // $monitor("PC: %d | ADDRS %d |  Ist_EX: %b | CC_stat Reg (N Z C V): %b | ALU_a: %d | ALU_b: %d | ALU_op: %b | A_O: %d | CC_alu_out (N Z C V): %b | S: %b ",PCO, MEM_A_O, EX_Bit11_0, cc_out, mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, A_O, cc_main_alu_out, S_M);
 // $monitor("PC: %d | ADDRS %d |  Ist_EX: %b | CC_stat Reg (N Z C V): %b | ALU_a: %d | ALU_b: %d | ALU_op: %b | A_O: %d | CC_alu_out (N Z C V): %b | S: %b ",PCO, MEM_A_O, EX_Bit11_0, cc_out, mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, A_O, cc_main_alu_out, EX_S_M);
@@ -383,7 +385,6 @@ initial begin
 end
 
 
-/*
  integer x=0; 
  initial begin
     #108; //Profe said 82 was good time to print content
@@ -394,7 +395,7 @@ end
         $display("Data en Address %0d = %b at time: %0d", x, data_ram.Mem[x], $time);
     
     end
- end */
+ end 
 
 
 endmodule
