@@ -202,7 +202,7 @@ endmodule
 //Status Register
 module Status_register(input [3:0] cc_in, input S, output reg [3:0] cc_out, input clk, Reset); //verify
     //Recordar que el registro se declara aquí y luego
-    always @ (negedge clk)
+    always @ (posedge clk)
     begin
 
         if(Reset)
@@ -452,13 +452,13 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg [3:0] EX_Bit15_12, output reg EX_Shift_imm, output reg [3:0]  EX_ALU_OP, output reg EX_load_instr, EX_RF_instr, 
                                output reg [31:0] EX_Bit11_0,
                                output reg [7:0] EX_addresing_modes,
-                               output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M,
+                               output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M, ex_asserted,
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
                                input [3:0] ID_Bit15_12, input [9:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
-                               input  clk, Reset, s_M);
+                               input  clk, Reset, s_M, asserted);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -483,6 +483,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
 
             EXBL <= 1'b0;
             ex_S_M  <= 1'b0;
+            ex_asserted <= 1'b0;
 
         end else begin
         //Control Unit signals  
@@ -505,6 +506,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
 
             EXBL <= ID_CU[9]; 
             ex_S_M <= s_M;
+            ex_asserted <= asserted;
         end
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
@@ -1268,9 +1270,9 @@ endmodule
 /*Creator: Ashley Ortiz Colon
 */
 
-module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
+module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
 
-    reg [32:0] OPS_result;
+    reg signed [32:0] OPS_result;
 
     integer tn = 0; 
     integer tz = 0; 
@@ -1291,7 +1293,8 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
     begin
 
         // mod_cond_codes = B[20];
-        // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+         $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+        //$display ("OPS:%b", OPS);
         case(OPS)
             //0
             4'b0000: //Logical AND
@@ -1306,6 +1309,7 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
             begin
                 OPS_result = A - B;  
                 ol = 1;
+                $display("A-B: ");
             end
       
 
@@ -1314,6 +1318,8 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
             begin
                 OPS_result = B - A;  
                 ol = 2;
+                $display("B-A: ");
+
             end
                      
             //4
@@ -1321,6 +1327,8 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
             begin
                 OPS_result = A + B;
                 ol = 3;
+                $display("A+B: ");
+
             end
             //5
             4'b0101: //Add w. Carry
@@ -1331,12 +1339,16 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
             begin
                 OPS_result = A - B -(~{31'b0,Cin});
                 ol = 1;
+                $display("A-B-CARRY: ");
+
             end 
             //7
             4'b0111: //Reverse Subtract w. Carr
             begin 
                 OPS_result = B - A -(~{31'b0,Cin}); 
                 ol = 2;
+                $display("B-A-CARRY: ");
+
             end
             
             //8
@@ -1351,13 +1363,19 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
 
             //10
             4'b1010: //Compare
-            OPS_result = A - B;  
+            begin
+                OPS_result = A - B;  
+                ol = 1;
+                $display("Compare: ");
+            end
 
             //11
             4'b1011: //Compare Negated
-            // begin
-            OPS_result = A + B;
-            // end
+            begin
+                OPS_result = A + B;
+                ol = 3;
+                $display("Neg Compare: ");
+            end
 
 
             //12
@@ -1376,26 +1394,30 @@ module alu(input [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S
             4'b1111: //Move Not
             OPS_result = ~B;
         endcase
-
+        $display("%d",OPS_result[31:0]);
         //for when result is zero
         tz = (OPS_result == 32'b0) ? 1:0;
     
         
         //for when result is negative
-        tn = (OPS_result[31] == 1'b1) ? 1:0;
+        tn = (OPS_result[31] == 1'b1 && OPS_result[32] == 1'b0) ? 1:0;
         
         //for Carry out
         tc = OPS_result[32];
 
         //for when result provokes overflow
         if(ol == 1) begin // subtract
-            if(A[31] != B[31]) begin
+            if(A[31] != B[31] && A[31]>B[31]) begin
                 if(OPS_result[31] == B[31])
                     tv = 1;
                 else
                     tv = 0;
-            end else
-                tv = 0;
+            end else if(A[31] != B[31] && A[31]<B[31]) begin
+                if(OPS_result[31] == B[31])
+                    tv = 1;
+                else
+                    tv = 0;
+            end
         end
 
         if(ol == 2) begin //revers sub
