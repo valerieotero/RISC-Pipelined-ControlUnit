@@ -115,8 +115,10 @@ wire [9:0] ID_CU;
     //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
     alu alu_1(PCO, 32'd4, 4'b0100, 4'b0, PC4, cc_alu_1);
 
-    mux_2x1_Stages mux_2x1_stages_1(PC4, TA, choose_ta_r_nop, PCIN);
+    mux_2x1_Stages mux_2x1_stages_1(PC4, MOV, choose_ta_r_nop, PCIN);
     // mux_2x1_Stages mux_2x1_stages_6(PCI, 32'b0, Reset, PCIN);
+    
+  mux_2x1_Stages  mux_2x1_stages_8( TA,RF_rm, TA_PP, MOV);
             
     // //IF/ID reg
     // //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
@@ -126,7 +128,7 @@ wire [9:0] ID_CU;
     IF_ID_pipeline_register IF_ID_pipeline_register(ID_Bit23_0, Next_PC,
                                 ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, //ID_Bit11_0,
                                 ID_Bit15_12, DO_CU,
-                                choose_ta_r_nop, IF_ID_Load, clk,Reset, asserted, PC4, DO);
+                                choose_ta_r_nop, IF_ID_Load, clk,Reset, asserted, PC4, DO, TA_PP);
          
     /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
     //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -191,7 +193,8 @@ ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_ou
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_Bit31_28, ID_CU,
                                 DO_CU, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr);    
-  
+
+
 // //MAIN ALU    
 // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
 alu alu_main(mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, cc_out, A_O, cc_main_alu_out);

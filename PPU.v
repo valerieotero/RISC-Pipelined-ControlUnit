@@ -396,7 +396,7 @@ endmodule
 module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID_Next_PC,
                                output reg [3:0] ID_Bit19_16, ID_Bit3_0, output reg [3:0] ID_Bit31_28, 
                                output reg[3:0] ID_Bit15_12, output reg [31:0] ID_Bit31_0,
-                               input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut);
+                               input choose_ta_r_nop, Hazard_Unit_Ld, clk, Reset,asserted, input [31:0] PC4, DataOut, output reg TA_PP);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -409,6 +409,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit19_16 <= 4'b0;
             ID_Bit15_12 <= 4'b0;
             ID_Bit23_0 <= 24'b0;
+            TA_PP<=1'b0;
 
         end else begin
             if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
@@ -420,7 +421,12 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 ID_Bit19_16 <=  4'b0000; 
                 ID_Bit15_12 <= 4'b1110;
                 ID_Bit23_0 <=  DataOut[23:0]; //
+                TA_PP <=  1'b0;
                 // $display("DOUT 31 28: %b", DataOut[31:28]);
+            end else if (DataOut[15:12] == 4'b1111) begin
+              TA_PP <=1'b1;
+
+
             end else begin
 
                 if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
@@ -431,6 +437,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                         ID_Bit19_16 <=  DataOut[19:16]; 
                         ID_Bit15_12 <= DataOut[15:12];
                         ID_Bit23_0 <= DataOut[23:0];
+
                         
                 end else begin // if(Hazard_Unit_Ld == 0 || asserted == 0|| choose_ta_r_nop == 1)begin
                         ID_Bit31_0 <= 32'b0;
@@ -440,6 +447,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                         ID_Bit19_16 <= 4'b0; 
                         ID_Bit15_12 <= 4'b0;
                         ID_Bit23_0 <= 24'b0;
+                        TA_PP <=  1'b0;
                 end
             end
 
