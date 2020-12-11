@@ -3,9 +3,9 @@
 //Description: Defines all the needed components (here modules) for the correct functionality of
 //a register file according to PF1 specifications.
 
-module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, CLK, RST);
+module register_file(PA, PB, PD, PW, PCin, PCout, R14out, C, SA, SB, SD, RFLd, HZPCld, CLK, RST);
     //Outputs
-    output [31:0] PA, PB, PD, PCout;
+    output [31:0] PA, PB, PD, PCout, R14out;
     output [31:0] MO; //output of the 2x1 multiplexer
     output [1:0] R15MO; //Output of mux used to select which input to charge PCin or PW
     //Inputs
@@ -51,6 +51,7 @@ module register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd, HZPCld, C
     register R14 (Q14, PW, E[14], CLK, RST);
     PCregister R15 (Q15, MO, HZPCld, CLK, RST);
     assign PCout = Q15;
+    assign R14out = Q14;
 
 endmodule
 
@@ -196,7 +197,7 @@ endmodule
 //    reg [31:0] PW, PCin;
 //
 //    //Outputs
-//    wire [31:0] PA, PB, PD, PCout;
+//    wire [31:0] PA, PB, PD, PCout, R14out;
 //
 //    initial RST = 1'b1;
 //
@@ -233,11 +234,11 @@ endmodule
 ////    without trailing zeroes, binary otherwise.
 //     always @ (CLK)
 //     begin
-//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCout: %3d | LD: %b |RFLD: %b | CLK: %b | Time: %d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCout, HZPCLd, RFLd, CLK, $time);
+//         $display("PC:%3d | PW:%3d | SA:%b | SB:%b | SD:%b | PA:%3d | PB:%3d | PD:%3d | C:%b | PCout: %3d | LD: %b |R14O: %d | Time: %d", PCin, PW, SA, SB, SD, PA, PB, PD, C, PCout, HZPCLd, R14out, $time);
 //         //$display("PC:%3d | PCout: %3d", PCin, PCout);
 //     end
 //
-//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
+//    register_file test (.PA(PA), .PB(PB), .PD(PD), .PW(PW), .PCin(PCin), .PCout(PCout), .R14out(R14out), .C(C), .SA(SA), .SB(SB), .SD(SD), .RFLd(RFLd), .HZPCld(HZPCLd), .CLK(CLK), .RST(RST));
 //    initial begin
 //    //$monitor("PC:%3d | PCout: %3d | PCLd:%b | RFLd:%3d | HZPCLd :%b", PCin, PCout, PCLd, RFLd, HZPCLd);
 //        //Initial values
