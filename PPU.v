@@ -37,7 +37,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
 
     begin
         // // $display("instruction %b", A);
-        if(Reset == 1'b1 || A  == 32'b0) begin // || asserted ==0) begin 
+        if(Reset == 1'b1 || A  == 32'b0 || asserted ==0) begin 
             s_imm = 0; 
             rf_instr = 0; 
             l_instr = 0; 
@@ -229,12 +229,14 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output 
 
     assign asserted = assrt;
 
+
     always@(*) //posedge clk)
     begin
         n = cc_in[3];
         z = cc_in[2];
         c = cc_in[1];
         v = cc_in[0];
+        // $display ("n: %b | z: %b | c: %b | v: %b " , cc_in[3], cc_in[2], cc_in[1], cc_in[0]);
         case(instr_condition)
             4'b0000: //(EQ) Equal
             begin
@@ -370,7 +372,9 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output 
             assrt = 0;
 
         endcase
-        // $display("condition arsserted %b", assrt);
+
+        
+        // $display("condition arsserted: %b | cond Instr: %b", assrt, instr_condition);
     end
 
 endmodule
@@ -379,7 +383,7 @@ endmodule
 module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
     always@(*)
     begin
-        if(asserted == 1 && b_instr == 1)
+        if(asserted == 1 && b_instr == 1 ) //|| ex_asserted ==1 && ex_b_instr == 1)
             choose_ta_r_nop = 1;
         else
             choose_ta_r_nop = 0; 
@@ -409,13 +413,13 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
         end else begin
             if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
             //     // DataOut = 32'b11100001101000001110000000001111; 
-                ID_Bit31_0 <= {DataOut[31:28], 28'b0001101000001110000000001111};
+                ID_Bit31_0 <= DataOut;//{DataOut[31:28], 28'b0001101000001110000000001111};
                 ID_Next_PC <= PC4;
                 ID_Bit3_0 <=  4'b1111; 
                 ID_Bit31_28 <= DataOut[31:28];
                 ID_Bit19_16 <=  4'b0000; 
                 ID_Bit15_12 <= 4'b1110;
-                ID_Bit23_0 <= 24'b101000001110000000001111; // DataOut[23:0]; //
+                ID_Bit23_0 <=  DataOut[23:0]; //
                 // $display("DOUT 31 28: %b", DataOut[31:28]);
             end else begin
 
@@ -449,16 +453,16 @@ endmodule
 
 //ID/EX PIPELINE REGISTER
 module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C,
-                               output reg [3:0] EX_Bit15_12, output reg EX_Shift_imm, output reg [3:0]  EX_ALU_OP, output reg EX_load_instr, EX_RF_instr, 
+                               output reg [3:0] EX_Bit15_12, EX_Bit31_28, output reg EX_Shift_imm, output reg [3:0]  EX_ALU_OP, output reg EX_load_instr, EX_RF_instr, 
                                output reg [31:0] EX_Bit11_0,
                                output reg [7:0] EX_addresing_modes,
-                               output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M, ex_asserted,
+                               output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M, ex_asserted, ex_b_instr,
 
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
-                               input [3:0] ID_Bit15_12, input [9:0] ID_CU, 
+                               input [3:0] ID_Bit15_12, ID_Bit31_28, input [9:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
-                               input  clk, Reset, s_M, asserted);
+                               input  clk, Reset, s_M, asserted, b_instr);
 
     always@(posedge clk, posedge Reset)
     begin
@@ -484,6 +488,8 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EXBL <= 1'b0;
             ex_S_M  <= 1'b0;
             ex_asserted <= 1'b0;
+            EX_Bit31_28 <= 4'b0;
+            ex_b_instr <= 1'b0;
 
         end else begin
         //Control Unit signals  
@@ -507,6 +513,8 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EXBL <= ID_CU[9]; 
             ex_S_M <= s_M;
             ex_asserted <= asserted;
+            EX_Bit31_28 <= ID_Bit31_28;
+            ex_b_instr <= b_instr;
         end
     //  $display("ID_EX reg");
     //  $display("ID_shift_imm = %b | ID_alu= %b | ID_load = %b | ID_RF= %b", ID_CU[6], ID_CU[5:2], ID_CU[1], ID_CU[0]);     
@@ -1270,7 +1278,7 @@ endmodule
 /*Creator: Ashley Ortiz Colon
 */
 
-module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
+module alu(input signed [31:0] A, B, input [3:0] OPS, input [3:0] ccCin, output signed [31:0] S, output [3:0] Alu_Out); // N, Z, C, V);
 
     reg signed [32:0] OPS_result;
 
@@ -1279,6 +1287,9 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
     integer tc = 0; 
     integer tv = 0; 
     integer ol = 0;
+    integer Cin =0;
+
+
 
     assign Alu_Out[3] = tn; //Negative
     assign Alu_Out[2] = tz; //Zero 
@@ -1291,9 +1302,9 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
    
     always@(*)
     begin
-
+        Cin = ccCin[1];
         // mod_cond_codes = B[20];
-         $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+        // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
         //$display ("OPS:%b", OPS);
         case(OPS)
             //0
@@ -1308,8 +1319,19 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
             4'b0010: //Subtract
             begin
                 OPS_result = A - B;  
-                ol = 1;
-                $display("A-B: ");
+                 if(A[31] != B[31])begin
+                    if( A[31] == 0  && B[31] == 1 && OPS_result[31]== B[31]) 
+                    // if(OPS_result[31] ==A[31])
+                        tv = 1;
+                    else if(A[31] == 1 && B[31] == 0 && OPS_result[31] ==B[31])// || OPS_result[31] == A[31]))
+                        tv = 1;
+                    else
+                        tv = 0;
+           
+                end //else
+                // tv= (A[31] & !B[31] & !OPS_result[31]) | (!A[31] & B[31] & OPS_result[31]);
+                // ol = 1;
+             //   $display("A-B: ");
             end
       
 
@@ -1317,8 +1339,22 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
             4'b0011: //Reverse Subtract
             begin
                 OPS_result = B - A;  
-                ol = 2;
-                $display("B-A: ");
+                    if(A[31] != B[31])begin
+
+                        if( B[31] == 0 && A[31] == 1 && OPS_result[31] == A[31])
+                            tv = 1;
+                            // else
+                            //     tv = 1;
+                        else if(B[31] == 1 && A[31] == 0 && OPS_result[31]== A[31])
+                            // if(OPS_result[31] == A[31])
+                                tv = 1;
+                        else
+                                tv = 0;
+                    end
+            // tv=0;
+                tv=	(!A[31] & B[31] & !OPS_result[31]) | (A[31] & !B[31] & OPS_result[31]);
+                // ol = 2;
+              //  $display("B-A: ");
 
             end
                      
@@ -1326,28 +1362,73 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
             4'b0100: //Add
             begin
                 OPS_result = A + B;
-                ol = 3;
-                $display("A+B: ");
+                 if(A[31] == B[31])begin
+                    if(A[31] != OPS_result[31])
+                        tv = 1;
+                    else 
+                        tv = 0;
+                //else
+                end else  tv = 0;
+
+                //    tv = (A[31] & B[31] & !OPS_result[31]) | (!A[31] & !B[31] & OPS_result[31]);
+                // ol = 3;
+              //  $display("A+B: ");
 
             end
             //5
             4'b0101: //Add w. Carry
-            OPS_result = A + B + Cin;
+            begin
+                OPS_result = A + B + Cin;
+                 if(A[31] == B[31])begin
+                    if(A[31] != OPS_result[31])
+                        tv = 1;
+                    else 
+                        tv = 0;
+                //else
+                end else  tv = 0;
+
+                // tv = (A[31] & B[31] & !OPS_result[31]) | (!A[31] & !B[31] & OPS_result[31]);
+                // ol = 3;
+            end
 
             //6
             4'b0110: //Subtract w. Carry
             begin
-                OPS_result = A - B -(~{31'b0,Cin});
-                ol = 1;
-                $display("A-B-CARRY: ");
+                OPS_result = A - B - !Cin; //(~{31'b0,Cin});
+                 if(A[31] != B[31])begin
+                    if( A[31] == 0  && B[31] == 1 && OPS_result[31]== B[31]) 
+                    // if(OPS_result[31] ==A[31])
+                        tv = 1;
+                    else if(A[31] == 1 && B[31] == 0 && OPS_result[31] ==B[31])// || OPS_result[31] == A[31]))
+                        tv = 1;
+                    else
+                        tv = 0;
+           
+                end //else
+                //  tv= (A[31] & !B[31] & !OPS_result[31]) | (!A[31] & B[31] & OPS_result[31]);
+                // ol = 4;
+              //  $display("A-B-CARRY: ");
 
             end 
             //7
             4'b0111: //Reverse Subtract w. Carr
             begin 
-                OPS_result = B - A -(~{31'b0,Cin}); 
-                ol = 2;
-                $display("B-A-CARRY: ");
+                OPS_result = B - A - !Cin; //(~{31'b0,Cin}); 
+                    if(A[31] != B[31])begin
+
+                        if( B[31] == 0 && A[31] == 1 && OPS_result[31] == A[31])
+                            tv = 1;
+                         
+                        else if(B[31] == 1 && A[31] == 0 && OPS_result[31]== A[31])
+                            // if(OPS_result[31] == A[31])
+                                tv = 1;
+                        else
+                                tv = 0;
+                    end
+            // tv=0;
+                // tv=	(!A[31] & B[31] & !OPS_result[31]) | (A[31] & !B[31] & OPS_result[31]);
+                // ol = 5;
+               // $display("B-A-CARRY: ");
 
             end
             
@@ -1365,16 +1446,40 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
             4'b1010: //Compare
             begin
                 OPS_result = A - B;  
-                ol = 1;
-                $display("Compare: ");
+               /* if(A[31] != B[31])begin
+                    if( A[31] == 0  && B[31] == 1 && OPS_result[31]== B[31]) 
+                    // if(OPS_result[31] ==A[31])
+                        tv = 1;
+                    else if(A[31] == 1 && B[31] == 0 && OPS_result[31] ==B[31])// || OPS_result[31] == A[31]))
+                        tv = 1;
+                    else
+                        tv = 0;
+           
+                end *///else
+               tv = (OPS_result[32]);//  != OPS_result[32]) ? 1:0;
+            //     tv=0;
+                // tv = (A[31] & !B[31] & !OPS_result[31]) | (!A[31] & B[31] & OPS_result[31]);
+                // ol = 1;
+               // $display("Compare: ");
             end
 
             //11
             4'b1011: //Compare Negated
             begin
                 OPS_result = A + B;
-                ol = 3;
-                $display("Neg Compare: ");
+              /*  if(A[31] == B[31])begin
+                    if(A[31] != OPS_result[31])
+                        tv = 1;
+                    else 
+                        tv = 0;
+                //else
+                end else  tv = 0;*/
+
+                // tv = (OPS_result[31]  != OPS_result[32])? 1:0;
+
+                tv = OPS_result[32]; // ^Cin ^ ;// !(A[31] ^ B[31]) && (B[31] ^ OPS_result[31]) ;// Cin ^ (OPS_result[32]); // == 1'b1) ; //&& (A[31] & B[31] & !OPS_result[31]) | (!A[31] & !B[31] & OPS_result[31]) ? 1:0; //(;
+               // ol = 3;
+            //    $display("Neg Compare: ");
             end
 
 
@@ -1394,56 +1499,89 @@ module alu(input signed [31:0] A, B, input [3:0] OPS, input Cin, output signed [
             4'b1111: //Move Not
             OPS_result = ~B;
         endcase
-        $display("%d",OPS_result[31:0]);
+       // $display("%d",OPS_result[31:0]);
         //for when result is zero
         tz = (OPS_result == 32'b0) ? 1:0;
     
         
         //for when result is negative
-        tn = (OPS_result[31] == 1'b1 && OPS_result[32] == 1'b0) ? 1:0;
+        tn = (OPS_result[31] == 1'b1) ? 1:0;
         
         //for Carry out
         tc = OPS_result[32];
+    
 
         //for when result provokes overflow
-        if(ol == 1) begin // subtract
-            if(A[31] != B[31] && A[31]>B[31]) begin
-                if(OPS_result[31] == B[31])
-                    tv = 1;
-                else
-                    tv = 0;
-            end else if(A[31] != B[31] && A[31]<B[31]) begin
-                if(OPS_result[31] == B[31])
-                    tv = 1;
-                else
-                    tv = 0;
-            end
-        end
+        // if(ol == 1) begin // subtract
+        //     // if(A[31] != B[31])begin
+        //         if( A[31] == 0  && B[31] == 1 && OPS_result[31]== B[31]) 
+        //         // if(OPS_result[31] ==A[31])
+        //             tv = 1;
+        //         //else
+        //         //tv = 0;
 
-        if(ol == 2) begin //revers sub
-            if(B[31] != A[31]) begin
-                if(OPS_result[31] == A[31])
-                    tv = 1;
-                else
-                    tv = 0;
-            end else
-                tv = 0;
-        end
+        //         else if(A[31] == 1 && B[31] == 0 && OPS_result[31] ==B[31])// || OPS_result[31] == A[31]))
+        //             tv = 1;
+        //         else
+        //             tv = 0;
+           
+        //     // end //else
+        //     //     tv=0;
+            
+        // end
 
-        if(ol ==3)begin // addition
-            if(A[31] == B[31])begin
-                if(A[31] != OPS_result[31])
-                    tv = 1;
-                else 
-                    tv = 0;
-            end else
-                tv = 0;
 
-        end
+        // if(ol == 2) begin //revers sub
+        //     // if(A[31] != B[31])begin
 
-        // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+        //         if( B[31] == 0 && A[31] == 1 && OPS_result[31] == A[31])
+        //             tv = 1;
+        //             // else
+        //             //     tv = 1;
+        //         else if(B[31] == 1 && A[31] == 0 && OPS_result[31]== A[31])
+        //             // if(OPS_result[31] == A[31])
+        //                 tv = 1;
+        //         else
+        //                 tv = 0;
+        //     // end
+        //     // tv=0;
+        // end
 
-        // $monitor("alu result:", OPS_result);
+        // if(ol ==3)begin // addition
+        //     if(A[31] == B[31])begin
+        //         if(A[31] != OPS_result[31])
+        //             tv = 1;
+        //         else 
+        //             tv = 0;
+        //      //else
+        //     end else  tv = 0;
+
+        // end
+
+        // if(ol == 4) begin
+        //     if((A + Cin) < (B + 1'b1 ) && OPS_result[31] == 1)
+        //         tv = 0;
+        //     else if((A+Cin) >= (B + 1'b1 ) && (OPS_result[31] == 0 || OPS_result[31] == A[31]))
+        //         tv = 0;
+        //     else
+        //         tv = 1;
+        // end 
+        // if(ol == 5) begin
+        //     if((B + Cin) < (A+ 1'b1 ) && OPS_result[31] == 1)
+        //         tv = 0;
+        //     else if((B+Cin) >= (A + 1'b1) && (OPS_result[31] == 0 || OPS_result[31] == B[31]))
+        //         tv = 0;
+        //     else
+        //         tv = 1;
+        // end
+        
+        
+        //     // tv = 0;
+        //     // ol = 0;
+
+        // // $display ("A: %d | B: %d | OPS:%b", A, B, OPS);
+
+        // // $monitor("alu result:", OPS_result);
     end
 
 endmodule
