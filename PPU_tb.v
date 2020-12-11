@@ -393,7 +393,7 @@ initial begin
 //    $monitor(" PD: %d | A_O: %d | M_O = %d | PW: %d | MUX3_signal: %b | ID MUX_3: %d | EX_MUX3: %d | DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", PD, A_O, M_O, PW, MUX3_signal, mux_out_3, mux_out_3_C, MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 //   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
  /*--------------------------------- NEW MUX -----------------------------------*/
- $monitor("PC: %d | TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d;",PCO, TA,RF_rm, TA_PP, MOV);
+ $monitor("PC: %d | TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d",PCO, TA,RF_rm, TA_PP, MOV);
 end
 
 
