@@ -20,8 +20,8 @@ wire [3:0] ID_Bit19_16, ID_Bit3_0;
 wire [3:0] ID_Bit31_28, cc_alu_1;
 wire [3:0] ID_Bit15_12, cc_main_alu_out;
 wire [31:0] ID_Bit11_0;
-wire [31:0] EX_Bit11_0,  PCIN;
-wire choose_ta_r_nop;
+wire [31:0] EX_Bit11_0,  PCIN, MOV, RF_rm;
+wire choose_ta_r_nop,  TA_PP;
 wire signed [31:0] EX_MUX_2X1_OUT;
 wire IF_ID_Load; // = 1; // load pipeline viene de hazard unit
             
@@ -160,7 +160,7 @@ wire [9:0] ID_CU;
     // input RFLd, PCLd, CLK;
     
     //    register_file(PA, PB, PD, PW, PCin, PCout,      C,            SA,         SB,     SD, RFLd,   HZPCld,  CLK,  RST);
-    register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, WB_Bit15_12, ID_Bit19_16, ID_Bit3_0, WB_RF_Enable,  PC_RF_ld ,clk,  Reset, wb_bl); //falta RW = WB_Bit15_12_out
+    register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, RF_rm,  WB_Bit15_12, ID_Bit19_16, ID_Bit3_0, WB_RF_Enable,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
 
     // //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output [31:0] MUX_Out);
     // //MUX1
@@ -324,7 +324,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-       $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+    //    $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -392,7 +392,8 @@ initial begin
 
 //    $monitor(" PD: %d | A_O: %d | M_O = %d | PW: %d | MUX3_signal: %b | ID MUX_3: %d | EX_MUX3: %d | DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", PD, A_O, M_O, PW, MUX3_signal, mux_out_3, mux_out_3_C, MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 //   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
-
+ /*--------------------------------- NEW MUX -----------------------------------*/
+ $monitor("PC: %d | TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d;",PCO, TA,RF_rm, TA_PP, MOV);
 end
 
 
