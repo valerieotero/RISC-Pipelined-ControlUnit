@@ -118,7 +118,7 @@ wire [9:0] ID_CU;
     mux_2x1_Stages mux_2x1_stages_1(PC4, MOV, choose_ta_r_nop, PCIN);
     // mux_2x1_Stages mux_2x1_stages_6(PCI, 32'b0, Reset, PCIN);
     
-  mux_2x1_Stages  mux_2x1_stages_8( TA,{28'b0, ID_Bit3_0}, TA_PP, MOV);
+  mux_2x1_Stages  mux_2x1_stages_8( TA,mux_out_2, TA_PP, MOV);
             
     // //IF/ID reg
     // //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
@@ -324,7 +324,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-       $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+        $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -393,7 +393,7 @@ initial begin
 //    $monitor(" PD: %d | A_O: %d | M_O = %d | PW: %d | MUX3_signal: %b | ID MUX_3: %d | EX_MUX3: %d | DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", PD, A_O, M_O, PW, MUX3_signal, mux_out_3, mux_out_3_C, MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
 //   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
  /*--------------------------------- NEW MUX -----------------------------------*/
- //$monitor("PC: %d | TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d",PCO, TA,RF_rm, TA_PP, MOV);
+ //$monitor("PC: %d | Puerto B: % TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d",PCO, TA,RF_rm, TA_PP, MOV);
 end
 
 
