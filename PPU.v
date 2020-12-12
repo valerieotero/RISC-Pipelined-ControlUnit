@@ -380,13 +380,17 @@ module Cond_Is_Asserted (input [3:0] cc_in, input [3:0] instr_condition, output 
 endmodule
 
 //conition handler (output condition asserted, branch)
-module Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
+module Condition_Handler(input asserted, b_instr,TA_PP, output reg choose_ta_r_nop);
     always@(*)
     begin
-        if(asserted == 1 && b_instr == 1 ) //|| ex_asserted ==1 && ex_b_instr == 1)
+        if(TA_PP)
             choose_ta_r_nop = 1;
-        else
-            choose_ta_r_nop = 0; 
+        else begin
+            if(asserted == 1 && b_instr == 1 ) //|| ex_asserted ==1 && ex_b_instr == 1)
+                choose_ta_r_nop = 1;
+            else
+                choose_ta_r_nop = 0; 
+        end
     end
 
 endmodule
