@@ -65,17 +65,17 @@ wire [3:0] MEM_Bit15_12;
 wire [3:0] WB_Bit15_12; 
 
 //ID_EX
-wire signed [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out;
-wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, Carry, bl, ex_bl,mem_bl,wb_bl, S_M, EX_S_M, ex_asserted;
+wire signed [31:0] mux_out_1_A, mux_out_2_B, mux_out_3_C, SSE_out, SSEI, SSEIst, FMOV;
+wire EX_Shift_imm, EX_RF_Enable, EX_mem_size, EX_mem_read_write, ID_mem_size, ID_mem_read_write, Carry, bl, ex_bl,mem_bl,wb_bl, S_M, EX_S_M, ex_asserted,REPLACEMENT;
 wire [3:0] EX_ALU_OP, cch;
 wire[7:0] EX_addresing_modes, ID_addresing_modes;
 wire [8:0] C_U_out, NOP_S;// = 0010001;
-wire [9:0] ID_CU;
+wire [8:0] ID_CU;
 wire reg [31:0] ID_Next_PC;
 wire reg [31:0] EX_Next_PC;
 wire reg [31:0] old_A0;
-wire reg [3:0] R14_CU_OUT;
-wire reg [3:0] RW;
+wire reg R14_CU_OUT;
+wire reg [3:0] RW,  Rm, RM1;
 
 
 /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
@@ -119,12 +119,11 @@ wire reg [3:0] RW;
     //para conseguir PC+4
     //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
     alu alu_1(PCO, 32'd4, 4'b0100, 4'b0, PC4, cc_alu_1);
-
+    mux_2x1_Stages   mux_2x1__stages_10(TA, mux_out_2,  REPLACEMENT, MOV );
     mux_2x1_Stages mux_2x1_stages_1(PC4, MOV, choose_ta_r_nop, PCIN);
     // mux_2x1_Stages mux_2x1_stages_6(PCI, 32'b0, Reset, PCIN);
     
-  mux_2x1_Stages  mux_2x1_stages_8( TA,mux_out_2, TA_PP, MOV);
-            
+         //escoge new TA   
     // //IF/ID reg
     // //IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, ID_Next_PC, output reg S,
     // //                           output reg[3:0] ID_Bit19_16, ID_Bit3_0, ID_Bit31_28, output reg[11:0] ID_Bit11_0,
@@ -138,10 +137,10 @@ wire reg [3:0] RW;
     /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
     //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-    control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU, R14_CU_OUT);
+    control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU, R14_CU_OUT, RM1,SSEI );
 
     // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
-    mux_2x1_ID mux_2x1_ID(C_U_out, bl, S, MUXControlUnit_signal, ID_CU, S_M);
+    mux_2x1_ID mux_2x1_ID(C_U_out, bl, S,R14_CU_OUT,  SSEI,RM1,  MUXControlUnit_signal, ID_CU,ID_bl, S_M, REPLACEMENT, SSEIst, Rm); 
     // //ID_Stage
          //Status_register Status_register(cc_main_alu_out, S_M, cc_out, clk, Reset);
 
@@ -154,6 +153,8 @@ wire reg [3:0] RW;
     // //para conseguir TA
     //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] Alu_Out);
     alu alu_2(SEx4_out, Next_PC, 4'b0100, 4'b0, TA, cc_alu_2);
+
+    
    
     // este es el general RF
     // // register_file(PA, PB, PD, PW, PCin, PCout, C, SA, SB, SD, RFLd //hazaerd unit, PCLd, CLK);
@@ -192,20 +193,21 @@ wire reg [3:0] RW;
     // //                            input [7:0] ID_addresing_modes_in,
     // //                            input ID_branch_instr_in, 
     // //                            ID_mem_size_in, ID_mem_read_write_in, input clk);    
+mux_2x1_Stages  mux_2x1_stages_20(DO_CU, SSEIst, ID_bl, FMOV);
 
 ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_out_3_C,
                                 EX_Bit15_12, EX_Bit31_28, EX_Shift_imm, EX_ALU_OP, EX_load_instr, EX_RF_Enable,
                                 EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write, ex_bl, EX_S_M, ex_asserted,EX_B_instr,
 
-                                mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_Bit31_28, ID_CU,
-                                DO_CU, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr,
+                                mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_Bit31_28, ID_CU, ID_bl,
+                                FMOV, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr,
                                 Next_PC,
                                 EX_Next_PC);    
 
                        //input [31:0] A,       B,      input sig,   output [31:0] MUX_Out);
- mux_2x1_Reg   mux_2x1_Reg1(WB_Bit15_12,  R14_CU_OUT,     bl,           RW );
+ mux_2x1_Reg   mux_2x1_Reg2(WB_Bit15_12,  Rm,     ID_bl,           RW ); // manejar rm for bl 
 
-mux_2x1_Stages  mux_2x1_stages_alu(old_A0, EX_Next_PC, bl, A_O);
+mux_2x1_Stages  mux_2x1_stages_alu(old_A0, EX_Next_PC, ex_bl, A_O); // maneja alu out con next pc en EX
 
 // //MAIN ALU    
 // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
@@ -223,7 +225,7 @@ mux_2x1_Stages  mux_2x1_stages_2(mux_out_2_B, SSE_out, EX_Shift_imm, EX_MUX_2X1_
 Cond_Is_Asserted Cond_Is_Assert2 (cc_out, EX_Bit31_28,  asserted);
 
 // //Condition_Handler(input asserted, b_instr, output reg choose_ta_r_nop);
-Condition_Handler Condition_Hand (asserted, ID_B_instr,TA_PP, choose_ta_r_nop);
+Condition_Handler Condition_Hand (asserted, ID_B_instr,ID_bl, choose_ta_r_nop);
 
 // Condition_Handler Condition_Hand2 (ex_asserted, ex_bl, choose_ta_r_nop);
 
@@ -267,7 +269,7 @@ hazard_unit h_u(MUX1_signal, MUX2_signal, MUX3_signal, MUXControlUnit_signal,   
     
 /*--------------------------------------  Toggle Clock  --------------------------------------*/
   
-    initial #110 $finish;  //finish simulation on tick 90 (If commented, simulation will enter infinite loop)
+    initial #60 $finish;  //finish simulation on tick 90 (If commented, simulation will enter infinite loop)
 
     initial begin
 
@@ -336,7 +338,7 @@ initial begin
         // $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
         // $monitor("PC: %4d  |  DR-Address: %b  | RD: %d | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R8: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %3d ", PCO, MEM_A_O, WB_Bit15_12, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R8.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
     //    $monitor("PC: %d  |  DR-Address: %b  | R1: %d  |  R2: %d  | R3: %d  | R5: %d  | R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R5.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
-        $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
+         $monitor("PC: %3d  |  DR-Address: %b  | R0: %d  | R1: %d  |  R2: %d  | R3: %d  | R4: %d  | R5: %d  | R10: %d  | R11: %d  |  R12: %d  |R15: %d  | R14: %d  | Time: %2d ", PCO, MEM_A_O, register_file_1.R0.Q, register_file_1.R1.Q, register_file_1.R2.Q, register_file_1.R3.Q, register_file_1.R4.Q, register_file_1.R5.Q,register_file_1.R10.Q,register_file_1.R11.Q,register_file_1.R12.Q, register_file_1.R15.Q, register_file_1.R14.Q, $time);
 
 
 /*------------------------------------------- FOR REGISTERS AND LOAD SIGNALS--------------------------------------------------------------------------*/
@@ -408,12 +410,14 @@ initial begin
  //$monitor("PC: %d | Puerto B: % TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d",PCO, TA,RF_rm, TA_PP, MOV);
     // $monitor("PC: %d | old_A0: %d | EX_Next_PC: %d | bl: %d | A_O: %d",PCO, old_A0, EX_Next_PC, bl, A_O); 
     //  $monitor("PC: %d | old_A0: %d | EX_Next_PC: %d | bl: %d | A_O: %d| RD_WB: %d | R14CU: %d | bl: %d | RW: %d",PCO, old_A0, EX_Next_PC, bl, A_O, WB_Bit15_12,  R14_CU_OUT,bl, RW );
+        // $monitor("PC: %d | TA: %d | mux_out_2: %d | REPLACEMENT: %d | MOV: %d", PCO, TA, mux_out_2,  REPLACEMENT, MOV );
+
 end
 
 
  integer x=0; 
  initial begin
-    #108; //Profe said 82 was good time to print content
+    #59; //Profe said 82 was good time to print content
     $display("\n\n--------------------------------------  Data Ram Content After Simulation  --------------------------------------\n");  
 
     for (x=0; x<256; x = x +1) //256 because its the total amount of localizations. So prof can literally see all the content of the ram

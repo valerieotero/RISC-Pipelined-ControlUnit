@@ -4,7 +4,7 @@
 
 
 //CONTROL UNIT
-module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A, output [3:0] R14_CU_OUT); 
+module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A, output R14_CU_OUT, output [3:0] Rm, output [31:0] SSEI); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -16,11 +16,14 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
     reg b_instr = 0; 
     reg m_rw = 0;
     reg m_size = 0;
+    reg incon = 0;
+    reg [31:0] ssi;
 
-    reg [3:0] alu_op, rcu;
+    reg [3:0] alu_op, rm_new ;
     reg b_bl =0; // branch or branch & link
     reg r_sr_off; // register or Scaled register offset
     reg u;
+    reg rcu = 0;
 
     assign C_U_out[6] = s_imm;
     assign C_U_out[0] = rf_instr;
@@ -32,6 +35,8 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
     assign BL = b_bl;
     assign S = change;
     assign R14_CU_OUT = rcu;
+    assign Rm = rm_new;
+    assign SSEI = ssi;
 
     always@(*)
    
@@ -49,7 +54,11 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
             change = 0;
             b_bl=0;
         end else begin 
-            instr = A[27:25];
+            if(A[15:12] == 4'b1111) begin
+                instr = 3'b101;
+                incon = 1;
+            end  else
+               instr = A[27:25];
               
             case(instr)
 
@@ -182,12 +191,27 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                             alu_op = 4'b0100; //suma
                             m_rw = 0;
                             m_size = 0;
-
-                            rcu = 4'b1110;
-
+                            ssi = 32'b11100001101000001110000000001111; // 
+                            rm_new = 4'b1110; // r14
 
 
                         end
+
+                        if(incon == 1) begin// when instrc rd is 15 
+                            rcu = 1'b1; //decide escoger Rm for when RD = 15
+//                            rm_new = 4'b1110; // r14
+                            //ssi = 32'b11100001101000001110000000001111;
+
+
+
+
+                        end else begin
+                            rcu = 1'b0; 
+                          //  rm_new = 4'b1110; // r14
+                            alu_op = 4'b1101;
+
+                        end
+                        
                     // end
                 end
                 
@@ -458,7 +482,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
 
 
             end */
-             else begin
+            else begin
 
                 if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
                         ID_Bit31_0 <= DataOut;
@@ -482,7 +506,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
                 end
             end
 
-        end
+    end
     //    $monitor("PC4: %d | instr:%b | asserted:%b ", PC4, ID_Bit31_0, asserted);
         // $monitor(" EX_alu_op: %b, ID_alu_op: %b,  ID_instr: %b, ex  instr: %b",  ID_CU[5:2], EX_ALU_OP, ID_Bit11_0, EX_Bit11_0);
 
@@ -498,7 +522,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M, ex_asserted, ex_b_instr,
                                
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
-                               input [3:0] ID_Bit15_12, ID_Bit31_28, input [9:0] ID_CU, 
+                               input [3:0] ID_Bit15_12, ID_Bit31_28, input [8:0] ID_CU, input  id_bl,
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
                                input  clk, Reset, s_M, asserted, b_instr,
@@ -553,7 +577,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_Bit11_0 <= ID_Bit11_0; // {20'b0, ID_Bit11_0};
             EX_addresing_modes <= ID_addresing_modes; //22-20
 
-            EXBL <= ID_CU[9]; 
+            EXBL <= id_bl; 
             ex_S_M <= s_M;
             ex_asserted <= asserted;
             EX_Bit31_28 <= ID_Bit31_28;
@@ -741,12 +765,19 @@ module mux_4x2_ID(input [31:0] A_O, PW, M_O, X, input [1:0] HF_U, output [31:0] 
 endmodule
 
 //Multiplexer control Unit
-module mux_2x1_ID(input [8:0] C_U, input BL,S, input HF_U, output [9:0] MUX_Out, output S_M);
-    reg [9:0] salida;
+module mux_2x1_ID(input [8:0] C_U, input BL,S,input  R14m, input [31:0] ssei, input [3:0] Rm, input HF_U, output [8:0] MUX_Out, output id_bl, S_M, output replacement, output [31:0] id_ssei, output [3:0] newrm);
+    reg [8:0] salida;
     reg change;
+    reg nbl;
+    reg [3:0] newrd, nrm;
+    reg [31:0]  ss;
 
     assign MUX_Out = salida;
     assign S_M = change;
+    assign id_bl = nbl;
+    assign replacement = newrd;
+    assign id_ssei = ss;
+    assign newrm = nrm;
 
     always@(*)
     begin
@@ -755,12 +786,20 @@ module mux_2x1_ID(input [8:0] C_U, input BL,S, input HF_U, output [9:0] MUX_Out,
             begin
                 salida = 10'b0;
                 change = 1'b0;
+                nbl =  1'b0;
+                newrd  =  4'b0;
+                ss=32'b0;
+                nrm = 4'b0;
             end
 
             1'b1://Control Unit
             begin
-                salida = {BL, C_U};
+                salida = C_U;
                 change = S;
+                nbl =  BL;
+                newrd  =  R14m;
+                ss= ssei;
+                nrm= Rm;
             end
         endcase
         // $display("CU MEX OUT %b ", salida );//
