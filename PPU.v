@@ -4,7 +4,7 @@
 
 
 //CONTROL UNIT
-module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A, output [31:0] R14_CU_OUT); 
+module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A, output [3:0] R14_CU_OUT); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -17,7 +17,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
     reg m_rw = 0;
     reg m_size = 0;
 
-    reg [3:0] alu_op;
+    reg [3:0] alu_op, rcu;
     reg b_bl =0; // branch or branch & link
     reg r_sr_off; // register or Scaled register offset
     reg u;
@@ -31,6 +31,7 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
     assign C_U_out[8]  = m_size;
     assign BL = b_bl;
     assign S = change;
+    assign R14_CU_OUT = rcu;
 
     always@(*)
    
@@ -181,6 +182,10 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                             alu_op = 4'b0100; //suma
                             m_rw = 0;
                             m_size = 0;
+
+                            rcu = 4'b1110;
+
+
 
                         end
                     // end
@@ -769,6 +774,26 @@ cambiar las asignaturas segun lo que se necesite)
 */
 module mux_2x1_Stages(input [31:0] A, B, input sig, output [31:0] MUX_Out);
     reg [31:0] salida;
+
+    assign MUX_Out = salida;
+
+    always@(*)
+    begin
+        
+        case(sig)
+            1'b0: 
+            salida = A;
+
+            1'b1:
+            salida = B;
+        endcase
+
+    end
+
+endmodule
+
+module mux_2x1_Reg(input [3:0] A, B, input sig, output [3:0] MUX_Out);
+    reg [3:0] salida;
 
     assign MUX_Out = salida;
 

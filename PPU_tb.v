@@ -74,7 +74,7 @@ wire [9:0] ID_CU;
 wire reg [31:0] ID_Next_PC;
 wire reg [31:0] EX_Next_PC;
 wire reg [31:0] old_A0;
-wire reg [31:0] R14_CU_OUT;
+wire reg [3:0] R14_CU_OUT;
 wire reg [3:0] RW;
 
 
@@ -199,11 +199,11 @@ ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_ou
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_Bit31_28, ID_CU,
                                 DO_CU, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr,
-                                ID_Next_PC,
+                                Next_PC,
                                 EX_Next_PC);    
 
-                       //input [31:0] A,             B,      input sig,   output [31:0] MUX_Out);
-mux_2x1_Stages  mux_2x1_stages_new({WB_Bit15_12,28'b0},  R14_CU_OUT,     bl,           {RW} );
+                       //input [31:0] A,       B,      input sig,   output [31:0] MUX_Out);
+ mux_2x1_Reg   mux_2x1_Reg1(WB_Bit15_12,  R14_CU_OUT,     bl,           RW );
 
 mux_2x1_Stages  mux_2x1_stages_alu(old_A0, EX_Next_PC, bl, A_O);
 
@@ -406,6 +406,8 @@ initial begin
 //   $monitor(" DataIn = %d | Address: %d | ReadWrite: %d | Size = %b | Data_RAM_Out: %b  at time: %0d", MEM_MUX3, MEM_A_O, MEM_mem_read_write, MEM_mem_size, Data_RAM_Out, $time);
  /*--------------------------------- NEW MUX -----------------------------------*/
  //$monitor("PC: %d | Puerto B: % TA: %d | RF_rm: %d  |  TA_PP: %b |  MOV: %d",PCO, TA,RF_rm, TA_PP, MOV);
+    // $monitor("PC: %d | old_A0: %d | EX_Next_PC: %d | bl: %d | A_O: %d",PCO, old_A0, EX_Next_PC, bl, A_O); 
+    //  $monitor("PC: %d | old_A0: %d | EX_Next_PC: %d | bl: %d | A_O: %d| RD_WB: %d | R14CU: %d | bl: %d | RW: %d",PCO, old_A0, EX_Next_PC, bl, A_O, WB_Bit15_12,  R14_CU_OUT,bl, RW );
 end
 
 
