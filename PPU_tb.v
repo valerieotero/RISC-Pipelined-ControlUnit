@@ -71,6 +71,11 @@ wire [3:0] EX_ALU_OP, cch;
 wire[7:0] EX_addresing_modes, ID_addresing_modes;
 wire [8:0] C_U_out, NOP_S;// = 0010001;
 wire [9:0] ID_CU;
+wire reg [31:0] ID_Next_PC;
+wire reg [31:0] EX_Next_PC;
+wire reg [31:0] old_A0;
+wire reg [31:0] R14_CU_OUT;
+wire reg [3:0] RW;
 
 
 /*-------------------------------------- PRECHARGE INSTRUCTION RAM --------------------------------------*/
@@ -133,7 +138,7 @@ wire [9:0] ID_CU;
     /*module control_unit(output ID_B_instr, MemReadWrite, output [6:0] C_U_out, input clk, Reset, input [31:0] A); */
     //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
 
-    control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU);
+    control_unit control_unit1(ID_B_instr, bl, S, C_U_out,clk, Reset, asserted, DO_CU, R14_CU_OUT);
 
     // //mux_2x1_ID(input [6:0] C_U, NOP_S, input HF_U, output [6:0] MUX_Out);
     mux_2x1_ID mux_2x1_ID(C_U_out, bl, S, MUXControlUnit_signal, ID_CU, S_M);
@@ -159,8 +164,9 @@ wire [9:0] ID_CU;
     // input [3:0] SA, SB, SD, C;
     // input RFLd, PCLd, CLK;
     
-    //    register_file(PA, PB, PD, PW, PCin, PCout,      C,            SA,         SB,     SD, RFLd,   HZPCld,  CLK,  RST);
-    register_file register_file_1(PA, PB, PD, PW, PCIN, PCO, RF_rm,  WB_Bit15_12, ID_Bit19_16, ID_Bit3_0, WB_RF_Enable,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
+   
+    //                            PA, PB, PD, PW, PCin, PCout,  R14out,  C,     SA,          SB,        RFLd,        HZPCld, CLK, RST);
+    register_file register_file_1(PA, PB, PD, PW, PCIN,  PCO,   RF_rm,   RW, ID_Bit19_16, ID_Bit3_0, WB_RF_Enable,  PC_RF_ld ,clk,  Reset); //falta RW = WB_Bit15_12_out
 
     // //mux_4x2_ID(input [31:0] A_O, PW, M_O, P, input [1:0] HF_U, output [31:0] MUX_Out);
     // //MUX1
@@ -192,12 +198,18 @@ ID_EX_pipeline_register ID_EX_pipeline_register(mux_out_1_A, mux_out_2_B, mux_ou
                                 EX_Bit11_0, EX_addresing_modes, EX_mem_size, EX_mem_read_write, ex_bl, EX_S_M, ex_asserted,EX_B_instr,
 
                                 mux_out_1, mux_out_2, mux_out_3, ID_Bit15_12, ID_Bit31_28, ID_CU,
-                                DO_CU, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr);    
+                                DO_CU, ID_addresing_modes, clk, Reset, S_M, asserted, ID_B_instr,
+                                ID_Next_PC,
+                                EX_Next_PC);    
 
+                       //input [31:0] A,             B,      input sig,   output [31:0] MUX_Out);
+mux_2x1_Stages  mux_2x1_stages_new({WB_Bit15_12,28'b0},  R14_CU_OUT,     bl,           {RW} );
+
+mux_2x1_Stages  mux_2x1_stages_alu(old_A0, EX_Next_PC, bl, A_O);
 
 // //MAIN ALU    
 // //alu(input [31:0]A,B, input [3:0] OPS, input Cin, output [31:0]S, output [3:0] cc_alu_out); //N, Z, C, V
-alu alu_main(mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, cc_out, A_O, cc_main_alu_out);
+alu alu_main(mux_out_1_A, EX_MUX_2X1_OUT, EX_ALU_OP, cc_out, old_A0, cc_main_alu_out);
        
 // //Sign_Shift_Extender (input [31:0]A, input [11:0]B, output reg [31:0]shift_result, output reg C);
 Sign_Shift_Extender sign_shift_extender_1(mux_out_2_B, EX_Bit11_0, cc_out, SSE_out, Carry);

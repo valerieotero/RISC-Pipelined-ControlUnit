@@ -4,7 +4,7 @@
 
 
 //CONTROL UNIT
-module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A); 
+module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, Reset, asserted, input [31:0] A, output [31:0] R14_CU_OUT); 
 
     reg [2:0] instr;
      //**C_U_out = ID_shift_imm[6], ID_ALU_op[5:2], ID_load_instr [1], ID_RF_enable[0]
@@ -196,6 +196,25 @@ module control_unit(output  ID_B_instr,BL, S, output  [8:0] C_U_out, input clk, 
                             // $monitor("alu %b | A: %b",alu_op, A);
 
     end
+
+      /* else begin
+            if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
+            //     // DataOut = 32'b11100001101000001110000000001111; 
+                ID_Bit31_0 <= DataOut;//{DataOut[31:28], 28'b0001101000001110000000001111};
+                ID_Next_PC <= PC4;
+                ID_Bit3_0 <=  4'b1111; 
+                ID_Bit31_28 <= DataOut[31:28];
+                ID_Bit19_16 <=  4'b0000; 
+                ID_Bit15_12 <= 4'b1110;
+                ID_Bit23_0 <=  DataOut[23:0]; //
+                TA_PP <=  1'b0;
+                // $display("DOUT 31 28: %b", DataOut[31:28]);
+            end else if (DataOut[15:12] == 4'b1111) begin
+              TA_PP <=1'b1;
+
+
+            end */
+
 endmodule
 
 
@@ -415,7 +434,9 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
             ID_Bit23_0 <= 24'b0;
             TA_PP<=1'b0;
 
-        end else begin
+        end 
+
+       /* else begin
             if(DataOut[27:24] == 4'b1011 && asserted == 1 )begin // For Branch and Link
             //     // DataOut = 32'b11100001101000001110000000001111; 
                 ID_Bit31_0 <= DataOut;//{DataOut[31:28], 28'b0001101000001110000000001111};
@@ -431,7 +452,8 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
               TA_PP <=1'b1;
 
 
-            end else begin
+            end */
+             else begin
 
                 if(Hazard_Unit_Ld == 1 || asserted == 1 || choose_ta_r_nop == 0) begin
                         ID_Bit31_0 <= DataOut;
@@ -459,7 +481,7 @@ module IF_ID_pipeline_register(output reg[23:0] ID_Bit23_0, output reg [31:0] ID
     //    $monitor("PC4: %d | instr:%b | asserted:%b ", PC4, ID_Bit31_0, asserted);
         // $monitor(" EX_alu_op: %b, ID_alu_op: %b,  ID_instr: %b, ex  instr: %b",  ID_CU[5:2], EX_ALU_OP, ID_Bit11_0, EX_Bit11_0);
 
-    end
+   // end
 endmodule
 
 
@@ -469,12 +491,14 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
                                output reg [31:0] EX_Bit11_0,
                                output reg [7:0] EX_addresing_modes,
                                output reg EX_mem_size, EX_mem_read_write,EXBL, ex_S_M, ex_asserted, ex_b_instr,
-
+                               
                                input [31:0] mux_out_1, mux_out_2, mux_out_3,
                                input [3:0] ID_Bit15_12, ID_Bit31_28, input [9:0] ID_CU, 
                                input [31:0] ID_Bit11_0,
                                input [7:0] ID_addresing_modes,
-                               input  clk, Reset, s_M, asserted, b_instr);
+                               input  clk, Reset, s_M, asserted, b_instr,
+                               input  [31:0] ID_Next_PC,
+                               output reg [31:0] EX_Next_PC); 
 
     always@(posedge clk, posedge Reset)
     begin
@@ -486,6 +510,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_RF_instr <= 1'b0;
             EX_mem_size <= 1'b0;
             EX_mem_read_write <= 1'b0;
+            EX_Next_PC <= 1'b0;
 
             //Register File operands
             mux_out_1_A <= 32'b0;
@@ -511,6 +536,7 @@ module ID_EX_pipeline_register(output reg [31:0] mux_out_1_A, mux_out_2_B, mux_o
             EX_RF_instr <= ID_CU[0];
             EX_mem_size <= ID_CU[8];
             EX_mem_read_write <= ID_CU[7];
+            EX_Next_PC <= ID_Next_PC;
 
             //Register File operands
             mux_out_1_A <= mux_out_1;
